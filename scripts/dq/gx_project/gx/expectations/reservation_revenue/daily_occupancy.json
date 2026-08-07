@@ -1,0 +1,68 @@
+{
+  "expectations": [
+    {
+      "id": "4afcd965-049b-429f-b940-2e20c39dd5de",
+      "kwargs": {
+        "column": "property_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "c7603ca1-6d55-4cb0-b22a-1fc3f1689224",
+      "kwargs": {
+        "column": "room_type"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "603a533c-f4c2-4b4f-b1a3-8730478fb0b4",
+      "kwargs": {
+        "column": "date"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "063e4159-dcd7-4a2a-9eee-e6656c8ee0a0",
+      "kwargs": {
+        "column": "occupancy_rate"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "ab4635a4-f515-4e2e-bfaf-2f21145dc361",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE occupancy_rate < 0 OR occupancy_rate > 1"
+      },
+      "meta": {
+        "rule_name": "occupancy_rate_between_0_and_1"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    },
+    {
+      "id": "680f9eff-bbdb-4a0b-adf8-02c16df4742b",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE rooms_sold > total_rooms_available"
+      },
+      "meta": {
+        "rule_name": "rooms_sold_not_exceed_available"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "d96d8246-0d1c-4e0a-ba10-4adcf235a44e",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "reservation_revenue.daily_occupancy",
+  "notes": null
+}

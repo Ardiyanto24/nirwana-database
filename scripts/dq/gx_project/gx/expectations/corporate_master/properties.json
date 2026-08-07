@@ -1,0 +1,80 @@
+{
+  "expectations": [
+    {
+      "id": "9f40e8b5-57ad-4bd0-a5d8-4a0530ef1469",
+      "kwargs": {
+        "column": "property_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "ce9f7afc-5012-47ab-a4f6-59459cf73583",
+      "kwargs": {
+        "column": "property_name"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "05ced2e0-c412-4d0b-ae9b-cf2bc2d1af63",
+      "kwargs": {
+        "column": "city"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "a66b3d56-b010-4c77-9a7d-78729f1c6bf2",
+      "kwargs": {
+        "column": "region"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "63349a00-78ae-4169-b448-d0335536c0bc",
+      "kwargs": {
+        "column": "property_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "5d1b4243-87b2-46e4-b741-56002a607e04",
+      "kwargs": {
+        "column": "region",
+        "value_set": [
+          "Bali",
+          "Jawa",
+          "Nusa Tenggara"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "42300dbb-6c03-411e-85a5-94ace1f8b477",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE total_rooms < 0"
+      },
+      "meta": {
+        "rule_name": "total_rooms_non_negative"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "dccb500b-be9a-4124-a45f-a1f3171cd92f",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "corporate_master.properties",
+  "notes": null
+}

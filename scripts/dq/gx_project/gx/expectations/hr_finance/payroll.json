@@ -1,0 +1,86 @@
+{
+  "expectations": [
+    {
+      "id": "ce7e580f-591b-44b3-952b-ee8dd2500aa3",
+      "kwargs": {
+        "column": "payroll_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "67e062f5-37b0-4d28-b17e-865521c6ee43",
+      "kwargs": {
+        "column": "employee_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "a3931e8f-734d-41f4-92fb-f326dd4d7be9",
+      "kwargs": {
+        "column": "period"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "b5780da8-e517-4fca-b48b-fe9a443457a7",
+      "kwargs": {
+        "column": "base_salary"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "84484c5e-31c4-44fb-9890-08e91c6a8568",
+      "kwargs": {
+        "column": "net_salary"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "1bdd14a3-cd02-4689-850a-25b4dcc4564c",
+      "kwargs": {
+        "column": "payroll_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "ab0c158e-1e2c-45f1-be48-7b6ff683318d",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE base_salary <= 0"
+      },
+      "meta": {
+        "rule_name": "base_salary_positive"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    },
+    {
+      "id": "79305f11-8a74-416e-9a03-412ddefb33c6",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE net_salary != base_salary + service_charge + overtime_pay + thr - deduction"
+      },
+      "meta": {
+        "rule_name": "net_salary_matches_formula"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "772be1ad-0d33-4d9d-b5fd-175684f7c41e",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "hr_finance.payroll",
+  "notes": null
+}

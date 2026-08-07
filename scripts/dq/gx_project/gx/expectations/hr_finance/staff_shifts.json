@@ -1,0 +1,93 @@
+{
+  "expectations": [
+    {
+      "id": "fb01ca51-200c-4923-874e-8949afae3d69",
+      "kwargs": {
+        "column": "shift_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "16eeea32-dfb5-4c25-b139-be42871d00a0",
+      "kwargs": {
+        "column": "employee_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "50bea8f7-e72e-4b75-b41f-6e9e3eb21d76",
+      "kwargs": {
+        "column": "date"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "c8124c75-db64-49ad-a54e-ab9cb3df0a87",
+      "kwargs": {
+        "column": "shift_type"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "9afd556c-1fa8-43b3-911b-6dcde59e7d26",
+      "kwargs": {
+        "column": "status"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "7887d6d1-0379-48cd-a717-769d328c6f61",
+      "kwargs": {
+        "column": "shift_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "790f2ab0-c17a-40af-8de0-e3ea09cb300d",
+      "kwargs": {
+        "column": "shift_type",
+        "value_set": [
+          "Morning",
+          "Afternoon",
+          "Night"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "af5edaf7-6e30-445e-b3a2-68c75e8fcc9c",
+      "kwargs": {
+        "column": "status",
+        "value_set": [
+          "present",
+          "late",
+          "absent",
+          "leave"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    }
+  ],
+  "id": "2f195f2d-f617-4877-9467-a75cbc027655",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "hr_finance.staff_shifts",
+  "notes": null
+}

@@ -1,0 +1,45 @@
+{
+  "expectations": [
+    {
+      "id": "250c68f0-7cd7-4946-b88a-7b0d88533a3a",
+      "kwargs": {
+        "column": "guest_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "5ee053f5-ec22-4087-8b89-5c4794491e2f",
+      "kwargs": {
+        "column": "loyalty_tier",
+        "value_set": [
+          "none",
+          "Silver",
+          "Gold",
+          "Platinum"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "aab86076-d82e-4eef-9dc3-39dc2d6e4eba",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE email IS NOT NULL AND email != '' AND email !~ '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$'"
+      },
+      "meta": {
+        "rule_name": "email_format_when_filled"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "416cdf53-3241-4168-8963-546d88e25220",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "corporate_master.guests",
+  "notes": null
+}

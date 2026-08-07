@@ -1,0 +1,88 @@
+{
+  "expectations": [
+    {
+      "id": "ec2b5763-a1f5-4fd7-a17d-232cc7a0647a",
+      "kwargs": {
+        "column": "log_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "3f8b1026-9982-4802-80fd-d26142c9805e",
+      "kwargs": {
+        "column": "room_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "b0d2f2fc-7b87-4efd-a7fb-21d11b6afe1c",
+      "kwargs": {
+        "column": "date"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "3d7c8eca-167f-48fc-bd05-3c4afd7c1d66",
+      "kwargs": {
+        "column": "staff_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "c8c96fc3-8f98-47c8-a186-c4d3a8e38d59",
+      "kwargs": {
+        "column": "status"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "e7fa8813-3418-4932-affd-e0d942cc902a",
+      "kwargs": {
+        "column": "log_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "62b00ecf-8978-45fa-b182-6c27138f0fd9",
+      "kwargs": {
+        "column": "status",
+        "value_set": [
+          "completed",
+          "delayed"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "b8c03e08-ff6b-44e9-9969-2494f758e12d",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE cleaning_end_time <= cleaning_start_time"
+      },
+      "meta": {
+        "rule_name": "cleaning_end_after_start"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "7e11475e-e700-4eb0-80d4-af2697a72f47",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "facility_maintenance.housekeeping_log",
+  "notes": null
+}

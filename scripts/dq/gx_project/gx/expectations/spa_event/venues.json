@@ -1,0 +1,89 @@
+{
+  "expectations": [
+    {
+      "id": "9f6ea296-df91-4018-9094-433202ce91d6",
+      "kwargs": {
+        "column": "venue_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "b5f95a89-79bd-41e9-8f29-761e7d6ea498",
+      "kwargs": {
+        "column": "property_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "d9de7a1a-263a-4fba-9687-5a45b12b8db9",
+      "kwargs": {
+        "column": "venue_name"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "fac0cd11-fd6c-4df7-bbfc-a37f89c90811",
+      "kwargs": {
+        "column": "venue_type"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "e811f52f-f01a-4725-b0e7-3cb1f2641d4f",
+      "kwargs": {
+        "column": "max_capacity"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "4acebf78-1494-40be-b16f-327711d6accd",
+      "kwargs": {
+        "column": "venue_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "9052ed36-5c11-433c-a92a-56718edb09ad",
+      "kwargs": {
+        "column": "venue_type",
+        "value_set": [
+          "Ballroom",
+          "Meeting Room",
+          "Outdoor"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "ef53df5c-647f-4abe-aae2-194ec49ee9e6",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE max_capacity <= 0"
+      },
+      "meta": {
+        "rule_name": "max_capacity_positive"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "2f2d0752-466a-4770-958c-39eaf2f42457",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "spa_event.venues",
+  "notes": null
+}

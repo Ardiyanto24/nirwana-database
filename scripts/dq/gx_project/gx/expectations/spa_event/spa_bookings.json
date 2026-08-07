@@ -1,0 +1,117 @@
+{
+  "expectations": [
+    {
+      "id": "8b9bd1b1-02f6-431c-9d08-4ea18175d406",
+      "kwargs": {
+        "column": "spa_booking_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "149d44ca-80f7-4488-9ed7-49606b0e3b6a",
+      "kwargs": {
+        "column": "property_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "99d75c11-bbf3-4ede-9341-98ed4a8b1f47",
+      "kwargs": {
+        "column": "customer_type"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "a53d3bd6-eb3a-4615-a525-cd3057857d48",
+      "kwargs": {
+        "column": "service_name"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "f5570bb7-71bb-4d4d-a1a1-c110e948204e",
+      "kwargs": {
+        "column": "status"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "b13a341e-1db1-4953-abef-1fd92d9fd3a1",
+      "kwargs": {
+        "column": "spa_booking_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "04d2620c-fe45-4fb3-a4fb-910986c50030",
+      "kwargs": {
+        "column": "customer_type",
+        "value_set": [
+          "inhouse",
+          "walk-in"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "e8426d5a-0888-41d1-ad07-6e6235ab45f6",
+      "kwargs": {
+        "column": "status",
+        "value_set": [
+          "confirmed",
+          "cancelled",
+          "completed"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "670d2188-58c9-49fe-ba7c-6daccc228ac2",
+      "kwargs": {
+        "column": "duration_minutes",
+        "value_set": [
+          45,
+          60,
+          90,
+          120
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "fd9d899d-1ffd-4c85-85d3-28719adc268f",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE service_date < booking_date"
+      },
+      "meta": {
+        "rule_name": "service_date_not_before_booking_date"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "f2a33423-1137-4c35-9e48-c873a63aac66",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "spa_event.spa_bookings",
+  "notes": null
+}

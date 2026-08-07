@@ -1,0 +1,126 @@
+{
+  "expectations": [
+    {
+      "id": "0d88b69b-8624-49ca-8698-1cdf040a887d",
+      "kwargs": {
+        "column": "event_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "b2be35e4-d710-4f0c-b678-5dac47186d11",
+      "kwargs": {
+        "column": "property_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "26d60dc6-3cff-466e-a7dc-c6879683996c",
+      "kwargs": {
+        "column": "venue_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "67d150a3-e9e4-476c-8c3b-69c21773dd79",
+      "kwargs": {
+        "column": "event_type"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "c6b90294-169c-4c5e-9eeb-db6cd754f34c",
+      "kwargs": {
+        "column": "event_date"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "aefa14b5-f3e3-43a7-a5c8-856f078be3e5",
+      "kwargs": {
+        "column": "status"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "84729d73-8145-4847-bde1-e8f77564eaaa",
+      "kwargs": {
+        "column": "event_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "6c0c8795-bcd7-4da7-a868-0ebd62411d9a",
+      "kwargs": {
+        "column": "event_type",
+        "value_set": [
+          "Wedding",
+          "Corporate Meeting",
+          "Conference",
+          "Gala Dinner",
+          "Product Launch",
+          "Training/Workshop"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "5676a78b-208d-4ff6-ac78-7258ad489c6d",
+      "kwargs": {
+        "column": "status",
+        "value_set": [
+          "completed",
+          "cancelled",
+          "confirmed"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "91b46a7b-d3fa-487c-bd3b-995fc0202c52",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE subselect.capacity_booked > (SELECT max_capacity FROM spa_event.venues v WHERE v.venue_id = subselect.venue_id)"
+      },
+      "meta": {
+        "rule_name": "capacity_not_exceed_venue_max"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    },
+    {
+      "id": "87620c12-5bc5-46e0-8148-b01b96b1bf5a",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE (subselect.venue_id, subselect.event_date) IN (SELECT venue_id, event_date FROM spa_event.event_bookings GROUP BY venue_id, event_date HAVING COUNT(*) > 1)"
+      },
+      "meta": {
+        "rule_name": "no_duplicate_venue_per_day"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "af756c16-dc53-40c0-8d05-7354aaf79691",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "spa_event.event_bookings",
+  "notes": null
+}

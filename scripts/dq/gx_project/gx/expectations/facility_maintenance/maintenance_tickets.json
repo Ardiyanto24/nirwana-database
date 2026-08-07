@@ -1,0 +1,133 @@
+{
+  "expectations": [
+    {
+      "id": "9c62d8d7-39cc-41f2-9887-dfe1685bf826",
+      "kwargs": {
+        "column": "ticket_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "8e91417b-b5c3-4a8c-91bc-2606ddcd7c05",
+      "kwargs": {
+        "column": "property_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "57162026-20bf-4584-a435-13bb5da2087d",
+      "kwargs": {
+        "column": "facility_area"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "a6350a49-c41c-40a3-a731-4ab128557515",
+      "kwargs": {
+        "column": "issue_type"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "3fc6dbf5-d11b-4345-b834-51f0d28e361d",
+      "kwargs": {
+        "column": "reported_date"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "f0400da6-8410-430d-928b-57afc866be68",
+      "kwargs": {
+        "column": "status"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "7c62dc9c-d008-4d0f-91f1-75633fcd193d",
+      "kwargs": {
+        "column": "priority"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "38949e16-1f99-4f84-9e28-842aa70d78c0",
+      "kwargs": {
+        "column": "ticket_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "e30b650e-7e61-40b9-9e59-4b4a46073478",
+      "kwargs": {
+        "column": "status",
+        "value_set": [
+          "open",
+          "in-progress",
+          "resolved"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "4dc88da3-6156-423f-bec2-9b893e3cb0e6",
+      "kwargs": {
+        "column": "priority",
+        "value_set": [
+          "low",
+          "medium",
+          "high",
+          "critical"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "9819f7a2-f2fb-4703-9b07-a5c5090e836b",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE cost < 0"
+      },
+      "meta": {
+        "rule_name": "cost_non_negative"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    },
+    {
+      "id": "55efd7b2-7e43-47a0-9b24-2dc0a2d521b8",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE resolved_date IS NOT NULL AND resolved_date < reported_date"
+      },
+      "meta": {
+        "rule_name": "resolved_date_after_reported"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "07b65718-2998-46f8-b146-85d789e44c0d",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "facility_maintenance.maintenance_tickets",
+  "notes": null
+}

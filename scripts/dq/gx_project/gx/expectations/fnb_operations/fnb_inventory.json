@@ -1,0 +1,71 @@
+{
+  "expectations": [
+    {
+      "id": "a6e6c96a-88d0-4c68-84f0-eb43b6dbfcf8",
+      "kwargs": {
+        "column": "ingredient_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "2214e365-02bb-4d77-874b-d84623ce0a75",
+      "kwargs": {
+        "column": "outlet_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "d5fd1950-1cf2-4a11-b0b3-82b696257900",
+      "kwargs": {
+        "column": "ingredient_name"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "e6ad5328-e881-401e-91cd-6eb5dd0e8e14",
+      "kwargs": {
+        "column": "unit"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "ad976d87-8c95-4a18-80c9-28bd36b8eaa4",
+      "kwargs": {
+        "column": "unit",
+        "value_set": [
+          "kg",
+          "liter",
+          "pcs"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "ad27c7dd-786b-40f0-a419-358cce64ffbc",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE stock_current < 0"
+      },
+      "meta": {
+        "rule_name": "stock_current_non_negative"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "f907b7ec-9244-4690-a805-12dc99314c38",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "fnb_operations.fnb_inventory",
+  "notes": null
+}

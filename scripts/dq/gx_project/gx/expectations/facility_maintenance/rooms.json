@@ -1,0 +1,77 @@
+{
+  "expectations": [
+    {
+      "id": "e71d3909-1e06-4e0c-a706-bacab4d970e7",
+      "kwargs": {
+        "column": "room_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "02325b44-0956-44ce-9412-58cc6fcac139",
+      "kwargs": {
+        "column": "property_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "6c1408f6-0e73-423e-ae07-d6dac15f27d1",
+      "kwargs": {
+        "column": "room_type"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "ce0aa54a-9e7e-4757-9787-761a2e4eef73",
+      "kwargs": {
+        "column": "room_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "c750e688-406f-4477-b345-8df76130bdde",
+      "kwargs": {
+        "column": "room_type",
+        "value_set": [
+          "Standard",
+          "Deluxe",
+          "Suite",
+          "Villa"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "9216f172-f894-4ec0-a30f-eebbbf8c9c7b",
+      "kwargs": {
+        "column": "status",
+        "value_set": [
+          "available",
+          "occupied",
+          "cleaning",
+          "maintenance",
+          "out-of-order"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    }
+  ],
+  "id": "910756f5-1981-4140-afec-774116aea2c5",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "facility_maintenance.rooms",
+  "notes": null
+}

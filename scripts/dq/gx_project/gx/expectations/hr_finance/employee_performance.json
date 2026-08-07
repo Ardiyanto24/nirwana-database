@@ -1,0 +1,66 @@
+{
+  "expectations": [
+    {
+      "id": "fa56d47d-b2b6-4a53-93b0-81d8fa1ef220",
+      "kwargs": {
+        "column": "review_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "ad038829-e09a-4341-8647-55a58666d405",
+      "kwargs": {
+        "column": "employee_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "04414f41-1d09-4ea2-82fb-a97135491c7d",
+      "kwargs": {
+        "column": "review_period"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "982dcb88-d6e2-4a47-9b4e-3cc100c94e70",
+      "kwargs": {
+        "column": "score"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "6820448f-d337-45d4-af63-903c70c468ba",
+      "kwargs": {
+        "column": "review_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "3f07c7c1-7d08-496b-bfe7-ba34eaa556ad",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE score < 1.0 OR score > 5.0"
+      },
+      "meta": {
+        "rule_name": "score_in_valid_range"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "2b1f4d8f-31e1-47de-a8ae-6b3104899687",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "hr_finance.employee_performance",
+  "notes": null
+}

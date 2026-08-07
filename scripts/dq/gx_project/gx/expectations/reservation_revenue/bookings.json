@@ -1,0 +1,140 @@
+{
+  "expectations": [
+    {
+      "id": "d918da88-e4b6-4feb-8924-5024d9073cf1",
+      "kwargs": {
+        "column": "booking_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "20e0706b-c5f9-441e-b352-e70e3961a8fc",
+      "kwargs": {
+        "column": "property_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "51458a44-28de-49f3-ae68-6b957a41c443",
+      "kwargs": {
+        "column": "guest_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "4651b9a2-db92-4282-8c0b-fca1e85157a1",
+      "kwargs": {
+        "column": "status"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "f52ffc10-c81a-4aa2-a585-3b1086fa1f5d",
+      "kwargs": {
+        "column": "booking_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "58e5846c-2de8-4ee4-bdd0-dfb56fb9538e",
+      "kwargs": {
+        "column": "room_type",
+        "value_set": [
+          "Standard",
+          "Deluxe",
+          "Suite",
+          "Villa"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "9d878ac5-889b-46be-8973-ef695f188128",
+      "kwargs": {
+        "column": "status",
+        "value_set": [
+          "confirmed",
+          "cancelled",
+          "no-show",
+          "completed"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "6bb37412-f0b7-4c73-af7c-8cc16246c369",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE total_amount != room_rate * nights"
+      },
+      "meta": {
+        "rule_name": "total_amount_matches_rate_x_nights"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    },
+    {
+      "id": "cc17f71f-8ab3-4417-8bda-c3c451867b5f",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE check_out_date <= check_in_date"
+      },
+      "meta": {
+        "rule_name": "check_out_after_check_in"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    },
+    {
+      "id": "cbac30e3-740a-4158-89e5-89b30ae6f31c",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE booking_date > check_in_date"
+      },
+      "meta": {
+        "rule_name": "booking_date_before_check_in"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    },
+    {
+      "id": "8207f3a2-a975-48b6-b4e8-337ed1a258b5",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE room_rate < 0 OR total_amount < 0"
+      },
+      "meta": {
+        "rule_name": "room_rate_non_negative"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    },
+    {
+      "id": "79dd8a3a-786f-4a65-a99e-b7f40d16d133",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE room_type = 'Villa' AND property_id NOT IN ('P01', 'P04', 'P05')"
+      },
+      "meta": {
+        "rule_name": "villa_only_in_p01_p04_p05"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "266becd6-d77a-437c-b778-d71646cd35c8",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "reservation_revenue.bookings",
+  "notes": null
+}

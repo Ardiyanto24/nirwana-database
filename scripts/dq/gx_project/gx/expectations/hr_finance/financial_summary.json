@@ -1,0 +1,82 @@
+{
+  "expectations": [
+    {
+      "id": "c23ea28a-c017-4b89-bd50-870fbe44d97a",
+      "kwargs": {
+        "column": "property_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "3380878d-11e5-478a-8b85-23b50db9ab40",
+      "kwargs": {
+        "column": "period"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "9f27681e-7487-4986-8dc3-f280f1f77791",
+      "kwargs": {
+        "column": "department"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "c4699ef6-24bb-4195-819e-d3742a1d6b0c",
+      "kwargs": {
+        "column": "departmental_revenue"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "d8454682-8cd2-49ff-97e8-2671610d507b",
+      "kwargs": {
+        "column": "departmental_expense"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "35fe231e-6dfe-4543-84d9-79b6352e5f7c",
+      "kwargs": {
+        "column": "department",
+        "value_set": [
+          "Room",
+          "F&B",
+          "Spa&Event",
+          "Overall",
+          "Corporate Overhead"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "c1941579-f89f-4c4f-ae3e-d6a2817dec83",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE department NOT IN ('Overall', 'Corporate Overhead') AND (gop != 0 OR undistributed_expense != 0)"
+      },
+      "meta": {
+        "rule_name": "gop_zero_except_overall_and_corporate_overhead"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "5804e25e-871e-44e2-9761-e1579632ec60",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "hr_finance.financial_summary",
+  "notes": null
+}

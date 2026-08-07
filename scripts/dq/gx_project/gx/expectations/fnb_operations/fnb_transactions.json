@@ -1,0 +1,126 @@
+{
+  "expectations": [
+    {
+      "id": "5e334c9f-4e6f-42e5-a416-f949b2e04044",
+      "kwargs": {
+        "column": "transaction_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "3db1d0c6-1e79-4c65-b3b0-0c1da8aa12ee",
+      "kwargs": {
+        "column": "outlet_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "88e83be6-3885-446c-a310-35709f494030",
+      "kwargs": {
+        "column": "customer_type"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "15cd661b-7761-4c73-93a5-c31fd857c008",
+      "kwargs": {
+        "column": "transaction_datetime"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "cd69f6e5-4df9-4208-9c02-219f5b822c1d",
+      "kwargs": {
+        "column": "item_name"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "c0406091-8e68-44c5-a441-826b00280830",
+      "kwargs": {
+        "column": "customer_type",
+        "value_set": [
+          "inhouse",
+          "walk-in"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "e0ccc9dd-f5eb-42b8-9516-e4ed1661c335",
+      "kwargs": {
+        "column": "category",
+        "value_set": [
+          "Food",
+          "Beverage",
+          "Dessert"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "ee5a03b3-779a-4620-b52e-bb3ab76bd150",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE total_price != unit_price * quantity"
+      },
+      "meta": {
+        "rule_name": "total_price_matches_unit_price_x_qty"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    },
+    {
+      "id": "818d27b3-4344-4442-ac8c-4e1af0ea46e4",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE customer_type = 'inhouse' AND (guest_id IS NULL OR guest_id = '')"
+      },
+      "meta": {
+        "rule_name": "inhouse_must_have_guest_id"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    },
+    {
+      "id": "cd7e1ea7-f9c4-4e9f-84c3-42290ca2241c",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE quantity <= 0"
+      },
+      "meta": {
+        "rule_name": "quantity_positive"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    },
+    {
+      "id": "77491da2-56c0-4f66-9fc3-9bcef26c3196",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE unit_price < 0"
+      },
+      "meta": {
+        "rule_name": "unit_price_non_negative"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "bc5b4299-b5ea-4e91-bb2b-2f3833172730",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "fnb_operations.fnb_transactions",
+  "notes": null
+}

@@ -1,0 +1,103 @@
+{
+  "expectations": [
+    {
+      "id": "d4f12a9d-fed3-49c8-a062-8853d093b224",
+      "kwargs": {
+        "column": "role_title"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "b7f51d54-9f55-4d43-9716-c80f251d7af5",
+      "kwargs": {
+        "column": "data_domain"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "079fa5c4-8e73-4e56-8ba7-d0772322e6a6",
+      "kwargs": {
+        "column": "access_scope"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "83ff5ae6-a748-49bd-8e52-37257f2f1828",
+      "kwargs": {
+        "column": "permission_type"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "b72ce1a4-4eb7-4b73-b781-2590ba4ff3d9",
+      "kwargs": {
+        "column": "access_scope",
+        "value_set": [
+          "own_property",
+          "all_properties"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "9a3cc2d4-2ed4-4a45-ac6e-6031da3b9024",
+      "kwargs": {
+        "column": "permission_type",
+        "value_set": [
+          "read"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "653375c8-bb32-453a-aabd-7abae552738b",
+      "kwargs": {
+        "column": "data_domain",
+        "value_set": [
+          "reservation",
+          "fnb",
+          "facility",
+          "spa_event",
+          "hr",
+          "financial",
+          "properties_ref",
+          "employees_directory",
+          "guests_pii",
+          "guests_profile"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "b213104d-7a9a-412f-8f93-f0c7d8e9a8d0",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE (subselect.role_title, subselect.data_domain) IN (SELECT role_title, data_domain FROM corporate_master.role_permissions GROUP BY role_title, data_domain HAVING COUNT(*) > 1)"
+      },
+      "meta": {
+        "rule_name": "role_domain_combo_unique"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "c33be30b-5a9c-4dc9-90bc-aed6555d5be5",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "corporate_master.role_permissions",
+  "notes": null
+}

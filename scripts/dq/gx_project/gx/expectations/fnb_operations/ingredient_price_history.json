@@ -1,0 +1,48 @@
+{
+  "expectations": [
+    {
+      "id": "83b3254e-a9f5-4b8c-a046-cdcc662533ff",
+      "kwargs": {
+        "column": "ingredient_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "071aa340-62a6-4f01-b954-0e2204977231",
+      "kwargs": {
+        "column": "date"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "609ad8cb-8697-4b3e-bcb1-1db7f280a6f2",
+      "kwargs": {
+        "column": "unit_cost"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "7b957636-af65-4e24-841c-6452f27c84d5",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE unit_cost <= 0"
+      },
+      "meta": {
+        "rule_name": "unit_cost_positive"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "12bd8868-6a98-4109-93c2-0cac8612b3af",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "fnb_operations.ingredient_price_history",
+  "notes": null
+}

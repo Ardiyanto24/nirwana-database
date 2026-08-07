@@ -1,0 +1,89 @@
+{
+  "expectations": [
+    {
+      "id": "08ddf03e-4e6e-4d38-8ba0-e268ea185ffd",
+      "kwargs": {
+        "column": "waste_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "50b50184-1091-4f57-8522-f6a45ac1a907",
+      "kwargs": {
+        "column": "outlet_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "95260909-8ca3-4e2b-910e-6f23a2c18c26",
+      "kwargs": {
+        "column": "date"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "10d4be16-ddbe-4dad-a190-4571358d43cb",
+      "kwargs": {
+        "column": "ingredient_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "1e15ef3d-3b0f-472b-9499-57736566790c",
+      "kwargs": {
+        "column": "reason"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "4ea2abe2-57ca-4983-8d9e-6434c6edfe89",
+      "kwargs": {
+        "column": "waste_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "32ff39ae-68ad-4bd2-b226-649c6ddc50bc",
+      "kwargs": {
+        "column": "reason",
+        "value_set": [
+          "overproduction",
+          "expired",
+          "spillage"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "71046016-643b-45ff-af63-55e76c3cf560",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE quantity_wasted <= 0"
+      },
+      "meta": {
+        "rule_name": "quantity_wasted_positive"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "c266adef-fb5f-439b-b947-649c1b48ca1d",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "fnb_operations.fnb_waste_log",
+  "notes": null
+}

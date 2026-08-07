@@ -1,0 +1,80 @@
+{
+  "expectations": [
+    {
+      "id": "6d0925cb-87c7-4e97-86e0-8bd2fef81097",
+      "kwargs": {
+        "column": "property_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "5b326f09-263d-4953-8338-96706f5c3c6f",
+      "kwargs": {
+        "column": "room_type"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "d141ea14-d2cd-4f00-a32f-cb84ea3108f2",
+      "kwargs": {
+        "column": "date"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "b0f5f6cc-cdf5-4ed8-9ec0-3023815054cc",
+      "kwargs": {
+        "column": "base_rate"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "97b25e4e-633f-4229-836a-0b27c7a63578",
+      "kwargs": {
+        "column": "applied_rate"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "fa626097-c310-4137-abb5-bace9f8bc4c4",
+      "kwargs": {
+        "column": "reason",
+        "value_set": [
+          "manual",
+          "promo",
+          "dynamic-pricing-AI"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "5a043786-9476-402d-8ae8-eefd8573b423",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE base_rate < 0 OR applied_rate < 0"
+      },
+      "meta": {
+        "rule_name": "rates_non_negative"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "a4f7bb40-d85a-4dd6-916e-3436abd2bdbb",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "reservation_revenue.pricing_history",
+  "notes": null
+}

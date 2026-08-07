@@ -1,0 +1,69 @@
+{
+  "expectations": [
+    {
+      "id": "f75aa650-c63b-4187-9f1d-38345c08c545",
+      "kwargs": {
+        "column": "outlet_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "f2033e22-e53b-48c8-afba-af60e487f7b2",
+      "kwargs": {
+        "column": "property_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "b63c996b-cd37-4506-95aa-401de0d32bc0",
+      "kwargs": {
+        "column": "outlet_name"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "b1ebf69c-be8e-4eb8-9163-e7a71beb1e34",
+      "kwargs": {
+        "column": "outlet_type"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "06f3d14d-d9fe-46a2-8d27-c538984b9cfc",
+      "kwargs": {
+        "column": "outlet_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "f1f5803c-6182-4431-88ae-0ab267dfb9d1",
+      "kwargs": {
+        "column": "outlet_type",
+        "value_set": [
+          "Restaurant",
+          "Bar",
+          "Room Service"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    }
+  ],
+  "id": "4c8e9947-6d23-442d-8379-14090cb817d4",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "fnb_operations.fnb_outlets",
+  "notes": null
+}

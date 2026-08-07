@@ -1,0 +1,94 @@
+{
+  "expectations": [
+    {
+      "id": "1aafc4a5-6419-427b-aa88-c495451bea45",
+      "kwargs": {
+        "column": "employee_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "df581af8-601b-49be-9e92-f2a682f78a46",
+      "kwargs": {
+        "column": "property_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "2ddeb490-ad09-48e3-92c7-b383d4cf0f79",
+      "kwargs": {
+        "column": "access_level"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "49e1de9c-856b-42c1-8d21-76761bf4d02b",
+      "kwargs": {
+        "column": "status"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "08e89dda-7ab5-4953-ada1-3dce3050a0e2",
+      "kwargs": {
+        "column": "employee_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "04abf2fb-7bfe-4b13-9ab3-1621d1dec3d5",
+      "kwargs": {
+        "column": "access_level",
+        "value_set": [
+          "staff",
+          "manager",
+          "corporate"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "94db5611-2932-43de-8d46-ccecf3303a9d",
+      "kwargs": {
+        "column": "status",
+        "value_set": [
+          "active",
+          "resigned",
+          "terminated"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "4479fd90-db95-4c92-96cb-dd1ad6d9b4a4",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE subselect.role_title IS NOT NULL AND subselect.role_title != '' AND subselect.role_title NOT IN (SELECT DISTINCT role_title FROM corporate_master.role_permissions)"
+      },
+      "meta": {
+        "rule_name": "role_title_exists_in_rbac_when_filled"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "0b4b1d38-c327-46b5-a4f4-6e2ca71d34ed",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "corporate_master.employees",
+  "notes": null
+}

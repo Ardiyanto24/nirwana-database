@@ -1,0 +1,320 @@
+# Welcome to Great Expectations! Always know what to expect from your data.
+#
+# Here you can define datasources, batch kwargs generators, integrations and
+# more. This file is intended to be committed to your repo. For help with
+# configuration please:
+#   - Read our docs: https://docs.greatexpectations.io/docs/guides/connecting_to_your_data/connect_to_data_overview/#2-configure-your-datasource
+#   - Join our slack channel: http://greatexpectations.io/slack
+
+# config_version refers to the syntactic version of this config file, and is used in maintaining backwards compatibility
+# It is auto-generated and usually does not need to be changed.
+config_version: 4.0
+
+# This config file supports variable substitution which enables: 1) keeping
+# secrets out of source control & 2) environment-based configuration changes
+# such as staging vs prod.
+#
+# When GX encounters substitution syntax (like `my_key: ${my_value}` or
+# `my_key: $my_value`) in the great_expectations.yml file, it will attempt
+# to replace the value of `my_key` with the value from an environment
+# variable `my_value` or a corresponding key read from this config file,
+# which is defined through the `config_variables_file_path`.
+# Environment variables take precedence over variables defined here.
+#
+# Substitution values defined here can be a simple (non-nested) value,
+# nested value such as a dictionary, or an environment variable (i.e. ${ENV_VAR})
+#
+#
+# https://docs.greatexpectations.io/docs/guides/setup/configuring_data_contexts/how_to_configure_credentials
+
+
+config_variables_file_path: uncommitted/config_variables.yml
+
+# The plugins_directory will be added to your python path for custom modules
+# used to override and extend Great Expectations.
+plugins_directory: plugins/
+
+stores:
+# Stores are configurable places to store things like Expectations, Validations
+# Data Docs, and more. These are for advanced users only - most users can simply
+# leave this section alone.
+  expectations_store:
+    class_name: ExpectationsStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: expectations/
+
+  validation_results_store:
+    class_name: ValidationResultsStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: uncommitted/validations/
+
+  checkpoint_store:
+    class_name: CheckpointStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      suppress_store_backend_id: true
+      base_directory: checkpoints/
+
+  validation_definition_store:
+    class_name: ValidationDefinitionStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: validation_definitions/
+
+expectations_store_name: expectations_store
+validation_results_store_name: validation_results_store
+checkpoint_store_name: checkpoint_store
+
+data_docs_sites:
+  # Data Docs make it simple to visualize data quality in your project. These
+  # include Expectations, Validations & Profiles. The are built for all
+  # Datasources from JSON artifacts in the local repo including validations &
+  # profiles from the uncommitted directory. Read more at https://docs.greatexpectations.io/docs/terms/data_docs
+  local_site:
+    class_name: SiteBuilder
+    show_how_to_buttons: true
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: uncommitted/data_docs/local_site/
+    site_index_builder:
+      class_name: DefaultSiteIndexBuilder
+fluent_datasources:
+  nirwana_supabase:
+    type: postgres
+    id: 04e087e3-672e-468d-9cd2-4a79c13cb537
+    assets:
+      corporate_master__properties__asset:
+        type: table
+        id: 27425b06-1cd3-4f2f-9010-db79147e9f96
+        batch_metadata: {}
+        batch_definitions:
+          corporate_master__properties__whole:
+            id: a9a99685-6395-459c-b28a-20f2a48821a5
+            partitioner:
+        table_name: properties
+        schema_name: corporate_master
+      corporate_master__employees__asset:
+        type: table
+        id: e13d89b0-ca91-42a2-bd9f-26143e8c8b1c
+        batch_metadata: {}
+        batch_definitions:
+          corporate_master__employees__whole:
+            id: b3273d5b-d279-41fb-8292-44f3182d1d21
+            partitioner:
+        table_name: employees
+        schema_name: corporate_master
+      corporate_master__guests__asset:
+        type: table
+        id: 127fa53a-7b4c-4fa6-8072-4290a9d2a914
+        batch_metadata: {}
+        batch_definitions:
+          corporate_master__guests__whole:
+            id: 234a7cdf-129b-4263-bb75-76090256fad7
+            partitioner:
+        table_name: guests
+        schema_name: corporate_master
+      corporate_master__role_permissions__asset:
+        type: table
+        id: c7ef9e39-7fba-433d-a6bf-d027cb682ef7
+        batch_metadata: {}
+        batch_definitions:
+          corporate_master__role_permissions__whole:
+            id: 522b0957-c523-46a1-bde5-37f670c857a6
+            partitioner:
+        table_name: role_permissions
+        schema_name: corporate_master
+      reservation_revenue__bookings__asset:
+        type: table
+        id: 1bb068a0-6e95-4490-9af9-8a773e136b18
+        batch_metadata: {}
+        batch_definitions:
+          reservation_revenue__bookings__whole:
+            id: 06923fe7-b842-42b6-bfca-76ba64f0c016
+            partitioner:
+        table_name: bookings
+        schema_name: reservation_revenue
+      reservation_revenue__daily_occupancy__asset:
+        type: table
+        id: 0ece6336-fbc9-4d9f-ad22-c41591fc1e24
+        batch_metadata: {}
+        batch_definitions:
+          reservation_revenue__daily_occupancy__whole:
+            id: bfb0d9c9-99d0-4a92-a7d3-c5728c0da118
+            partitioner:
+        table_name: daily_occupancy
+        schema_name: reservation_revenue
+      reservation_revenue__pricing_history__asset:
+        type: table
+        id: 0423a5de-6af8-4a3c-bc8c-dbf90669808a
+        batch_metadata: {}
+        batch_definitions:
+          reservation_revenue__pricing_history__whole:
+            id: d8c4b1f0-4f47-4448-9750-65f4797bab75
+            partitioner:
+        table_name: pricing_history
+        schema_name: reservation_revenue
+      fnb_operations__fnb_outlets__asset:
+        type: table
+        id: 2caf4a76-2239-4790-a867-094e892b2ace
+        batch_metadata: {}
+        batch_definitions:
+          fnb_operations__fnb_outlets__whole:
+            id: 102a417c-1d7c-49c7-9fa9-589fb4048f9e
+            partitioner:
+        table_name: fnb_outlets
+        schema_name: fnb_operations
+      fnb_operations__recipe_bom__asset:
+        type: table
+        id: 7a42bfdd-28d5-46db-9e3e-c49eec1662c5
+        batch_metadata: {}
+        batch_definitions:
+          fnb_operations__recipe_bom__whole:
+            id: d79a3e23-7b54-4636-baf5-71ebbeafe8e6
+            partitioner:
+        table_name: recipe_bom
+        schema_name: fnb_operations
+      fnb_operations__ingredient_price_history__asset:
+        type: table
+        id: d6dd3b6e-b9ff-47ad-aa8f-d511ba312bbc
+        batch_metadata: {}
+        batch_definitions:
+          fnb_operations__ingredient_price_history__whole:
+            id: d080d5df-bf62-4ef0-9b2d-dd8a623bf443
+            partitioner:
+        table_name: ingredient_price_history
+        schema_name: fnb_operations
+      fnb_operations__fnb_transactions__asset:
+        type: table
+        id: 568c1bf9-6199-4813-a20b-a5a43cbfda6e
+        batch_metadata: {}
+        batch_definitions:
+          fnb_operations__fnb_transactions__whole:
+            id: b3c79d92-4482-4a7c-b5ae-2ebad8ccc3cb
+            partitioner:
+        table_name: fnb_transactions
+        schema_name: fnb_operations
+      fnb_operations__fnb_waste_log__asset:
+        type: table
+        id: 1bf8dbf0-9545-4e6b-9050-84f81ff89835
+        batch_metadata: {}
+        batch_definitions:
+          fnb_operations__fnb_waste_log__whole:
+            id: a335797d-e754-4cd7-84ef-97acf056734e
+            partitioner:
+        table_name: fnb_waste_log
+        schema_name: fnb_operations
+      fnb_operations__fnb_inventory__asset:
+        type: table
+        id: f755420c-d665-4e11-afd5-573a7581af22
+        batch_metadata: {}
+        batch_definitions:
+          fnb_operations__fnb_inventory__whole:
+            id: 2c6d72e6-ae3b-4148-bca1-a2baeee2323b
+            partitioner:
+        table_name: fnb_inventory
+        schema_name: fnb_operations
+      facility_maintenance__rooms__asset:
+        type: table
+        id: 60b48fe1-8326-47b1-88ce-5fdca27261bb
+        batch_metadata: {}
+        batch_definitions:
+          facility_maintenance__rooms__whole:
+            id: 47cadc47-2bcf-45a9-aab5-baaf6700d7e3
+            partitioner:
+        table_name: rooms
+        schema_name: facility_maintenance
+      facility_maintenance__housekeeping_log__asset:
+        type: table
+        id: 7c977231-da23-4b7e-ab32-baf6509e19eb
+        batch_metadata: {}
+        batch_definitions:
+          facility_maintenance__housekeeping_log__whole:
+            id: 918b3b36-ea5d-4cfe-92ec-130019752c63
+            partitioner:
+        table_name: housekeeping_log
+        schema_name: facility_maintenance
+      facility_maintenance__maintenance_tickets__asset:
+        type: table
+        id: 57faeb7e-c41e-464a-86cb-46fdefb7ccae
+        batch_metadata: {}
+        batch_definitions:
+          facility_maintenance__maintenance_tickets__whole:
+            id: 262b6062-5089-43e9-963e-03655b53f332
+            partitioner:
+        table_name: maintenance_tickets
+        schema_name: facility_maintenance
+      spa_event__venues__asset:
+        type: table
+        id: a81d83e9-20af-452b-9cfb-e743d4074153
+        batch_metadata: {}
+        batch_definitions:
+          spa_event__venues__whole:
+            id: 94d3dff7-dda6-4ca0-a6ee-f73f913d3e8f
+            partitioner:
+        table_name: venues
+        schema_name: spa_event
+      spa_event__spa_bookings__asset:
+        type: table
+        id: 277fa97d-f17a-4a24-bb5b-fd2fa0913463
+        batch_metadata: {}
+        batch_definitions:
+          spa_event__spa_bookings__whole:
+            id: 8b7a5dc3-dead-4ded-bd4b-59c45faae982
+            partitioner:
+        table_name: spa_bookings
+        schema_name: spa_event
+      spa_event__event_bookings__asset:
+        type: table
+        id: 9d74a567-8ea3-4292-b381-b3c1f17f5309
+        batch_metadata: {}
+        batch_definitions:
+          spa_event__event_bookings__whole:
+            id: 274dcc31-c319-49b4-985c-274fe47867e7
+            partitioner:
+        table_name: event_bookings
+        schema_name: spa_event
+      hr_finance__staff_shifts__asset:
+        type: table
+        id: ebb1cfc6-829a-4768-bdb5-746cdeb432e9
+        batch_metadata: {}
+        batch_definitions:
+          hr_finance__staff_shifts__whole:
+            id: 5ba35d1c-91ea-45b9-9065-aab312245b28
+            partitioner:
+        table_name: staff_shifts
+        schema_name: hr_finance
+      hr_finance__employee_performance__asset:
+        type: table
+        id: 8526c2f1-9656-41a0-b187-c5ce585fd5df
+        batch_metadata: {}
+        batch_definitions:
+          hr_finance__employee_performance__whole:
+            id: 35a4dd8d-0146-4cc7-bc6d-35559b64b382
+            partitioner:
+        table_name: employee_performance
+        schema_name: hr_finance
+      hr_finance__payroll__asset:
+        type: table
+        id: e3780da1-0069-40ad-a7ac-3479974ce046
+        batch_metadata: {}
+        batch_definitions:
+          hr_finance__payroll__whole:
+            id: 1cc4b2e0-3f90-4fdb-901f-3932b7e7df2a
+            partitioner:
+        table_name: payroll
+        schema_name: hr_finance
+      hr_finance__financial_summary__asset:
+        type: table
+        id: 47ebe76f-dd18-40f6-9059-6d3c41f8df84
+        batch_metadata: {}
+        batch_definitions:
+          hr_finance__financial_summary__whole:
+            id: aa8e44e0-4d35-42ad-8641-2de0e37bcf6d
+            partitioner:
+        table_name: financial_summary
+        schema_name: hr_finance
+    connection_string: ${SUPABASE_DB_URL}
+analytics_enabled:
+data_context_id: b90193b8-6852-4fa4-9ce9-22284d7e8fea

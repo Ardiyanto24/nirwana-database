@@ -1,0 +1,48 @@
+{
+  "expectations": [
+    {
+      "id": "09b136c0-22aa-46c4-a931-1569b079744d",
+      "kwargs": {
+        "column": "item_name"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "e5212910-bda1-4b00-b7ef-6a71e003d88b",
+      "kwargs": {
+        "column": "ingredient_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "ba1693b7-6975-484b-99aa-848dd0b94ba9",
+      "kwargs": {
+        "column": "qty_per_portion"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "b96edbd1-7cf7-46dc-89d7-98f3032297b9",
+      "kwargs": {
+        "unexpected_rows_query": "SELECT * FROM {batch} WHERE qty_per_portion <= 0"
+      },
+      "meta": {
+        "rule_name": "qty_per_portion_positive"
+      },
+      "severity": "critical",
+      "type": "unexpected_rows_expectation"
+    }
+  ],
+  "id": "38d9d9a7-74eb-4ec6-a79f-e6c7db709233",
+  "meta": {
+    "great_expectations_version": "1.19.1"
+  },
+  "name": "fnb_operations.recipe_bom",
+  "notes": null
+}
