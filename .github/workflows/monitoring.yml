@@ -1,0 +1,46 @@
+name: Data Production Monitoring
+
+# Milestone 1.5 -- menjalankan mekanisme Milestone 1.2-1.4 secara terjadwal.
+# Rujukan keputusan: docs/keputusan-tertunda.md ("Platform penjadwalan & deployment"),
+# milestones/1.5-dashboard-alerting-terpadu/decisions.md.
+#
+# Sengaja TIDAK menjalankan scripts/schema_drift/baseline_columns.py (itu bootstrap
+# baseline sekali di awal, bukan job harian -- lihat catatan di script itu) atau
+# scripts/schema_drift/acknowledge.py (aksi manual per drift event, butuh review manusia).
+
+on:
+  schedule:
+    - cron: "0 1 * * *"  # tiap hari jam 01:00 UTC (08:00 WIB)
+  workflow_dispatch: {}   # bisa dipicu manual dari tab Actions untuk uji coba
+
+jobs:
+  run-monitoring:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write .env for scripts (dari GitHub Secret, tidak pernah disimpan permanen)
+        run: echo "SUPABASE_DB_URL=${{ secrets.SUPABASE_DB_URL }}" > .env
+
+      - name: Milestone 1.2 -- volume & freshness snapshot + alert
+        run: |
+          python scripts/monitoring/snapshot_volume.py
+          python scripts/monitoring/snapshot_freshness.py
+          python scripts/monitoring/detect_alerts.py
+
+      - name: Milestone 1.3 -- data quality & value anomaly
+        run: |
+          python scripts/dq/build_and_run.py
+          python scripts/dq/snapshot_dirty_proportion.py
+          python scripts/dq/snapshot_value_anomaly.py
+          python scripts/dq/dq_alerts.py
+
+      - name: Milestone 1.4 -- schema drift diff
+        run: python scripts/schema_drift/snapshot_and_diff.py
