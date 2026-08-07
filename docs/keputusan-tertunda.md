@@ -33,3 +33,14 @@
 - **Why deferred:** User memilih menunda dulu, tanpa alasan spesifik dicatat dalam diskusi — kemungkinan prioritas waktu. Konsekuensi eksplisit: Kriteria Keberhasilan #2 Milestone 1.5 ("...dan terkirim ke kanal yang benar saat diuji coba") **tidak terpenuhi penuh** — hanya bagian "muncul di dashboard" yang tercapai. Milestone 1.5 dilaporkan **Partially Completed**, bukan Completed, karena gap ini.
 - **Revisit when:** Kapan saja — perubahan yang dibutuhkan kecil (tambah 1 contact point + notification policy di Grafana, tidak menyentuh logic deteksi apa pun di Python). Prioritaskan sebelum project ini dianggap "selesai" untuk portofolio, karena ini gap yang eksplisit disebut di Kriteria Keberhasilan sumber.
 - **Status:** Open
+
+---
+
+### Orchestrator sungguhan (Airflow/Dagster/Prefect self-hosted) untuk Fase 2 (deferred dari Milestone 2.0)
+
+- **Date:** 2026-08-08
+- **What was deferred:** Menggunakan orchestrator sungguhan yang di-self-host (Airflow, Dagster, atau Prefect via Docker, dideploy ke platform seperti Railway/Render/Fly.io — pola sama seperti Grafana M1.5) untuk mengatur pipeline Fase 2 (ekstraksi → transform → reverse ETL → feedback loop scoring), lengkap dengan dependency graph, sensor, dan retry per-task native.
+- **Why deferred:** Milestone 2.0 memilih **GitHub Actions extended** (workflow YAML + `workflow_run`/`needs` untuk dependency chaining, pola dilanjutkan dari Fase 1) sebagai gantinya, murni karena pertimbangan **biaya** — self-hosted orchestrator butuh service yang jalan 24/7 (beda dari GitHub Actions yang serverless) dan berisiko keluar dari free tier platform hosting begitu traffic/compute bertambah. Konsekuensi eksplisit: GitHub Actions tidak punya sensor native (dibutuhkan nanti untuk feedback loop scoring, Bagian 6.4 arsitektur — "tunggu hingga `ml_output` selesai ditulis") dan dependency graph-nya lebih terbatas dibanding orchestrator sungguhan. Untuk memitigasi, konvensi job & dependency di Milestone 2.0 sengaja didesain **sedekat mungkin dengan standar industri** (naming eksplisit, dependency terdokumentasi jelas) supaya migrasi nanti tidak perlu desain ulang total — lihat `milestones/2.0-fondasi-orchestrator-bersama/decisions.md`.
+- **Alternatives considered:** Managed cloud orchestrator free tier (Prefect Cloud/Dagster Cloud) — tidak butuh kelola server 24/7, tapi terikat batasan free tier vendor pihak ketiga (jumlah run/bulan, retensi log) yang bisa berubah kapan saja; dipertimbangkan tapi tidak dipilih karena user lebih memilih opsi tanpa dependency ke uptime/kebijakan vendor eksternal sama sekali untuk fondasi ini.
+- **Revisit when:** Ketika kebutuhan sensor/dependency graph sungguhan sudah tidak bisa lagi "dipaksakan" lewat GitHub Actions (kemungkinan besar saat masuk milestone feedback loop scoring, `03-mart-aggregated-owner.md`), atau ketika constraint biaya sudah tidak lagi jadi penghalang.
+- **Status:** Open

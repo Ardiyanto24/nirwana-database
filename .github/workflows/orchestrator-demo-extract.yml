@@ -1,0 +1,25 @@
+name: Orchestrator Demo - Extract
+
+# Milestone 2.0 -- job percobaan sederhana untuk membuktikan mekanisme
+# orchestrator (GitHub Actions extended) bisa dijadwalkan & dijalankan.
+# Sengaja self-contained (tanpa koneksi GCP/BigQuery -- itu Milestone 2.1),
+# murni membuktikan platform + dependency chaining.
+# Rujukan: milestones/2.0-fondasi-orchestrator-bersama/decisions.md,
+# docs/05-orchestrator/konvensi-job-dependency.md.
+#
+# Dependency keluar (ke orchestrator-demo-transform.yml) didaftarkan di file
+# TUJUAN lewat workflow_run, bukan di sini -- lihat konvensi poin 2.
+
+on:
+  schedule:
+    - cron: "0 2 * * *"  # tiap hari jam 02:00 UTC, setelah monitoring.yml (01:00 UTC)
+  workflow_dispatch: {}
+
+jobs:
+  run-extract-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simulasikan tahap extract
+        run: |
+          echo "[extract] Milestone 2.0 demo -- simulasi ekstraksi production -> raw_production"
+          echo "[extract] Selesai pada $(date -u +%Y-%m-%dT%H:%M:%SZ)"

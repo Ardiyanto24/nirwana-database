@@ -1,0 +1,29 @@
+name: Orchestrator Demo - Transform
+
+# Milestone 2.0 -- job kedua dalam rantai demo, membuktikan dependency
+# lintas workflow file (bukan job.needs dalam satu file) lewat workflow_run.
+# Rujukan: milestones/2.0-fondasi-orchestrator-bersama/decisions.md,
+# docs/05-orchestrator/konvensi-job-dependency.md.
+#
+# HANYA jalan setelah "Orchestrator Demo - Extract" selesai SUKSES --
+# dicek eksplisit di step pertama, bukan diasumsikan dari trigger completed saja
+# (workflow_run juga trigger saat upstream gagal, conclusion perlu dicek manual).
+
+on:
+  workflow_run:
+    workflows: ["Orchestrator Demo - Extract"]
+    types: [completed]
+  workflow_dispatch: {}
+
+jobs:
+  run-transform-demo:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Simulasikan tahap transform
+        run: |
+          echo "[transform] Milestone 2.0 demo -- simulasi transform raw_production -> mart_cleaned"
+          echo "[transform] Dependency terpenuhi: job extract sudah selesai sukses"
+          echo "[transform] Selesai pada $(date -u +%Y-%m-%dT%H:%M:%SZ)"

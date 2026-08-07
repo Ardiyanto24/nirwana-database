@@ -1,0 +1,34 @@
+name: Orchestrator Demo - Monitoring (Simulated Other Owner)
+
+# Milestone 2.0 -- job KETIGA, ditambahkan untuk mensimulasikan Kriteria
+# Keberhasilan #2: "pemilik pekerjaan lain bisa menambahkan job baru ke
+# instance yang sama tanpa perlu membangun instance terpisah."
+#
+# Berperan sebagai pekerjaan monitoring Fase 2 (06-monitoring-warehouse-serving-fase2.md)
+# yang ingin mengamati job pipeline utama tanpa memiliki/mengubahnya.
+# Ditambahkan murni dengan membuat file baru ini + mendaftarkan workflow_run
+# ke "Orchestrator Demo - Transform" -- TIDAK menyentuh
+# orchestrator-demo-extract.yml maupun orchestrator-demo-transform.yml sama
+# sekali, membuktikan konvensi di docs/05-orchestrator/konvensi-job-dependency.md
+# (poin "Cara Menambahkan Job Baru") berjalan sesuai desain.
+#
+# Rujukan: milestones/2.0-fondasi-orchestrator-bersama/decisions.md.
+
+on:
+  workflow_run:
+    workflows: ["Orchestrator Demo - Transform"]
+    types: [completed]
+  workflow_dispatch: {}
+
+jobs:
+  run-monitoring-warehouse-demo:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Simulasikan job pemilik pekerjaan lain
+        run: |
+          echo "[monitoring-warehouse] Milestone 2.0 demo -- job ini mewakili pemilik pekerjaan lain (monitoring Fase 2)"
+          echo "[monitoring-warehouse] Ditambahkan ke instance orchestrator yang sama tanpa mengubah job extract/transform"
+          echo "[monitoring-warehouse] Selesai pada $(date -u +%Y-%m-%dT%H:%M:%SZ)"
