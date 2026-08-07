@@ -5,6 +5,7 @@ __pycache__/
 .agents
 skills-lock.json
 .claude
+CLAUDE.md
 
 # Great Expectations local project state (Milestone 1.3) -- config_variables.yml
 # under uncommitted/ holds the raw Supabase connection string, defense-in-depth
