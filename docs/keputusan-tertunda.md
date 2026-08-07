@@ -23,3 +23,13 @@
 - **Why chosen:** GitHub Actions gratis, tidak perlu infra/server terpisah untuk dikelola, secrets management bawaan (`SUPABASE_DB_URL` aman sebagai GitHub Secret, bukan hardcode — prinsip sama seperti `.env`/`config_variables.yml` di M1.3), cron scheduling bawaan, dan history run terlihat langsung di repo sebagai bukti berjalan. Grafana dipilih karena satu-satunya dari opsi yang dibandingkan (vs Metabase, Superset) yang punya alerting engine native selain visualisasi — pas dengan output Milestone 1.5 ("dashboard **dan** alerting terpadu"), dan datasource BigQuery native untuk Fase 2 nanti.
 - **Alternatives considered:** `pg_cron` (ditolak, lihat entri di atas); orchestrator penuh (Airflow/Dagster/Prefect) — dinilai overkill untuk kebutuhan Fase 1 (4 script Python dijadwalkan harian), lebih masuk akal dibahas ulang saat Fase 2; scheduled job di platform cloud (Cloud Run Jobs/Railway/Render cron) — lebih "production-grade" tapi menambah kerumitan setup yang belum perlu sekarang; Metabase/Superset untuk dashboard — dibahas di diskusi sebelum Milestone 1.5, ditolak karena tidak punya alerting native (Metabase) atau overkill untuk kebutuhan saat ini (Superset).
 - **Status:** Resolved (keputusan diambil) — **implementasi belum dikerjakan**, direncanakan sebagai bagian kerja Milestone 1.5 (workflow YAML GitHub Actions untuk M1.2-1.4 + deploy Grafana untuk dashboard/alerting M1.5).
+
+---
+
+### Kanal notifikasi eksternal untuk alert (deferred dari Milestone 1.5)
+
+- **Date:** 2026-08-07
+- **What was deferred:** Menghubungkan alert Grafana ke kanal notifikasi eksternal nyata (Discord webhook, Email/SMTP, atau Slack webhook) supaya alert benar-benar "terkirim", bukan cuma terlihat di panel/state dashboard Grafana.
+- **Why deferred:** User memilih menunda dulu, tanpa alasan spesifik dicatat dalam diskusi — kemungkinan prioritas waktu. Konsekuensi eksplisit: Kriteria Keberhasilan #2 Milestone 1.5 ("...dan terkirim ke kanal yang benar saat diuji coba") **tidak terpenuhi penuh** — hanya bagian "muncul di dashboard" yang tercapai. Milestone 1.5 dilaporkan **Partially Completed**, bukan Completed, karena gap ini.
+- **Revisit when:** Kapan saja — perubahan yang dibutuhkan kecil (tambah 1 contact point + notification policy di Grafana, tidak menyentuh logic deteksi apa pun di Python). Prioritaskan sebelum project ini dianggap "selesai" untuk portofolio, karena ini gap yang eksplisit disebut di Kriteria Keberhasilan sumber.
+- **Status:** Open
