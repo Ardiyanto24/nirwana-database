@@ -3,10 +3,16 @@
 -- tanpa query manual/analisis terpisah.
 
 CREATE OR REPLACE VIEW monitoring.current_status AS
+-- Milestone 1.5 fix: kecualikan schema `_simulation` -- tanpa filter ini, tabel
+-- staging dari uji coba terkontrol M1.2 (volume_normal_case, dst) ikut tampil
+-- di dashboard seolah-olah tabel production nyata. Ditemukan saat validasi
+-- panel Grafana, bukan bug dari awal (baru terlihat begitu ada consumer di luar
+-- query verifikasi manual yang selalu difilter manual).
 WITH latest_volume AS (
     SELECT DISTINCT ON (schema_name, table_name)
         schema_name, table_name, snapshot_date, row_count, day_of_week
     FROM monitoring.volume_daily_snapshot
+    WHERE schema_name != '_simulation'
     ORDER BY schema_name, table_name, snapshot_date DESC
 ),
 baseline AS (
@@ -27,6 +33,7 @@ latest_freshness AS (
     SELECT DISTINCT ON (schema_name, table_name)
         schema_name, table_name, freshness_column, latest_value, lag_hours
     FROM monitoring.freshness_snapshot
+    WHERE schema_name != '_simulation'
     ORDER BY schema_name, table_name, snapshot_date DESC
 )
 SELECT
