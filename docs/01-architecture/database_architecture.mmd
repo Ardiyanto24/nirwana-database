@@ -1,0 +1,290 @@
+%%{init: {'theme': 'base', 'themeVariables': {
+  'background': '#ffffff',
+  'primaryColor': '#ffffff',
+  'primaryTextColor': '#000000',
+  'primaryBorderColor': '#000000',
+  'lineColor': '#000000',
+  'secondaryColor': '#ffffff',
+  'tertiaryColor': '#ffffff',
+  'textColor': '#000000'
+}}}%%
+erDiagram
+    %% ==================== corporate_master ====================
+    properties {
+        text property_id PK
+        text property_name
+        text city
+        text region
+        integer total_rooms
+        numeric star_rating
+        date opening_date
+    }
+
+    employees {
+        text employee_id PK
+        text property_id FK
+        text full_name
+        text role_title
+        text department
+        text access_level
+        text hire_date
+        text status
+    }
+
+    guests {
+        text guest_id PK
+        text full_name
+        text email
+        text phone
+        text nationality
+        text loyalty_tier
+        date registered_date
+    }
+
+    role_permissions {
+        text role_title PK
+        text data_domain PK
+        text access_scope PK
+        text permission_type PK
+    }
+
+    %% ==================== reservation_revenue ====================
+    bookings {
+        text booking_id PK
+        text property_id FK
+        text guest_id FK
+        text room_type
+        text booking_channel
+        date check_in_date
+        date check_out_date
+        date booking_date
+        integer nights
+        numeric room_rate
+        numeric total_amount
+        text status
+    }
+
+    daily_occupancy {
+        text property_id PK
+        text room_type PK
+        date date PK
+        integer rooms_sold
+        numeric adr
+        integer total_rooms_available
+        numeric occupancy_rate
+        numeric revpar
+    }
+
+    pricing_history {
+        text property_id PK
+        text room_type PK
+        date date PK
+        numeric base_rate
+        numeric applied_rate
+        text reason
+    }
+
+    %% ==================== fnb_operations ====================
+    fnb_outlets {
+        text outlet_id PK
+        text property_id FK
+        text outlet_name
+        text outlet_type
+    }
+
+    recipe_bom {
+        text item_name PK
+        text ingredient_id PK
+        numeric qty_per_portion
+    }
+
+    ingredient_price_history {
+        text ingredient_id PK
+        date date PK
+        numeric unit_cost
+    }
+
+    fnb_transactions {
+        text transaction_id
+        text outlet_id FK
+        text guest_id FK
+        text customer_type
+        timestamp transaction_datetime
+        text item_name
+        text category
+        numeric quantity
+        numeric unit_price
+        numeric total_price
+    }
+
+    fnb_inventory {
+        text outlet_id PK
+        text ingredient_id PK
+        text ingredient_name
+        text unit
+        numeric stock_current
+        numeric stock_min_threshold
+        numeric unit_cost
+    }
+
+    fnb_waste_log {
+        text waste_id PK
+        text outlet_id FK
+        date date
+        text ingredient_id FK
+        numeric quantity_wasted
+        text reason
+    }
+
+    %% ==================== facility_maintenance ====================
+    rooms {
+        text room_id PK
+        text property_id FK
+        text room_number
+        text room_type
+        integer floor
+        text status
+    }
+
+    housekeeping_log {
+        text log_id PK
+        text room_id FK
+        date date
+        time cleaning_start_time
+        time cleaning_end_time
+        text staff_id FK
+        text status
+    }
+
+    maintenance_tickets {
+        text ticket_id PK
+        text property_id FK
+        text room_id FK
+        text facility_area
+        text issue_type
+        date reported_date
+        date resolved_date
+        text status
+        text priority
+        text assigned_staff_id FK
+        numeric labor_hours
+        text parts_replaced
+        numeric cost
+    }
+
+    %% ==================== spa_event ====================
+    venues {
+        text venue_id PK
+        text property_id FK
+        text venue_name
+        text venue_type
+        integer max_capacity
+    }
+
+    spa_bookings {
+        text spa_booking_id PK
+        text property_id FK
+        text guest_id FK
+        text customer_type
+        text service_name
+        date booking_date
+        date service_date
+        integer duration_minutes
+        numeric price
+        text status
+    }
+
+    event_bookings {
+        text event_id PK
+        text property_id FK
+        text venue_id FK
+        text client_name
+        text event_type
+        date event_date
+        text venue_name
+        integer capacity_booked
+        numeric total_revenue
+        text status
+    }
+
+    %% ==================== hr_finance ====================
+    staff_shifts {
+        text shift_id PK
+        text employee_id FK
+        date date
+        text shift_type
+        time clock_in
+        time clock_out
+        text status
+    }
+
+    employee_performance {
+        text review_id PK
+        text employee_id FK
+        text review_period
+        numeric score
+        text notes
+    }
+
+    payroll {
+        text payroll_id PK
+        text employee_id FK
+        text period
+        numeric base_salary
+        numeric service_charge
+        numeric overtime_pay
+        numeric thr
+        numeric deduction
+        numeric net_salary
+    }
+
+    financial_summary {
+        text property_id PK
+        text period PK
+        text department PK
+        numeric departmental_revenue
+        numeric departmental_expense
+        numeric departmental_profit
+        numeric undistributed_expense
+        numeric gop
+    }
+
+    %% ==================== public (tabel kontrol simulasi, bukan tabel bisnis) ====================
+    sim_state {
+        smallint id PK
+        date sim_date
+        timestamptz last_run_at
+    }
+
+    %% ==================== relasi (26 FK) ====================
+    properties  |o--o{ employees             : menugaskan
+    properties  ||--o{ bookings              : dipesan_di
+    properties  ||--o{ daily_occupancy       : diagregasi_ke
+    properties  ||--o{ pricing_history       : diagregasi_ke
+    properties  ||--o{ fnb_outlets           : punya
+    properties  ||--o{ rooms                 : punya
+    properties  ||--o{ maintenance_tickets   : punya
+    properties  ||--o{ venues                : punya
+    properties  ||--o{ spa_bookings          : punya
+    properties  ||--o{ event_bookings        : punya
+    properties  ||--o{ financial_summary     : diagregasi_ke
+
+    guests      ||--o{ bookings              : memesan
+    guests      |o--o{ fnb_transactions      : membeli
+    guests      |o--o{ spa_bookings          : memesan
+
+    employees   ||--o{ housekeeping_log      : bertugas
+    employees   ||--o{ maintenance_tickets   : ditugaskan
+    employees   ||--o{ staff_shifts          : punya
+    employees   ||--o{ employee_performance  : dinilai
+    employees   ||--o{ payroll               : digaji
+
+    fnb_outlets   ||--o{ fnb_inventory       : menyimpan
+    fnb_outlets   ||--o{ fnb_transactions    : mencatat
+    fnb_outlets   ||--o{ fnb_waste_log       : mencatat
+    fnb_inventory ||--o{ fnb_waste_log       : acuan_stok
+
+    rooms       ||--o{ housekeeping_log      : dibersihkan
+    rooms       |o--o{ maintenance_tickets   : diperbaiki
+
+    venues      ||--o{ event_bookings        : dipakai
