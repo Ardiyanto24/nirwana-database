@@ -1,7 +1,7 @@
 # Milestone 2.0: Fondasi Orchestrator Bersama (Fase 2)
 
 **Source:** `docs/03-implementation-plans/02-serving-data-scientist.md` (baris 45-61, "Milestone 2.0 — Fondasi Orchestrator Bersama")
-**Status:** In Progress
+**Status:** Done (lihat `report.md` untuk verifikasi Kriteria Keberhasilan)
 **Date started:** 2026-08-08
 
 ## Contract (from source doc)
@@ -22,11 +22,11 @@ Sebelum breakdown ini, ditemukan bahwa Milestone 2.0/Fase 2 sebelumnya ditandai 
 Catatan lingkup: sesuai source doc, M2.0 murni fondasi platform orchestrator — **tidak termasuk** provisioning GCP/BigQuery (itu output Milestone 2.1). Job percobaan di sini sengaja dibuat self-contained (tidak bergantung ke infra eksternal apa pun) supaya mekanisme scheduling & dependency bisa dibuktikan tuntas tanpa terikat kesiapan GCP.
 
 - [x] Task 1: Update `CLAUDE.md` — cerminkan bahwa Fase 2 kini dikerjakan di repo ini mulai M2.0 — Acceptance: bagian Project Scope & status Fase konsisten dengan kenyataan — Verify: baca ulang `CLAUDE.md` — XS
-- [ ] Task 2: Desain & dokumentasikan konvensi penamaan job + dependency (naming pattern, cara mendeklarasikan `needs`/`workflow_run`, lokasi workflow file, cara pemilik pekerjaan lain menambah job) — Acceptance: konvensi tertulis di `docs/`, dipakai konsisten di Task 3 & 4 — Verify: review manual — S
-- [ ] Task 3: Workflow GitHub Actions job percobaan sederhana (`.github/workflows/orchestrator-demo-extract.yml`) — job A (scheduled) → trigger job B (`.github/workflows/orchestrator-demo-transform.yml`) via `workflow_run`, dependency eksplisit — Acceptance: job B hanya jalan setelah job A sukses — Verify: run history GitHub Actions, urutan run kedua job — S
-- [ ] Task 4: Simulasi "pemilik pekerjaan lain" — tambah job ketiga (`.github/workflows/orchestrator-demo-monitoring.yml`, berperan sebagai pekerjaan monitoring Fase 2) mengikuti konvensi Task 2, ditambahkan sebagai perluasan tanpa mengubah job A/B — Acceptance: job ketiga jalan di instance/repo yang sama tanpa setup terpisah — Verify: run history, konfirmasi tidak ada instance/repo baru dibuat — S
+- [x] Task 2: Desain & dokumentasikan konvensi penamaan job + dependency (naming pattern, cara mendeklarasikan `needs`/`workflow_run`, lokasi workflow file, cara pemilik pekerjaan lain menambah job) — Acceptance: konvensi tertulis di `docs/`, dipakai konsisten di Task 3 & 4 — Verify: review manual
+- [x] Task 3: Workflow GitHub Actions job percobaan sederhana (`.github/workflows/orchestrator-demo-extract.yml`) — job A (scheduled) → trigger job B (`.github/workflows/orchestrator-demo-transform.yml`) via `workflow_run`, dependency eksplisit — Acceptance: job B hanya jalan setelah job A sukses — Verify: run history GitHub Actions, urutan run kedua job (run 31226809039 → 31226817633, 9 detik setelah extract sukses)
+- [x] Task 4: Simulasi "pemilik pekerjaan lain" — tambah job ketiga (`.github/workflows/orchestrator-demo-monitoring.yml`, berperan sebagai pekerjaan monitoring Fase 2) mengikuti konvensi Task 2, ditambahkan sebagai perluasan tanpa mengubah job A/B — Acceptance: job ketiga jalan di instance/repo yang sama tanpa setup terpisah — Verify: run history (run 31226825790, 9 detik setelah transform sukses), diff commit menunjukkan hanya 1 file baru ditambahkan, `orchestrator-demo-extract.yml`/`orchestrator-demo-transform.yml` tidak disentuh
 - [x] Task 5: Tambah entri baru di `docs/keputusan-tertunda.md` untuk keputusan self-hosted-nanti — Acceptance: entri lengkap dengan Why/Revisit — Verify: baca ulang dokumen
-- [ ] Task 6: Verifikasi Kriteria Keberhasilan + tulis `logs.md`/`report.md` — Acceptance: kedua KK dicek eksplisit — Verify: `report.md` mengacu ke run history sungguhan sebagai bukti — S
+- [x] Task 6: Verifikasi Kriteria Keberhasilan + tulis `logs.md`/`report.md` — Acceptance: kedua KK dicek eksplisit — Verify: `report.md` mengacu ke run history sungguhan sebagai bukti
 
 **Catatan serah terima ke Milestone 2.1:** provisioning GCP project + dataset `raw_production` + service account, yang sempat dibahas di sesi perencanaan ini, adalah pekerjaan Milestone 2.1 — dicatat di sini supaya tidak hilang, bukan dikerjakan di M2.0.
 
