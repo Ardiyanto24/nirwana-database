@@ -132,6 +132,46 @@ Ini murni pekerjaan konsolidasi dan presentasi — sengaja diletakkan terakhir k
 
 ---
 
+> **Catatan penambahan (2026-08-07):** Milestone 1.6 dan 1.7 di bawah **bukan bagian dari rancangan Fase 1 semula** (baris 1–133 di atas ditulis sebelum keduanya ada). Keduanya ditambahkan belakangan, setelah Milestone 1.5 selesai, dari diskusi terpisah: Grafana Cloud free tier (platform dashboard yang dipilih di Milestone 1.5) ternyata tidak mendukung *publicly shared dashboard* — fitur itu baru tersedia di tier berbayar (diverifikasi lewat dokumentasi Grafana). Karena proyek ini adalah portofolio yang perlu bisa dilihat publik tanpa login, dua milestone tambahan ini dibuat untuk membangun jalur publik sendiri (API + website) di atas hasil Milestone 1.2–1.5 yang sudah ada, tanpa mengekspos instance Grafana atau kredensial Supabase secara langsung. Ditulis di sini (bukan cuma di `milestones/1.6-.../decisions.md`) supaya tercatat sebagai bagian resmi rancangan implementasi, sesuai konvensi `milestone-execution` — setiap milestone yang dieksekusi harus punya rancangan tertulis di dokumen ini, bukan cuma di folder milestone-nya.
+
+## Milestone 1.6 — API Publik Data Monitoring
+
+### Lingkup
+Membangun API read-only yang menarik data dari `monitoring.*` (hasil Milestone 1.2–1.4: volume/freshness, kualitas data, anomali nilai, schema drift, alert) plus sample data non-sensitif dari tabel production, agar bisa dikonsumsi oleh website publik (Milestone 1.7) tanpa website tersebut perlu koneksi langsung ke Supabase.
+
+### Kenapa Ini Jadi Milestone Terpisah
+API dan website adalah dua concern yang berbeda (data access vs presentation) dan punya siklus deploy/verifikasi sendiri-sendiri — API harus terbukti benar dan aman (scope akses data, rate limiting) sebelum website dibangun di atasnya. Independen secara teknis dari Milestone 1.7, meski 1.7 bergantung pada kontrak (bentuk response) API ini.
+
+### Output
+- Service API publik (read-only, tanpa autentikasi, dengan rate limiting) yang menampilkan data `monitoring.*` terkini.
+- Role Postgres khusus dengan akses read-only yang dibatasi ketat (hanya `monitoring.*` + whitelist tabel production non-sensitif) — bukan memakai kredensial yang sama dengan mekanisme monitoring internal.
+- Deploy publik (di luar komputer lokal), di repo terpisah dari `nirwana-database`.
+
+### Kriteria Keberhasilan
+- Endpoint API bisa diakses publik (tanpa login/API key) dan mengembalikan data yang konsisten dengan `monitoring.current_status` dan tabel `monitoring.*` lain.
+- Tidak ada endpoint yang mengekspos kredensial atau data production sensitif (PII, finansial, HR) di luar whitelist yang disetujui eksplisit.
+- Rate limiting per IP terbukti aktif saat diuji coba terkontrol.
+
+---
+
+## Milestone 1.7 — Website Monitoring Publik
+
+### Lingkup
+Membangun website publik (frontend) yang menampilkan status monitoring data production — volume/freshness, kualitas data, anomali, schema drift, alert — dengan mengonsumsi API dari Milestone 1.6. Ditujukan untuk portofolio: bisa dibuka siapa pun tanpa login.
+
+### Kenapa Ini Jadi Milestone Terpisah
+Murni presentasi di atas API yang sudah ada — sengaja diletakkan setelah Milestone 1.6 karena baru bisa dibangun dengan baik setelah kontrak API-nya stabil, sama seperti relasi Milestone 1.5 terhadap 1.2–1.4.
+
+### Output
+- Website publik ter-deploy (di luar komputer lokal), menampilkan ringkasan status 23 tabel, hasil kualitas data, schema drift, dan alert terkini — versi publik dari dashboard Grafana Milestone 1.5, tanpa perlu akses ke Grafana itu sendiri.
+- Deploy di repo terpisah dari `nirwana-database` dan dari `nirwana-monitoring-api`.
+
+### Kriteria Keberhasilan
+- Website dapat diakses publik tanpa login dan menampilkan data yang konsisten dengan API Milestone 1.6 (bukan data statis/basi).
+- Tampilan mencakup keempat pilar monitoring (volume/freshness, kualitas data, anomali nilai, schema drift) plus alert aktif, setara cakupan dashboard Grafana Milestone 1.5.
+
+---
+
 ## Catatan Serah Terima ke Fase 2
 
 Fase 1 berhenti tepat sebelum data menyentuh `raw_production` di BigQuery. Hasil kerja fase ini (baseline, pola dirty data yang dikenal, mekanisme deteksi anomali/drift) relevan sebagai referensi untuk Fase 2, karena masalah yang berasal dari sisi production akan terlihat gejalanya lagi di layer warehouse — pemilik pekerjaan yang sama disarankan membawa temuan dari Fase 1 sebagai konteks saat memulai Fase 2, bukan memulai dari nol.
