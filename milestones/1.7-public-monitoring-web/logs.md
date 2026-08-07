@@ -1,0 +1,21 @@
+# Milestone 1.7 -- Execution Log
+
+## 2026-08-07 (start)
+Did: Breakdown Milestone 1.7 lewat `planning-and-task-breakdown` (`decisions.md` ditulis SEBELUM implementasi, termasuk `Source:` yang sudah merujuk ke section resmi di `docs/03-implementation-plans/01-monitoring-data-production-fase1.md` -- pelajaran dari koreksi proses M1.6 diterapkan sejak awal di sini). Konfirmasi 3 keputusan teknis (styling Tailwind polos, data fetching server-side + ISR 5 menit, struktur multi-halaman) via `AskUserQuestion`. Routing fase implementasi lewat `using-agent-skills` -> `incremental-implementation` + `frontend-ui-engineering` (build per halaman) + `api-and-interface-design` (kontrak fetch ke API M1.6) + `shipping-and-launch` (deploy Vercel).
+Result: worked.
+
+## 2026-08-07 -- Build 6 halaman + API client (Task 2-9)
+Did: `src/lib/api.ts` (client tipis, typed, tiap fungsi pakai `fetch(url, { next: { revalidate: 300 } })` -- sebelum menulis ini, dicek dulu `node_modules/next/dist/docs/01-app/03-api-reference/04-functions/fetch.md` bawaan project (Next.js 16, versi yang AGENTS.md hasil scaffold sendiri wanti-wanti "breaking changes dari training data") untuk pastikan API `next.revalidate` belum berubah -- terverifikasi masih sama). `src/components/Nav.tsx`, `src/components/ui.tsx` (Table/StatCard/Badge/Section generik, dipakai ulang di 6 halaman, tanpa component library sesuai keputusan). Ubah `globals.css` ke tema gelap tetap (bukan ikut preferensi OS) karena seluruh komponen didesain dengan palet `slate-9xx`. 6 halaman: Overview (`/`), Volume & Freshness, Kualitas Data, Anomali Nilai, Schema Drift, Sample Data.
+Result: worked. `npm run lint` bersih, `npm run build` sukses (semua 6 route ter-generate statis dengan `Revalidate: 5m`). Diverifikasi lewat browser (Claude Browser pane, `next dev`) terhadap API production sungguhan: Overview (23 tabel, 1 tabel gagal DQ, 0 schema drift, 28 alert -- cocok M1.6), Volume & Freshness (23 baris), Kualitas Data (ringkasan 23 tabel + 3 baris detail kegagalan `total_amount_matches_rate_x_nights`), Anomali (8 baris dirty proportion + 6 baris IQR), Schema Drift (0 baris, empty-state message tampil benar, bukan halaman kosong membingungkan), Sample Data (6 properties + 17 outlets + 200 sample rooms, semua kolom tampil).
+
+## 2026-08-07 -- Push repo GitHub (bagian dari Task 10)
+Did: `git init` folder `web/`, commit, `gh repo create Ardiyanto24/nirwana-monitoring-web --public --push`.
+Result: worked -- repo publik baru https://github.com/Ardiyanto24/nirwana-monitoring-web.
+
+## 2026-08-07 -- Percobaan deploy via Vercel CLI, dibatalkan
+Did: User minta deploy pakai Vercel CLI. `npx vercel whoami` ternyata sudah ada sesi tersimpan di komputer ini atas akun `kertaslipatweb-1272` (bukan akun user, kemungkinan dari project lain). Sempat lanjut `vercel link` (otomatis membuat project baru `kertas-lipat/web`, gagal connect ke repo GitHub karena akun itu tidak punya akses) dan `vercel env add` sebelum user menyadari dan menghentikan ("jangan pakai vercel CLI yang itu, pakai yang Ardiyanto"). Logout dari sesi salah (`vercel logout`), coba `vercel login` (device flow, browser confirmation) untuk masuk sebagai akun user yang benar -- user memutuskan tidak jadi lanjut CLI sama sekali, akan deploy manual lewat dashboard Vercel sendiri.
+Result: dibatalkan atas keputusan user, bukan gagal teknis. Cleanup: hapus folder `.vercel/` lokal (link ke project akun salah), kembalikan `.env.local` ke isi semula (buang `VERCEL_OIDC_TOKEN` yang otomatis ditambahkan `vercel link` untuk project akun salah tsb). Project `kertas-lipat/web` yang terlanjur dibuat di akun lain dibiarkan (bukan akun yang saya kelola lagi setelah logout) -- diinformasikan ke user untuk dihapus manual kalau bukan miliknya.
+Pelajaran: sebelum menjalankan CLI pihak ketiga yang mungkin sudah punya sesi tersimpan di mesin, cek dulu `whoami`/identitas aktif dan konfirmasi ke user itu akun yang benar SEBELUM melakukan aksi apa pun (create project, tambah env var) -- jangan asumsikan sesi yang ada pasti milik user yang sedang diajak bicara.
+
+## Status saat ini (belum Completed)
+Task 1-9 selesai & terverifikasi. Task 10 (deploy publik) menunggu user deploy manual lewat dashboard Vercel. `report.md` akan ditulis final setelah URL publik dikonfirmasi jalan.
