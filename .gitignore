@@ -7,6 +7,12 @@ skills-lock.json
 .claude
 CLAUDE.md
 
+# Milestone 1.6/1.7 -- api/ and web/ are developed here locally but deployed
+# from their own separate repos (nirwana-monitoring-api, nirwana-monitoring-web),
+# see milestones/1.6-public-monitoring-api/decisions.md
+api/
+web/
+
 # Great Expectations local project state (Milestone 1.3) -- config_variables.yml
 # under uncommitted/ holds the raw Supabase connection string, defense-in-depth
 # on top of GE's own auto-generated gx/.gitignore
