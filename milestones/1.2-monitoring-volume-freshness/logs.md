@@ -1,0 +1,31 @@
+# Milestone 1.2 — Execution Log
+
+## 2026-08-07 (start)
+Did: Breakdown Milestone 1.2 dengan `planning-and-task-breakdown`, konfirmasi 4 keputusan teknis bersama user (lokasi storage monitoring, definisi freshness, metode baseline rolling, cakupan mekanisme vs penjadwalan), cek ketersediaan `pg_cron` di Supabase (tersedia, belum aktif), buat `docs/keputusan-tertunda.md` untuk keputusan penjadwalan yang ditunda, tulis `decisions.md`.
+Result: worked.
+
+## 2026-08-07 — Verifikasi tipe kolom sebelum implementasi (Task 2)
+Did: Sebelum menulis script, verifikasi live (read-only) tipe data & rentang MIN/MAX seluruh kolom kandidat freshness dari `decisions.md`.
+Result: worked, dengan 2 temuan penting:
+- `facility_maintenance.housekeeping_log.cleaning_start_time` ternyata bertipe `time without time zone` (hanya jam, tanpa tanggal) — **bukan** `timestamp` seperti tersirat penamaan/deskripsi di `Metadata.md`. Tidak bisa dipakai untuk freshness. **Dikoreksi**: pakai kolom `date` (tipe `date`, terverifikasi benar) sebagai sinyal freshness. `decisions.md` sudah diupdate.
+- `corporate_master.employees.hire_date` bertipe `text`, bukan `date` — konsisten dengan catatan dirty data (~2% format `DD/MM/YYYY`). Keputusan: parsing dua format dilakukan di Python, bukan `MAX()` SQL murni.
+- Konfirmasi tambahan: `hr_finance.payroll.period` dan `hr_finance.financial_summary.period` (format `YYYY-MM`) serta `hr_finance.employee_performance.review_period` (format `YYYY-SN`) semuanya `text`, tapi zero-padded ISO-like sehingga `MAX()` leksikografis SQL tetap menghasilkan urutan yang benar — hanya nilai pemenangnya yang perlu dikonversi ke tanggal approksimasi di Python untuk hitung `lag_hours`, bukan seluruh kolom.
+
+## 2026-08-07 — Konteks penting: data adalah snapshot sintetis, bukan aliran live
+Did: Cek `MAX()`/`MIN()` kolom tanggal di beberapa tabel besar vs `now()` server.
+Result: `MAX(booking_date)`/`MAX(transaction_datetime)`/`MAX(date)` di seluruh tabel besar berhenti di **2026-07-01**, sementara `now()` server = **2026-08-07** (~37 hari lag). Ini BUKAN indikasi pipeline bermasalah — dataset ini sintetis dengan rentang waktu tetap (1 Jul 2023 - 30 Jun 2026, sesuai `DataSchema.md`) yang di-generate sekali, bukan aliran data yang terus mengalir sampai hari ini. Konsekuensi: threshold freshness lag yang dipakai di Task 6/7 (deteksi alert) tidak bisa dikalibrasi terhadap `now()` server apa adanya, atau setiap tabel akan selalu "telat" ~37 hari secara permanen dan alert freshness jadi tidak informatif (selalu true, tidak pernah false). Pendekatan: uji coba terkontrol (Task 7) memakai *tanggal referensi relatif terhadap MAX data yang ada* (bukan `now()` wall-clock) untuk membuktikan mekanisme bekerja — dicatat eksplisit sebagai keterbatasan lingkungan (data sintetis statis), bukan cara kerja yang direkomendasikan untuk data production sungguhan yang terus mengalir.
+
+## 2026-08-07 — Schema & mekanisme dibangun (Task 1, 4-6)
+Did: `scripts/monitoring/schema.sql` diterapkan ke Supabase (schema `monitoring` + 3 tabel, additive, DDL `IF NOT EXISTS` saja — terverifikasi tidak menyentuh schema production manapun). `snapshot_volume.py` dan `snapshot_freshness.py` dijalankan untuk snapshot hari ini (2026-08-07), berhasil untuk 23/23 tabel. `detect_alerts.py` dijalankan terhadap snapshot real tsb.
+Result: worked. Temuan (bukan bug, hasil yang benar secara desain):
+- **Volume**: seluruh 23 tabel `insufficient_history` — wajar, baru ada 1 titik data historis (snapshot pertama). Baseline rolling butuh minimal 3 titik di hari-yang-sama sebelum bisa menilai anomali.
+- **Freshness**: 15 tabel berkolom sinyal freshness kelas "daily" (threshold warning 48 jam) SEMUA menunjukkan **CRITICAL** (lag 866-1706 jam) — ini akurat mencerminkan bahwa dataset production memang berhenti di 2026-07-01 (lihat entri di atas), bukan kesalahan mekanisme. 3 tabel kelas "monthly"/"semesterly" (`payroll`, `financial_summary`, `employee_performance`) tidak alert — lag mereka (914-1706 jam) masih di bawah threshold yang jauh lebih longgar (1080/4800 jam), sesuai desain kadensi.
+- Ini membuktikan mekanisme freshness bekerja benar: ia jujur melaporkan kondisi data yang memang stale relatif ke `now()` wall-clock, sesuai definisi yang diputuskan di `decisions.md`. Temuan freshness "critical" untuk 12 tabel kelas daily ini didokumentasikan sebagai temuan production nyata di `report.md`, bukan disembunyikan.
+
+## 2026-08-07 — Uji coba terkontrol (Task 7)
+Did: `scripts/monitoring/simulate_test.py` — 5 skenario (volume normal/spike/drop, freshness normal/delayed) pakai entitas sintetis `_simulation.*` yang disisipkan langsung ke `monitoring.volume_daily_snapshot`/`monitoring.freshness_snapshot` (8 minggu histori + 1 hari uji per skenario volume), alert ditandai `is_simulated=TRUE`.
+Result: worked — **5/5 skenario sesuai ekspektasi**: dua kasus normal TIDAK memicu alert (true negative), tiga kasus anomali (spike, drop, freshness delay) MEMICU alert critical (true positive). Ini memenuhi Kriteria Keberhasilan #2 milestone ("simulasi penurunan/lonjakan volume buatan berhasil memicu alert sesuai ekspektasi"). Data simulasi terisolasi di `schema_name='_simulation'`, tidak bercampur dengan data 23 tabel production nyata.
+
+## 2026-08-07 — Verifikasi Kriteria Keberhasilan #1 (Task 8)
+Did: Buat `scripts/monitoring/views.sql` (`monitoring.current_status`) — satu view yang menggabungkan snapshot volume terbaru + baseline rolling per-hari-dalam-minggu + snapshot freshness terbaru per tabel. Jalankan satu query tunggal ke view ini, difilter ke 7 tabel prioritas Tinggi.
+Result: worked. Satu query menjawab kedua pertanyaan Kriteria Keberhasilan #1 sekaligus untuk ketujuh tabel (`employees`, `guests`, `role_permissions`, `bookings`, `fnb_transactions`, `staff_shifts`, `payroll`): `rows_today` (volume hari ini) dan `last_data_event_at`/`freshness_lag_hours` (kapan data terakhir "terjadi" secara bisnis). `pct_diff_from_baseline` masih NULL untuk semua tabel — jujur mencerminkan baru ada 1 titik snapshot historis (histori belum cukup, butuh minimal 3 titik di hari-yang-sama sesuai `decisions.md`), akan otomatis terisi begitu `snapshot_volume.py` dijalankan berulang di hari-hari berikutnya. `role_permissions` benar menunjukkan `freshness_column=NULL` (volume-only, sesuai keputusan).
