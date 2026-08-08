@@ -1,0 +1,11 @@
+nirwana_elt:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      project: nirwana-database-elt
+      dataset: staging
+      keyfile: ../scripts/extract/gcp-dbt-transform-key.json
+      threads: 4
+      location: US

@@ -1,0 +1,33 @@
+version: 2
+
+sources:
+  - name: raw_production
+    database: nirwana-database-elt
+    schema: raw_production
+    description: >
+      Milestone 2.1 output -- 23 tabel production, skema 1:1 dengan sumber,
+      tanpa transformasi apa pun. Lihat milestones/2.1-extraction-production-raw-warehouse/.
+    tables:
+      - name: corporate_master__properties
+      - name: corporate_master__employees
+      - name: corporate_master__guests
+      - name: corporate_master__role_permissions
+      - name: reservation_revenue__bookings
+      - name: reservation_revenue__daily_occupancy
+      - name: reservation_revenue__pricing_history
+      - name: fnb_operations__fnb_outlets
+      - name: fnb_operations__recipe_bom
+      - name: fnb_operations__ingredient_price_history
+      - name: fnb_operations__fnb_transactions
+      - name: fnb_operations__fnb_waste_log
+      - name: fnb_operations__fnb_inventory
+      - name: facility_maintenance__rooms
+      - name: facility_maintenance__housekeeping_log
+      - name: facility_maintenance__maintenance_tickets
+      - name: spa_event__venues
+      - name: spa_event__spa_bookings
+      - name: spa_event__event_bookings
+      - name: hr_finance__staff_shifts
+      - name: hr_finance__employee_performance
+      - name: hr_finance__payroll
+      - name: hr_finance__financial_summary

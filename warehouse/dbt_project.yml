@@ -1,0 +1,21 @@
+name: 'nirwana_elt'
+version: '1.0.0'
+config-version: 2
+
+profile: 'nirwana_elt'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  nirwana_elt:
+    staging:
+      +materialized: view
+      # Tidak set +schema di sini -- profiles.yml sudah set dataset: staging
+      # sebagai target schema. Menambah +schema di sini membuat dbt
+      # menggabungkannya jadi "staging_staging" (perilaku default
+      # generate_schema_name dbt: <target_schema>_<custom_schema>).

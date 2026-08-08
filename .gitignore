@@ -21,3 +21,11 @@ scripts/dq/gx_project/gx/uncommitted/
 
 # Milestone 2.1 -- GCP service account key, never committed (GOOGLE_APPLICATION_CREDENTIALS)
 scripts/extract/*.json
+
+# Milestone 2.2 -- dbt profile (points to the gitignored key above + project id),
+# committed as profiles.yml.example instead
+warehouse/profiles.yml
+warehouse/target/
+warehouse/dbt_packages/
+warehouse/logs/
+warehouse/.user.yml
