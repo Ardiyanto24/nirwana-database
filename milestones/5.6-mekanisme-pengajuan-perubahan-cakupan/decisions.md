@@ -58,9 +58,11 @@ Milestone ini **beda sifat** dari M5.1-5.5 — pekerjaan proses, bukan teknis (p
 
 Folder sama seperti seluruh deliverable M5.1-5.5. Isi: alur kerja (submit → evaluasi → keputusan → tindak lanjut → log ke backlog), template pengajuan, 3 kriteria evaluasi sesuai contoh dokumen sumber (ketersediaan data, dampak ke konsumen lain, prioritas relatif), peran evaluator ("pemilik mart_aggregated").
 
-### 5. Nilai threshold watchlist HR: rasio deviasi > 1.5x baseline individu (absence ATAU late)
+### 5. Nilai threshold watchlist HR: rasio deviasi > 5x baseline individu (absence ATAU late)
 
-`in_watchlist = coalesce(absence_deviation_ratio > 1.5, false) OR coalesce(late_deviation_ratio > 1.5, false)` — aturan sederhana, defensible, konsisten filosofi "within-entity-over-time" yang sudah dikunci sejak M5.1/M5.2 (deviasi dari baseline individu sendiri, bukan rate absolut lintas-karyawan). `coalesce(..., false)` supaya bulan pertama karyawan (baseline `NULL`, belum ada histori) tidak ikut ter-flag `NULL`/error, melainkan `false` (belum bisa dinilai = tidak masuk watchlist).
+`in_watchlist = coalesce(absence_deviation_ratio > 5, false) OR coalesce(late_deviation_ratio > 5, false)` — aturan sederhana, defensible, konsisten filosofi "within-entity-over-time" yang sudah dikunci sejak M5.1/M5.2 (deviasi dari baseline individu sendiri, bukan rate absolut lintas-karyawan). `coalesce(..., false)` supaya bulan pertama karyawan (baseline `NULL`, belum ada histori) tidak ikut ter-flag `NULL`/error, melainkan `false` (belum bisa dinilai = tidak masuk watchlist).
+
+**Koreksi saat implementasi (Checkpoint 5):** angka draf awal 1.5x **tidak dikalibrasi terhadap data riil** sebelum diputuskan — begitu diimplementasikan dan dicek distribusinya, 1.5x ternyata men-flag **47% dari seluruh baris** (`P75` rasio absence SUDAH 1.9x — jelas bukan penyimpangan langka). Threshold seperti itu tidak berguna sebagai "early warning" (harusnya minoritas kecil, bukan hampir separuh karyawan). Dicek ulang lewat `APPROX_QUANTILES`: `P90≈3.35x`, `P95≈4.64x`, `P99≈8.30x` untuk absence; pola serupa untuk late. **Direvisi ke 5x** (dekat P95) — proporsi ter-flag turun jadi **4.67%**, jauh lebih masuk akal sebagai watchlist. Pelajaran: keputusan threshold bisnis tidak boleh dikunci di atas kertas tanpa dicek dulu terhadap distribusi data sungguhan — pola yang sama seperti kenapa banyak koreksi M5.3-M5.5 baru ketahuan setelah diimplementasikan, bukan sebelumnya.
 
 ### 6. Implementasi tindak lanjut: edit `fact_hr_watchlist_monthly.sql` + `_hr_facts_tests.yml`, promote ulang, verifikasi via GitHub Actions sungguhan
 
