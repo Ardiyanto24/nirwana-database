@@ -6,6 +6,7 @@ __pycache__/
 skills-lock.json
 .claude
 CLAUDE.md
+skills-trigger-map.md
 
 # Milestone 1.6/1.7 -- api/ and web/ are developed here locally but deployed
 # from their own separate repos (nirwana-monitoring-api, nirwana-monitoring-web),
@@ -17,3 +18,6 @@ web/
 # under uncommitted/ holds the raw Supabase connection string, defense-in-depth
 # on top of GE's own auto-generated gx/.gitignore
 scripts/dq/gx_project/gx/uncommitted/
+
+# Milestone 2.1 -- GCP service account key, never committed (GOOGLE_APPLICATION_CREDENTIALS)
+scripts/extract/*.json
