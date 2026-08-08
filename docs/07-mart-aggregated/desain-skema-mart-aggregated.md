@@ -102,6 +102,7 @@ Seluruh kategori/referensi (channel, department, issue_type, dst) sengaja dijadi
 | `dim_pricing_reason` | `reason_id` (PK), `reason_name` (manual/promo/dynamic-pricing-AI) | Surrogate | `pricing_history.reason` | Task 2 (Revenue) — breakdown pricing deviation butuh dimensi ini, terlewat di Task 1 |
 | `dim_waste_reason` | `reason_id` (PK), `reason_name` (overproduction/expired/spillage) | Surrogate | `fnb_waste_log.reason` | Task 3 (F&B) |
 | `dim_ingredient` | `ingredient_id` (PK), `ingredient_name` | Natural key | `ingredient_price_history` | Task 3 (F&B) |
+| `dim_employee_status` | `status_id` (PK), `status_name` (active/resigned/terminated) | Surrogate | `employees.status` | Task 6 (HR) |
 
 ---
 
@@ -293,7 +294,108 @@ Seluruh kategori/referensi (channel, department, issue_type, dst) sengaja dijadi
 **Partition:** `period_date`. **Cluster:** `property_id`.
 **Cakupan M5.1:** §4.2 baris 5.
 
-*(diisi lanjut Fase 3-4 — Task 6-8)*
+### HR
+
+**Catatan:** Watchlist gejala pra-resign (baris 5, "Kebutuhan Khusus kategori B" di M5.1) **tidak** didesain di sini — dipisah ke Task 8 sesuai Keputusan #9 (karakter within-entity-over-time berbeda dari fact table agregat biasa).
+
+#### `fact_hr_attendance_daily`
+**Grain:** 1 baris per `property_id` × `department_id` × `period_date`.
+**Kolom:** `property_id` (FK), `department_id` (FK), `period_date` (DATE), `present_count`, `late_count`, `leave_count`, `absent_count`, `overtime_hours_total`.
+**Partition:** `period_date`. **Cluster:** `property_id`, `department_id`.
+**Cakupan M5.1:** baris 1, 2.
+
+#### `fact_hr_employee_monthly`
+**Grain:** 1 baris per `employee_id` (FK `dim_employee`) × `period` (bulanan/periode review).
+**Kolom:** `employee_id` (FK), `period_date` (DATE, awal bulan/periode), `overtime_hours`, `overtime_vs_dept_avg`, `late_rate`, `late_vs_dept_avg`, `latest_performance_score`.
+**Partition:** `period_date`. **Cluster:** `employee_id`.
+**Cakupan M5.1:** baris 3, 4, 6 (tren antar periode diturunkan via query lintas baris periode berbeda pada tabel yang sama, bukan kolom terpisah).
+
+#### `fact_hr_turnover_monthly`
+**Grain:** 1 baris per `property_id` × `department_id` × `period_date`.
+**Kolom:** `property_id` (FK), `department_id` (FK), `period_date` (DATE), `turnover_rate`, `mom_growth`, `yoy_growth`.
+**Partition:** `period_date`. **Cluster:** `property_id`, `department_id`.
+**Cakupan M5.1:** baris 7.
+
+#### `fact_hr_headcount_status_daily`
+**Grain:** 1 baris per `property_id` × `department_id` × `status_id` (FK `dim_employee_status`) × `period_date` (snapshot).
+**Kolom:** `property_id` (FK), `department_id` (FK), `status_id` (FK), `period_date` (DATE), `employee_count`.
+**Partition:** `period_date`. **Cluster:** `property_id`, `department_id`.
+**Cakupan M5.1:** baris 8.
+
+#### `fact_hr_performance_department_monthly`
+**Grain:** 1 baris per `property_id` × `department_id` × `period_date`.
+**Kolom:** `property_id` (FK), `department_id` (FK), `period_date` (DATE), `avg_performance_score`.
+**Partition:** `period_date`. **Cluster:** `property_id`, `department_id`.
+**Cakupan M5.1:** baris 9.
+
+#### `fact_hr_performance_by_status_monthly`
+**Grain:** 1 baris per `property_id` × `status_id` (FK `dim_employee_status`) × `period_date`.
+**Kolom:** `property_id` (FK), `status_id` (FK), `period_date` (DATE), `avg_performance_score`.
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** baris 10 (korelasi kinerja-retensi — perbandingan `status_id`='resigned'/'terminated' vs `status_id`='active' dilakukan di query, bukan kolom terpisah).
+
+---
+
+### Corporate/Financial
+
+**Catatan disambiguasi:** Kolom "department" pada `payroll` merujuk ke **unit organisasi karyawan** (`dim_department`, sama seperti HR) — **bukan** `dim_business_line` (USALI). Payroll terikat ke karyawan yang punya departemen organisasi, bukan baris lini bisnis `financial_summary`. Tabel `fact_payroll_*` di bawah pakai `dim_department`, sedangkan tabel `fact_financial_*` yang bersumber dari `financial_summary` pakai `dim_business_line`.
+
+#### `fact_financial_business_line_monthly`
+**Grain:** 1 baris per `property_id` × `business_line_id` (FK `dim_business_line`) × `period_date`.
+**Kolom:** `property_id` (FK), `business_line_id` (FK), `period_date` (DATE), `revenue`, `expense`, `profit`, `margin_pct`.
+**Partition:** `period_date`. **Cluster:** `property_id`, `business_line_id`.
+**Cakupan M5.1:** baris 1, 4, 13 (`Corporate Overhead` adalah salah satu nilai `dim_business_line`, tidak perlu tabel terpisah — lihat Keputusan/temuan M5.1 "Overhead Korporat").
+**Catatan wajib:** margin per lini bisnis (baris 4) HARUS filter `business_line_id` ke `Room`/`F&B`/`Spa&Event` saja saat dipakai untuk metrik "departmental margin" — jangan sertakan `Overall`/`Corporate Overhead` (risiko double counting, ditegaskan sejak M5.1).
+
+#### `fact_financial_overall_monthly`
+**Grain:** 1 baris per `property_id` × `period_date` (setara baris `Overall` di `financial_summary`).
+**Kolom:** `property_id` (FK), `period_date` (DATE), `gop`, `gop_margin_pct`, `mom_gop_growth`, `yoy_gop_growth`, `undistributed_expense_admin_general`, `undistributed_expense_sales_marketing`, `undistributed_expense_utilities`, `undistributed_expense_property_maintenance`, `undistributed_expense_it`, `overhead_ratio`.
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** baris 2, 3, 5.
+
+#### `fact_financial_revenue_runrate_daily`
+**Grain:** 1 baris per `property_id` × `period_date`.
+**Kolom:** `property_id` (FK), `period_date` (DATE), `revenue_runrate`.
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** baris 6.
+
+#### `fact_payroll_department_monthly`
+**Grain:** 1 baris per `property_id` × `department_id` (FK `dim_department`) × `period_date`.
+**Kolom:** `property_id` (FK), `department_id` (FK), `period_date` (DATE), `base_salary_total`, `service_charge_total`, `overtime_pay_total`, `thr_total`, `deduction_total`, `net_salary_total`, `mom_growth`.
+**Partition:** `period_date`. **Cluster:** `property_id`, `department_id`.
+**Cakupan M5.1:** baris 7.
+
+#### `fact_financial_service_charge_daily`
+**Grain:** 1 baris per `property_id` × `period_date`.
+**Kolom:** `property_id` (FK), `period_date` (DATE), `service_charge_pool`, `occupancy_rate` (cross-domain, precompute — Keputusan #6), `deviation_from_correlation`.
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** baris 8.
+
+#### `fact_financial_labor_cost_monthly`
+**Grain:** 1 baris per `property_id` × `period_date`.
+**Kolom:** `property_id` (FK), `period_date` (DATE), `labor_cost_pct_revenue`.
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** baris 9.
+
+#### `fact_payroll_access_level_monthly`
+**Grain:** 1 baris per `property_id` × `access_level_id` (FK `dim_access_level`) × `period_date`.
+**Kolom:** `property_id` (FK), `access_level_id` (FK), `period_date` (DATE), `service_charge_total`, `base_salary_total`, `service_charge_to_base_ratio`.
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** baris 10.
+
+#### `fact_financial_business_line_group_monthly`
+**Grain:** 1 baris per `business_line_id` (FK `dim_business_line`) × `period_date` (grup, lintas 5 properti — tanpa `property_id`).
+**Kolom:** `business_line_id` (FK), `period_date` (DATE), `group_revenue`, `revenue_share_pct`.
+**Partition:** `period_date`. **Cluster:** `business_line_id`.
+**Cakupan M5.1:** baris 11.
+
+#### `fact_financial_property_benchmark_monthly`
+**Grain:** 1 baris per `property_id` × `period_date`.
+**Kolom:** `property_id` (FK), `period_date` (DATE), `gop_margin_rank`.
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** baris 12.
+
+*(diisi lanjut Fase 4 — Task 8)*
 
 ---
 
