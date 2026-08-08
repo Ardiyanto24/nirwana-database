@@ -17,7 +17,7 @@
 
 ## Input Utama
 
-`docs/07-mart-aggregated/desain-skema-mart-aggregated.md` (Milestone 5.2, Completed) — 27 dimension table + 45 fact table (star schema), termasuk 2 fact table kasus khusus dan Audit PII (kesimpulan: tidak ada kolom `guests_pii` mentah di skema manapun).
+`docs/07-mart-aggregated/DataSchema-mart-aggregated.md` (Milestone 5.2, Completed) — 27 dimension table + 45 fact table (star schema), termasuk 2 fact table kasus khusus dan Audit PII (kesimpulan: tidak ada kolom `guests_pii` mentah di skema manapun).
 
 ## Temuan Eksplorasi
 
@@ -124,7 +124,7 @@ Permintaan eksplisit user (opsi split per domain ditawarkan untuk keterbacaan, d
 **Checkpoint 8**
 
 ### Fase 8 — Dokumentasi Pendamping
-11. Rename `desain-skema-mart-aggregated.md` → `DataSchema-mart-aggregated.md` + update referensi — XS
+11. Rename `DataSchema-mart-aggregated.md` → `DataSchema-mart-aggregated.md` + update referensi — XS
 12. Tulis `Metadata-mart-aggregated.md` — M
 13. Tulis `ERD-mart-aggregated.md` (1 Mermaid `erDiagram`, 72 tabel) — M
 

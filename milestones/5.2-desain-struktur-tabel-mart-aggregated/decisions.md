@@ -47,7 +47,7 @@
 
 ## Keputusan Teknis Lain (dikunci tanpa AskUserQuestion — mengikuti preseden/prinsip project)
 
-### 3. Lokasi output: `docs/07-mart-aggregated/desain-skema-mart-aggregated.md`
+### 3. Lokasi output: `docs/07-mart-aggregated/DataSchema-mart-aggregated.md`
 
 Folder sama dengan output M5.1, sesuai Handoff Notes eksplisit di `milestones/5.1-.../report.md`.
 
