@@ -197,7 +197,103 @@ Seluruh kategori/referensi (channel, department, issue_type, dst) sengaja dijadi
 
 **Catatan:** "Daftar staf F&B propertinya" (baris 15, kebutuhan chatbot-only) **tidak** perlu fact table — cukup dilayani lewat query langsung ke `dim_employee` difilter `department_id`='F&B' dan `property_id`, karena ini murni lookup dimension, bukan metrik agregat.
 
-*(diisi lanjut Fase 2-4 — Task 4-8)*
+### Facility/Ops
+
+#### `fact_facility_room_status_daily`
+**Grain:** 1 baris per `room_id` (FK `dim_room`) × `period_date` (snapshot harian).
+**Kolom:** `room_id` (FK), `period_date` (DATE), `status`, `is_out_of_order` (BOOL), `out_of_order_hours`.
+**Partition:** `period_date`. **Cluster:** `room_id`.
+**Cakupan M5.1:** baris 1, 2. Distribusi status per properti diturunkan via agregasi `GROUP BY property_id` (dari `dim_room`) di query M5.3/serving, tidak perlu tabel terpisah.
+
+#### `fact_housekeeping_room_type_daily`
+**Grain:** 1 baris per `property_id` × `room_type_id` × `period_date`.
+**Kolom:** `property_id` (FK), `room_type_id` (FK), `period_date` (DATE), `avg_cleaning_duration_minutes`, `baseline_duration_minutes`.
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** baris 3.
+
+#### `fact_housekeeping_property_daily`
+**Grain:** 1 baris per `property_id` × `period_date`.
+**Kolom:** `property_id` (FK), `period_date` (DATE), `delayed_rate`, `delayed_rate_vs_occupancy` (cross-domain, precompute — Keputusan #6).
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** baris 4, 5.
+
+#### `fact_housekeeping_staff_daily`
+**Grain:** 1 baris per `staff_id` (FK `dim_employee`) × `period_date`.
+**Kolom:** `staff_id` (FK), `period_date` (DATE), `avg_cleaning_duration_minutes`, `team_avg_duration_minutes`.
+**Partition:** `period_date`. **Cluster:** `staff_id`.
+**Cakupan M5.1:** baris 6. Data performa individu (Keputusan project M5.1: dimasukkan sadar, filtering akses granular jadi tanggung jawab application layer/serving).
+
+#### `fact_maintenance_ticket_daily`
+**Grain:** 1 baris per `property_id` × `facility_area_id` × `issue_type_id` × `priority_id` × `period_date`.
+**Kolom:** `property_id` (FK), `facility_area_id` (FK), `issue_type_id` (FK), `priority_id` (FK), `period_date` (DATE), `new_ticket_count`, `avg_sla_duration_hours` (mentah, **bukan** flag breach — Keputusan #7), `pending_count` (tiket `open`/`in-progress`).
+**Partition:** `period_date`. **Cluster:** `property_id`, `priority_id`.
+**Cakupan M5.1:** baris 7, 8.
+
+#### `fact_maintenance_cost_daily`
+**Grain:** 1 baris per `property_id` × `issue_type_id` × `period_date`.
+**Kolom:** `property_id` (FK), `issue_type_id` (FK), `period_date` (DATE), `total_cost`, `cost_with_parts`, `cost_without_parts`, `mom_cost_growth`, `yoy_cost_growth`.
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** baris 9, 10, 14 (tren jangka panjang diturunkan via roll-up bulanan dari tabel ini, tidak perlu tabel terpisah).
+
+#### `fact_maintenance_room_recurrence_yearly`
+**Grain:** 1 baris per `room_id` (FK `dim_room`) × `year`.
+**Kolom:** `room_id` (FK), `year` (INT64), `ticket_count`, `vs_median_ratio`.
+**Cluster:** `room_id`. **Partition:** tidak perlu (grain tahunan, volume kecil).
+**Cakupan M5.1:** baris 11.
+
+#### `fact_maintenance_property_benchmark_yearly`
+**Grain:** 1 baris per `property_id` × `year`.
+**Kolom:** `property_id` (FK), `year` (INT64), `tickets_per_room`, `building_age_years` (dari `dim_property.opening_date`), `tickets_per_room_normalized`.
+**Cluster:** `property_id`.
+**Cakupan M5.1:** baris 12.
+
+#### `fact_maintenance_technician_daily`
+**Grain:** 1 baris per `assigned_staff_id` (FK `dim_employee`) × `period_date`.
+**Kolom:** `assigned_staff_id` (FK), `period_date` (DATE), `ticket_count`, `labor_hours`.
+**Partition:** `period_date`. **Cluster:** `assigned_staff_id`.
+**Cakupan M5.1:** baris 13.
+
+---
+
+### Spa & Event
+
+#### `fact_spa_daily`
+**Grain:** 1 baris per `property_id` × `period_date`.
+**Kolom:** `property_id` (FK), `period_date` (DATE), `revenue`, `booking_count`, `walk_in_ratio`, `avg_lead_time_days`, `median_lead_time_days`, `cancellation_rate`.
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** §4.1 baris 1, 4, 6, 7.
+
+#### `fact_spa_customer_type_daily`
+**Grain:** 1 baris per `property_id` × `customer_type_id` × `period_date`.
+**Kolom:** `property_id` (FK), `customer_type_id` (FK), `period_date` (DATE), `revenue`, `visit_count`, `revenue_per_visit`.
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** §4.1 baris 2.
+
+#### `fact_spa_service_daily`
+**Grain:** 1 baris per `property_id` × `service_id` (FK `dim_spa_service`) × `period_date`.
+**Kolom:** `property_id` (FK), `service_id` (FK), `period_date` (DATE), `booking_count`, `revenue`, `revenue_share_pct`.
+**Partition:** `period_date`. **Cluster:** `property_id`, `service_id`.
+**Cakupan M5.1:** §4.1 baris 3, 5.
+
+#### `fact_event_venue_daily`
+**Grain:** 1 baris per `venue_id` (FK `dim_venue`) × `period_date`.
+**Kolom:** `venue_id` (FK), `period_date` (DATE), `bookings_pipeline_count`, `revenue_pipeline`, `utilization_rate`, `mom_revenue_growth`, `yoy_revenue_growth`, `low_utilization_streak_days` (untuk deteksi utilisasi rendah berulang).
+**Partition:** `period_date`. **Cluster:** `venue_id`.
+**Cakupan M5.1:** §4.2 baris 1 (bagian venue), 2, 3, 6.
+
+#### `fact_event_property_daily`
+**Grain:** 1 baris per `property_id` × `period_date`.
+**Kolom:** `property_id` (FK), `period_date` (DATE), `cancellation_rate`.
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** §4.2 baris 4.
+
+#### `fact_event_type_daily`
+**Grain:** 1 baris per `property_id` × `event_type_id` × `period_date`.
+**Kolom:** `property_id` (FK), `event_type_id` (FK), `period_date` (DATE), `event_count`, `revenue`.
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** §4.2 baris 5.
+
+*(diisi lanjut Fase 3-4 — Task 6-8)*
 
 ---
 
