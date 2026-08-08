@@ -35,3 +35,15 @@ User membuat key file `gcp-reverse-etl-mart-agg-reader-key.json` dan mengisi `.e
 - `monitoring.reverse_etl_sync_log`: 77 baris `dataset_name='mart_aggregated'` (76 dari `--all` + 1 dari smoke test Checkpoint 2 -- `dim_property` disync 2x, sesuai ekspektasi), semua `status='synced'`, 0 `mismatch_aborted`. Baris `mart_cleaned` (93, dari M2.4) tidak terganggu -- migrasi additive terbukti backward-compatible.
 
 **KK1 sumber M5.5 (seluruh tabel tersedia, row count cocok) terbukti** untuk 76/77 tabel (1 tabel ML M5.4 sengaja dikecualikan, Keputusan #2 -- dicatat sebagai deviasi eksplisit di `report.md` nanti).
+
+## 2026-08-08 -- Checkpoint 4: REINDEX/ANALYZE + index contoh + uji coba terkontrol (Fase 3)
+
+`example_indexes.py` (1 index contoh, ditandai provisional eksplisit di docstring) + `reindex_analyze.py` ditulis, dengan koreksi Keputusan #3 sudah diterapkan sejak awal (`CREATE INDEX IF NOT EXISTS` dulu, baru `REINDEX`+`ANALYZE`).
+
+**Baseline (SEBELUM index):** `EXPLAIN ANALYZE` terhadap `fact_revenue_property_daily WHERE property_id='P05' AND period_date='2023-12-03'` -> `Seq Scan`, **33.088 ms**, "Rows Removed by Filter: 5484" (full table scan literal).
+
+`reindex_analyze.py --table fact_revenue_property_daily` dijalankan -> index `idx_fact_revenue_property_daily_property_period` dibuat.
+
+**Setelah index:** `EXPLAIN ANALYZE` query sama -> `Index Scan using idx_fact_revenue_property_daily_property_period`, **2.386 ms** -- **~14x lebih cepat**, plan berubah dari Seq Scan ke Index Scan. Bukti konkret KK3 (bukan diasumsikan).
+
+**Uji coba terkontrol tambahan (membuktikan mekanisme benar-benar DIPERLUKAN, bukan cuma dekoratif):** `sync.py --table fact_revenue_property_daily` dijalankan ulang (simulasi swap hari berikutnya) -> `pg_indexes` dicek: **index HILANG TOTAL** (`[]`), persis prediksi koreksi Keputusan #3 (staging table baru tidak pernah punya index). `reindex_analyze.py --table fact_revenue_property_daily` dijalankan lagi -> index **kembali ada**, `EXPLAIN ANALYZE` kembali `Index Scan` (0.743 ms). Siklus hilang->pulih dibuktikan nyata, bukan cuma teori "REINDEX aman dijalankan kapan saja."
