@@ -29,3 +29,15 @@ python scripts/bigquery_common/verify_dataset_isolation.py \
   --allow "ml_output.predictions" \
   --deny "mart_cleaned.financial_summary"
 ```
+
+## 2026-08-08 -- Checkpoint 2: mock_score.py ditulis, ditest, koreksi kredensial (Fase 1)
+
+User membuat key file (`scripts/extract/gcp-ml-scoring-writer-key.json`) dan mengisi `.env` sendiri, sesuai prinsip project. `scripts/ml_scoring/mock_score.py` ditulis (Keputusan #8) -- baca histori occupancy dari `mart_aggregated.fact_revenue_room_type_daily` (bukan `mart_cleaned` mentah -- grain sudah pas), hitung moving average 30 hari + confidence dari koefisien variasi, tulis ke `ml_output.predictions` via self-union CTAS.
+
+**Run pertama gagal:** `Access Denied` baca `mart_aggregated.fact_revenue_room_type_daily` -- `ml-scoring-writer` cuma di-scope WRITER `ml_output`, lupa scoring pipeline juga butuh baca data fitur sumber (gap di Keputusan #11 draf awal). **Diperbaiki:** minta konfirmasi user dulu (perubahan IAM/security setting), lalu tambah 1 ACL READER `mart_aggregated` ke service account yang sama (`bq show`/`bq update` round-trip, pola sama Checkpoint 1). `kebijakan-akses-kredensial-scoped.md` dan `decisions.md` Keputusan #11 diperbarui mencatat koreksi ini.
+
+**Run kedua (setelah fix) -- sukses:**
+- First run: `ml_output.predictions` dibuat baru, 252 baris. `target_date` range `2026-07-02..2026-07-15` (relatif ke `MAX(period_date)`=2026-07-01 di sumber, BUKAN `CURRENT_DATE()` -- pelajaran M5.3 pace booking berhasil dihindari). 18 entity (property x room_type) distinct.
+- Sample row dicek manual: `entity_id='P01:1'`, `model_version='occupancy_forecast_mock_v1'`, `predicted_value='0.8272'`, `confidence_score=0.918`. `COUNTIF(model_version IS NULL)=0`, `COUNTIF(feature_snapshot_at IS NULL)=0` -- KK2 (kolom wajib selalu terisi) terbukti sejak level mock scorer, bukan cuma di dbt layer nanti.
+- Run kedua (test self-union append): 252 -> 504 baris, `scored_at` baru muncul di samping yang lama -- pola self-union/full-history (Keputusan #7 turunan M5.3 pace booking) terbukti bekerja, bukan cuma diasumsikan.
+- Isolasi kredensial (`verify_dataset_isolation.py`, setelah fix): `ml_output.predictions` (allow) PASS, `mart_cleaned.financial_summary` (deny) PASS.
