@@ -301,7 +301,8 @@ Seluruh kategori/referensi (channel, department, issue_type, dst) sengaja dijadi
 
 #### `fact_event_venue_daily`
 **Grain:** 1 baris per `venue_id` (FK `dim_venue`) × `period_date`.
-**Kolom:** `venue_id` (FK), `period_date` (DATE), `bookings_pipeline_count`, `revenue_pipeline`, `utilization_rate`, `mom_revenue_growth`, `yoy_revenue_growth`, `low_utilization_streak_days` (untuk deteksi utilisasi rendah berulang).
+**Kolom:** `venue_id` (FK), `period_date` (DATE), `bookings_pipeline_count`, `revenue_pipeline`, `utilization_rate`, `mom_revenue_growth`, `yoy_revenue_growth`, `low_utilization_days_last_30` (untuk deteksi utilisasi rendah berulang).
+**Koreksi (M5.3):** kolom "streak" (consecutive days) disederhanakan jadi rolling count 30 hari terakhir — perhitungan gaps-and-islands eksak untuk streak murni di luar cakupan waktu M5.3. Threshold `utilization_rate < 30%` adalah asumsi bisnis (tidak ada nilai baku dari dokumen manapun), didokumentasikan eksplisit di komentar SQL model.
 **Partition:** `period_date`. **Cluster:** `venue_id`.
 **Cakupan M5.1:** §4.2 baris 1 (bagian venue), 2, 3, 6.
 

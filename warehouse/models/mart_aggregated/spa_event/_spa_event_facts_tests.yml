@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: fact_spa_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_spa_customer_type_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_spa_service_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_event_venue_daily
+    columns:
+      - name: venue_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_venue')
+                field: venue_id
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_event_property_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_event_type_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
