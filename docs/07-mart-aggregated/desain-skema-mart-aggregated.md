@@ -110,25 +110,46 @@ Seluruh kategori/referensi (channel, department, issue_type, dst) sengaja dijadi
 
 ### Revenue
 
-**Catatan temuan:** Saat mendesain tabel ini, ditemukan 1 metrik yang tersirat sebagai dimensi (`loyalty_tier`) di §1.3 dokumen konsolidasi M5.1 tapi tidak eksplisit jadi baris metrik tersendiri, padahal Revenue Manager (chatbot) eksplisit meminta "jumlah booking per `loyalty_tier`, per periode". Ditambahkan di sini sebagai `fact_revenue_loyalty_daily` — bukan revisi M5.1 (dokumen itu tetap closed sebagaimana ditutup), murni penambahan yang wajar muncul saat kerja desain skema lebih detail dari kerja konsolidasi requirement.
+**Catatan temuan (M5.2):** Saat mendesain tabel ini, ditemukan 1 metrik yang tersirat sebagai dimensi (`loyalty_tier`) di §1.3 dokumen konsolidasi M5.1 tapi tidak eksplisit jadi baris metrik tersendiri, padahal Revenue Manager (chatbot) eksplisit meminta "jumlah booking per `loyalty_tier`, per periode". Ditambahkan di sini sebagai `fact_revenue_loyalty_daily` — bukan revisi M5.1 (dokumen itu tetap closed sebagaimana ditutup), murni penambahan yang wajar muncul saat kerja desain skema lebih detail dari kerja konsolidasi requirement.
 
-#### `fact_revenue_daily`
-**Grain:** 1 baris per `property_id` × `room_type_id` × `channel_id` × `period_date`.
-**Kolom:** `property_id` (FK), `room_type_id` (FK), `channel_id` (FK), `period_date` (DATE), `rooms_sold`, `total_rooms_available`, `occupancy_rate`, `adr`, `revpar`, `revenue`, `bookings_count`, `cancellations_count`, `no_shows_count`, `avg_los_nights`, `avg_lead_time_days`, `mom_occupancy_growth`, `yoy_occupancy_growth`, `mom_adr_growth`, `yoy_adr_growth`, `mom_revpar_growth`, `yoy_revpar_growth`.
+**Koreksi grain (M5.3):** `fact_revenue_daily` draf M5.2 (grain `property_id`×`room_type_id`×`channel_id`×`period_date`) ternyata salah — dicek langsung ke skema aktual `mart_cleaned__daily_occupancy` saat implementasi: tabel itu **tidak punya kolom `booking_channel`** (grain aslinya cuma `property_id`×`room_type`×`date`), sementara `mart_cleaned__bookings` punya `booking_channel` tapi metrik cancellation/no-show per M5.1 baris 2-3 grain-nya `property_id`×`channel` (tanpa `room_type`). Menyatukan ketiganya ke satu grain gabungan akan memaksa `occupancy_rate`/`adr`/`revpar` diulang tak berarti di setiap baris channel — persis ambiguitas grain yang KK#1 M5.2 minta dihindari. Dipecah jadi 4 tabel presisi-grain di bawah, menggantikan `fact_revenue_daily` dan `fact_revenue_property_summary` draf M5.2 (digabung ke `fact_revenue_property_daily` karena grain sama-sama `property_id`×`period_date`).
+
+#### `fact_revenue_room_type_daily`
+**Grain:** 1 baris per `property_id` × `room_type_id` × `period_date` (tanpa channel — sesuai grain asli `daily_occupancy`).
+**Kolom:** `property_id` (FK), `room_type_id` (FK), `period_date` (DATE), `rooms_sold`, `total_rooms_available`, `occupancy_rate`, `adr`, `revpar`, `revenue`, `room_type_revenue_share_pct`.
 **Partition:** `period_date`. **Cluster:** `property_id`, `room_type_id`.
-**Cakupan M5.1:** baris 1,2,3,4,5,7,8.
+**Cakupan M5.1:** baris 1 (occupancy/adr/revpar, dari `daily_occupancy`), 4 (room type revenue mix, dari `bookings` di-`GROUP BY room_type`).
+
+#### `fact_revenue_channel_daily`
+**Grain:** 1 baris per `property_id` × `channel_id` × `period_date` (tanpa room_type — sesuai grain asli metrik channel di `bookings`).
+**Kolom:** `property_id` (FK), `channel_id` (FK), `period_date` (DATE), `revenue`, `bookings_count`, `cancellations_count`, `no_shows_count`.
+**Partition:** `period_date`. **Cluster:** `property_id`, `channel_id`.
+**Cakupan M5.1:** baris 2, 3.
+
+#### `fact_revenue_los_daily`
+**Grain:** 1 baris per `property_id` × `room_type_id` × `channel_id` × `period_date` (satu-satunya metrik Revenue yang genuinely butuh ketiga dimensi sekaligus, per M5.1 baris 7).
+**Kolom:** `property_id` (FK), `room_type_id` (FK), `channel_id` (FK), `period_date` (DATE), `avg_los_nights`, `median_los_nights`.
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** baris 7.
+
+#### `fact_revenue_property_daily`
+**Grain:** 1 baris per `property_id` × `period_date` (menggantikan `fact_revenue_property_summary` M5.2 — digabung karena grain identik).
+**Kolom:** `property_id` (FK), `period_date` (DATE), `avg_lead_time_days`, `median_lead_time_days`, `mom_occupancy_growth`, `yoy_occupancy_growth`, `mom_adr_growth`, `yoy_adr_growth`, `mom_revpar_growth`, `yoy_revpar_growth`, `repeat_guest_rate`, `revpar_rank_group`, `adr_rank_group`, `occupancy_rank_group`.
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** baris 5, 8, 9, 11.
+
+#### `fact_revenue_gop_impact_monthly`
+**Grain:** 1 baris per `property_id` × `period_date` (bulanan — hari pertama bulan).
+**Kolom:** `property_id` (FK), `period_date` (DATE, awal bulan), `avg_pricing_deviation` (dari `pricing_history`, cross-domain), `gop_margin` (dari `financial_summary` baris `Overall`, cross-domain — Keputusan #6).
+**Partition:** `period_date`. **Cluster:** `property_id`.
+**Cakupan M5.1:** baris 12.
+**Koreksi grain & kolom (M5.3):** dipisah dari `fact_revenue_property_daily` — butuh join ke `financial_summary.gop` yang grain aslinya **bulanan** (`period` format `YYYY-MM`), bukan harian. Kolom tunggal "gop_pricing_impact" di draf awal juga dikoreksi jadi 2 kolom terpisah (`avg_pricing_deviation`, `gop_margin`) — 1 baris tidak bisa mengekspresikan "dampak/korelasi" secara bermakna, itu perlu dibandingkan lintas periode; disimpan sebagai 2 nilai mentah agar konsumen (analyst/chatbot) bisa membandingkan trennya sendiri.
 
 #### `fact_revenue_pricing_deviation`
 **Grain:** 1 baris per `property_id` × `pricing_reason_id` × `period_date`.
 **Kolom:** `property_id` (FK), `pricing_reason_id` (FK `dim_pricing_reason`), `period_date` (DATE), `avg_applied_rate`, `avg_base_rate`, `avg_deviation_pct`, `day_share_pct`.
 **Partition:** `period_date`. **Cluster:** `property_id`.
 **Cakupan M5.1:** baris 6.
-
-#### `fact_revenue_property_summary`
-**Grain:** 1 baris per `property_id` × `period_date` (grain lebih kasar — tanpa room_type/channel, sesuai grain asli metrik-metrik ini di M5.1).
-**Kolom:** `property_id` (FK), `period_date` (DATE), `repeat_guest_rate`, `revpar_rank_group`, `adr_rank_group`, `occupancy_rank_group`, `gop_pricing_impact` (cross-domain, precompute dari `financial_summary` — Keputusan #6).
-**Partition:** `period_date`. **Cluster:** `property_id`.
-**Cakupan M5.1:** baris 9, 11, 12.
 
 #### `fact_revenue_loyalty_daily`
 **Grain:** 1 baris per `property_id` × `loyalty_tier_id` × `period_date`.

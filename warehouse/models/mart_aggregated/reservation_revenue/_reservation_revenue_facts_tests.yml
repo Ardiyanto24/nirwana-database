@@ -1,0 +1,81 @@
+version: 2
+
+# Fact table Revenue -- tidak ada PK tunggal (grain komposit), jadi test difokuskan
+# ke not_null kolom kunci grain + relationships FK ke dimension, pola sama filosofi
+# _mart_cleaned_tests.yml (M2.3) diadaptasi untuk fact table (bukan tabel sumber).
+models:
+  - name: fact_revenue_room_type_daily
+    columns:
+      - name: property_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_property')
+                field: property_id
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_revenue_channel_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_revenue_los_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_revenue_property_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_revenue_gop_impact_monthly
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_revenue_pricing_deviation
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_revenue_loyalty_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_revenue_nationality_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+      - name: nationality_group_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_nationality_group')
+                field: nationality_group_id
+
+  - name: fact_revenue_pace_booking_snapshot
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: stay_date
+        tests: [not_null]
+      - name: snapshot_date
+        tests: [not_null]
