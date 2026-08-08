@@ -127,13 +127,71 @@ Bagian "Pemetaan Persona → Domain" di bawah adalah tabel rujukan lintas-domain
 
 ## 3. Facility/Ops
 
-*(diisi Fase 2 — Task 4)*
+**Sumber:** `pemetaan-kebutuhan-data-analyst.md` §3.3. **Tabel sumber:** `rooms`, `housekeeping_log`, `maintenance_tickets`; `daily_occupancy` (cross-domain Revenue, untuk korelasi okupansi).
+
+| Metrik/Agregasi | Grain | Konsumen Analyst | Konsumen Chatbot | Status | Catatan |
+|---|---|---|---|---|---|
+| Distribusi status kamar saat ini (snapshot) | property_id | Facility/Ops Analyst | Housekeeping Staff (daftar tugas & status), Housekeeping Manager (distribusi seluruh properti), Corporate Operations Director (benchmark) | Cakupan Awal | — |
+| Jumlah & durasi kamar out-of-order | property_id × periode | Facility/Ops Analyst | — | Cakupan Awal | Prioritas tinggi karena berdampak revenue, tapi tanpa estimasi kehilangan revenue (lihat baris Luar Cakupan) |
+| Durasi rata-rata pembersihan per tipe kamar vs baseline | property_id/room_type × periode | Facility/Ops Analyst | Housekeeping Staff (durasi dirinya), Housekeeping Manager (agregat tim) | Cakupan Awal | — |
+| Delayed rate housekeeping | property_id × periode | Facility/Ops Analyst | Housekeeping Manager | Cakupan Awal | — |
+| Delayed rate housekeeping terkait okupansi | property_id × periode | Facility/Ops Analyst | Housekeeping Manager | Cakupan Awal | **Cross-domain**: join `daily_occupancy` (domain Revenue) |
+| Durasi pembersihan per staff vs rata-rata staff lain | staff_id × periode | Facility/Ops Analyst | Housekeeping Staff (dirinya sendiri, filter wajib `staff_id`), Housekeeping Manager (seluruh tim) | Cakupan Awal | Data performa individu — keputusan sadar tetap dimasukkan meski label RBAC domain `facility` "Rendah"; filtering akses granular jadi tanggung jawab application layer |
+| Jumlah tiket maintenance baru per `facility_area`/`issue_type` | property_id/facility_area/issue_type × periode | Facility/Ops Analyst | Maintenance Manager | Cakupan Awal | — |
+| SLA breach rate per `priority` | property_id/priority × periode | Facility/Ops Analyst | Maintenance Manager, Maintenance Staff (status SLA per tiket) | Cakupan Awal | Tiket `open`/`in-progress` dikategorikan "pending", terpisah dari breach/tidak breach. **Threshold SLA per `priority` belum ditentukan** (gap parameter, bukan gap data) — keputusan menyusul di M5.2/5.3 |
+| Total maintenance cost, breakdown dengan/tanpa ganti part | property_id × periode | Facility/Ops Analyst | Maintenance Manager | Cakupan Awal | — |
+| Cost breakdown per `issue_type`, MoM & YoY | property_id/issue_type × periode | Facility/Ops Analyst | — | Cakupan Awal | — |
+| Jumlah tiket per `room_id` vs median/rata-rata kamar sejenis (recurring issue) | room_id × periode | Facility/Ops Analyst | Maintenance Manager (kamar dengan tiket berulang) | Cakupan Awal | — |
+| Tiket per kamar per tahun, benchmark antar properti | property_id × tahun | Facility/Ops Analyst | Corporate Operations Director (eksplisit: dinormalisasi `properties.opening_date`/usia gedung) | Cakupan Awal | — |
+| Jumlah tiket & total `labor_hours` per teknisi (workload) | assigned_staff_id × periode | Facility/Ops Analyst | Maintenance Staff (jumlah tiket diselesaikan dirinya), Maintenance Manager (seluruh tim) | Cakupan Awal | — |
+| Tren cost & jumlah tiket bulanan jangka panjang | property_id × bulanan | Facility/Ops Analyst | — | Cakupan Awal | Dasar proyeksi budget maintenance |
+| Preventive maintenance (jadwal terjadwal) | — | Facility/Ops Analyst | — | Luar Cakupan | Tidak ada tabel jadwal preventive maintenance — semua tiket bersifat reaktif, gap data sumber |
+| Estimasi kehilangan revenue akibat kamar out-of-order | — | Facility/Ops Analyst | — | Luar Cakupan | Butuh asumsi cross-domain (`daily_occupancy`/`bookings`) yang belum tentu akurat — sengaja tidak dijadikan metrik siap pakai |
+| Breakdown biaya per jenis part | — | Facility/Ops Analyst | — | Luar Cakupan | `parts_replaced` teks bebas, bukan kategori terstruktur |
+
+**Row-level (`mart_cleaned`, bukan `mart_aggregated`):** investigasi lonjakan keluhan tipe kerusakan tertentu, investigasi riwayat tiket per kamar spesifik.
 
 ---
 
 ## 4. Spa & Event
 
-*(diisi Fase 2 — Task 5)*
+**Sumber:** `pemetaan-kebutuhan-data-analyst.md` §4.3. Dipisah 2 sub-bagian karena karakter data berbeda signifikan (spa: volume tinggi/nilai kecil; event: volume rendah/nilai besar).
+
+### 4.1 Spa
+
+**Tabel sumber:** `spa_bookings`.
+
+| Metrik/Agregasi | Grain | Konsumen Analyst | Konsumen Chatbot | Status | Catatan |
+|---|---|---|---|---|---|
+| Revenue & jumlah booking | property_id × periode | Spa & Event Analyst | Spa & Event Staff (jadwal booking harian), Spa & Event Manager (revenue MoM) | Cakupan Awal | — |
+| Revenue per kunjungan, inhouse vs walk-in | property_id × periode | Spa & Event Analyst | Spa & Event Manager (walk-in ratio dan revenue per kunjungan) | Cakupan Awal | — |
+| Distribusi booking & revenue per `service_name` | property_id/service_name × periode | Spa & Event Analyst | Spa & Event Staff (layanan terlaris mingguan), Spa & Event Manager (tren layanan) | Cakupan Awal | — |
+| Walk-in ratio dan trennya | property_id × periode | Spa & Event Analyst | Spa & Event Manager | Cakupan Awal | — |
+| % kontribusi tiap `service_name` (tren popularitas) | property_id/service_name × periode | Spa & Event Analyst | Spa & Event Manager (tren popularitas layanan) | Cakupan Awal | — |
+| Rata-rata & median lead time booking (`service_date−booking_date`) | property_id × periode | Spa & Event Analyst | — | Cakupan Awal | — |
+| Cancellation rate spa | property_id × periode | Spa & Event Analyst | — | Cakupan Awal | Tidak diminta eksplisit oleh persona chatbot (beda dari cancellation rate event yang eksplisit diminta) |
+
+**Row-level (`mart_cleaned`):** tidak ada kebutuhan row-level khusus di luar cakupan standar investigasi ad-hoc.
+
+### 4.2 Event/MICE
+
+**Tabel sumber:** `event_bookings`, `venues`.
+
+| Metrik/Agregasi | Grain | Konsumen Analyst | Konsumen Chatbot | Status | Catatan |
+|---|---|---|---|---|---|
+| Jumlah & revenue event pipeline mendatang | property_id/venue_id × periode | Spa & Event Analyst | Spa & Event Staff (jadwal & lokasi event mendatang), Spa & Event Manager | Cakupan Awal | — |
+| Utilisasi venue rata-rata (`capacity_booked÷max_capacity`) | venue_id × periode | Spa & Event Analyst | Spa & Event Staff (ketersediaan & kapasitas venue), Spa & Event Manager, Corporate Operations Director (benchmark) | Cakupan Awal | — |
+| Venue dengan utilisasi rendah berulang | venue_id × periode | Spa & Event Analyst | Spa & Event Manager (eksplisit: venue utilisasi rendah berulang) | Cakupan Awal | Mengikuti pola "recurring issue" yang sama seperti Facility/Ops |
+| Cancellation rate event | property_id × periode | Spa & Event Analyst | Spa & Event Manager, Corporate Operations Director (benchmark) | Cakupan Awal | — |
+| Revenue & jumlah event per `event_type`, mix | property_id/event_type × periode | Spa & Event Analyst | Spa & Event Staff (detail booking event, row-level) | Cakupan Awal | — |
+| Revenue per venue, MoM & YoY | venue_id × periode | Spa & Event Analyst | Spa & Event Manager (implied, bagian revenue spa & event MoM) | Cakupan Awal | — |
+| Diskon/promo pada spa maupun event | — | Spa & Event Analyst | — | Luar Cakupan | Tidak ada kolom promo/discount di `spa_bookings` maupun `event_bookings` |
+| Repeat client event | — | Spa & Event Analyst | — | Luar Cakupan | `client_name` teks bebas tanpa ID terstruktur — deteksi otomatis tidak andal, butuh fuzzy matching manual row-level jika diperlukan |
+| Cross-sell spa × event | — | Spa & Event Analyst | — | Luar Cakupan | Tidak ada penghubung `guest_id` konsisten antara `spa_bookings` dan `event_bookings` |
+
+**Row-level (`mart_cleaned`):** investigasi anomali utilisasi venue tertentu, investigasi klien event tertentu (`client_name`, termasuk fuzzy matching manual untuk repeat client).
+
+**Catatan lintas sub-bagian (tidak dimasukkan sebagai metrik):** venue double-booking/konflik jadwal (constraint terjaga sistem, 0 pelanggaran — bukan sesuatu yang perlu dipantau); pemetaan `venue_type` ke `event_type` (aturan bisnis/konfigurasi tetap, bukan hal yang diagregasi/dianalisis trennya).
 
 ---
 
