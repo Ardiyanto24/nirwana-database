@@ -10,3 +10,14 @@ Result: worked. Seluruh 4 kredensial yang punya mekanisme non-destruktif terveri
 
 ## Checkpoint 1 -- selesai
 Audit + re-verifikasi 6 kredensial selesai, tidak ada drift ditemukan.
+
+## 2026-08-08 -- Task 3 (Fase 2: dokumen kebijakan)
+Did: Tulis `docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md` -- prinsip least-privilege wajib untuk kredensial baru, inventaris 6 kredensial (tabel lengkap dengan bukti isolasi per baris), pengecualian `dbt-transform` didokumentasikan eksplisit (bukan disembunyikan sebagai "sudah least-privilege" padahal tidak), siapa boleh pegang tiap kredensial, proses minta kredensial baru (5 langkah, merujuk pola existing), proses rotasi/pencabutan.
+Result: worked. Task 3 selesai.
+
+## 2026-08-08 -- Task 4 (Fase 2: verifikasi KK + report.md)
+Did: Cek 2 KK sumber -- keduanya sudah dibuktikan di M2.5, ditegaskan lagi lewat re-verifikasi non-destruktif M2.6 tanpa drift. Tulis `report.md`.
+Result: **Kedua KK terpenuhi**. Status: Completed. 2 Known Gap dicatat (rotasi otomatis belum ada -- diwariskan bukan baru; `extract-writer` belum punya script verifikasi re-runnable -- gap kecil, di luar scope M2.6).
+
+## Checkpoint 2 (final) -- selesai
+Milestone 2.6 selesai. Kedua Kriteria Keberhasilan sumber terpenuhi.
