@@ -24,3 +24,18 @@ Result: worked. Commit+push Checkpoint 1 (`eb8b0c3`). Trigger manual (`gh workfl
 
 ## Checkpoint 1 -- selesai
 Task 1-4 selesai dan terverifikasi. Commit `eb8b0c3` sudah di-push ke `origin/main`.
+
+## 2026-08-08 -- Task 5 (Fase 2: sync.py + uji 1 tabel kecil)
+Did: Tulis `scripts/reverse_etl/serving_tables.py` (salinan 23 tabel dari `scripts/extract/tables_config.py`, sengaja TIDAK di-import lewat sys.path -- hindari bug collision M2.1). Tulis `scripts/reverse_etl/sync.py`: per tabel -- ambil schema BigQuery (`get_table`), buat tabel staging Postgres (`<table>__staging`) dengan DDL hasil type-mapping BQ->PG, bulk load via `psycopg2.copy_expert` (text-format COPY, batch 50k baris, escaping manual `\N`/backslash/tab/newline -- bukan CSV format, dihindari karena ambiguitas NULL-vs-empty-string di CSV COPY), gate `COUNT(*)` BigQuery vs staging SEBELUM swap, RENAME-based swap (`ALTER TABLE ... RENAME`) kalau cocok, DROP staging + live tidak disentuh kalau tidak cocok. Uji di `mart_cleaned.properties` (6 baris, tabel terkecil).
+Result: worked. Run pertama (live table belum ada): synced, BigQuery=6 Postgres=6, tipe data terverifikasi benar (date/timestamptz/float/text semua ke-parse benar lewat query manual). Run kedua (live table sudah ada, uji jalur rename-old->drop): synced lagi, tidak ada tabel `__staging`/`__old` tersisa di schema (`information_schema.tables` cuma nampilkan `properties`). Task 5 selesai.
+
+## 2026-08-08 -- Task 6 (Fase 2: uji no-downtime swap)
+Did: Tulis `scripts/reverse_etl/test_no_downtime_swap.py` -- thread polling `SELECT COUNT(*)` tiap 20ms terhadap `mart_cleaned.properties` berjalan konkuren selagi 8 siklus `sync_table()` (fetch->COPY->gate->RENAME swap) dijalankan berturut-turut di foreground.
+Result: worked. 274 query konkuren selama 8 siklus swap, **0 error**. RENAME Postgres cuma ambil ACCESS EXCLUSIVE lock sesaat (query yang lagi berjalan tunggu beberapa ms, tidak pernah gagal) -- terbukti empiris, bukan cuma diasumsikan dari teori locking. Task 6 selesai, KK#2 sumber ("swap tanpa downtime yang mengganggu") terverifikasi.
+
+## 2026-08-08 -- Task 7 (Fase 2: monitoring.reverse_etl_sync_log)
+Did: Tulis `scripts/reverse_etl/schema_monitoring.sql` (tabel additive di schema `monitoring` PRODUCTION Supabase -- bukan serving project, sesuai Decision 6), apply via `get_production_connection()`. Wire `log_sync_result()` ke `sync.py` -- tiap `sync_table()` selesai (baik status `synced` maupun `mismatch_aborted`), 1 baris ditulis ke log.
+Result: worked. Re-run `sync.py --table properties` -- 1 baris log tercatat (`table_name=properties, bq_row_count=6, pg_row_count=6, status=synced`), terverifikasi lewat query manual. Task 7 selesai.
+
+## Checkpoint 2 -- selesai
+Task 5-7 selesai dan terverifikasi (mekanisme sync+swap+gate+log terbukti benar di 1 tabel + uji no-downtime). Siap lanjut Fase 3 (rollout 23 tabel).

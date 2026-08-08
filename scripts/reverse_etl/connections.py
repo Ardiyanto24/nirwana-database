@@ -21,9 +21,17 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 
 
 def get_serving_connection(readonly=False):
-    """Connect to the NEW serving Supabase project (mart_cleaned schema), not production."""
+    """Admin connection to the serving project -- setup scripts ONLY (schema/role creation).
+    Day-to-day sync.py uses get_serving_writer_connection() (least-privilege) instead."""
     env = _load_env(os.path.join(REPO_ROOT, ".env"))
     conn = psycopg2.connect(env["SERVING_DB_URL"])
     if readonly:
         conn.set_session(readonly=True, autocommit=True)
     return conn
+
+
+def get_serving_writer_connection():
+    """Least-privilege connection as reverse_etl_writer (scoped to schema
+    mart_cleaned only) -- what sync.py actually connects as."""
+    env = _load_env(os.path.join(REPO_ROOT, ".env"))
+    return psycopg2.connect(env["REVERSE_ETL_WRITER_DB_URL"])
