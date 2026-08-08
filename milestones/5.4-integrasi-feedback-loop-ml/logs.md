@@ -41,3 +41,17 @@ User membuat key file (`scripts/extract/gcp-ml-scoring-writer-key.json`) dan men
 - Sample row dicek manual: `entity_id='P01:1'`, `model_version='occupancy_forecast_mock_v1'`, `predicted_value='0.8272'`, `confidence_score=0.918`. `COUNTIF(model_version IS NULL)=0`, `COUNTIF(feature_snapshot_at IS NULL)=0` -- KK2 (kolom wajib selalu terisi) terbukti sejak level mock scorer, bukan cuma di dbt layer nanti.
 - Run kedua (test self-union append): 252 -> 504 baris, `scored_at` baru muncul di samping yang lama -- pola self-union/full-history (Keputusan #7 turunan M5.3 pace booking) terbukti bekerja, bukan cuma diasumsikan.
 - Isolasi kredensial (`verify_dataset_isolation.py`, setelah fix): `ml_output.predictions` (allow) PASS, `mart_cleaned.financial_summary` (deny) PASS.
+
+## 2026-08-08 -- Checkpoint 3: model dbt + tes ML feedback loop (Fase 2)
+
+Skema riil diverifikasi dulu (bukan asumsi): `fact_revenue_room_type_daily` (property_id STRING, room_type_id INTEGER, period_date DATE, occupancy_rate FLOAT, dst -- persis grain yang dibutuhkan), `dim_room_type`/`dim_property` (PK sesuai ekspektasi). `entity_id` yang ditulis `mock_score.py` sudah pakai `room_type_id` asli dari `fact_revenue_room_type_daily` (bukan dihitung ulang), jadi tidak ada risiko mismatch surrogate key dengan `dim_room_type` (yang di-generate `row_number() over (order by room_type)`).
+
+Dibuat: `_ml_output_sources.yml` (source `ml_output.predictions`, catatan provisional diulang di description), `fact_ml_occupancy_forecast_property_room_type.sql` (`FROM ml_output.predictions` sebagai base -- KK2 by construction -- `LEFT JOIN` `fact_revenue_room_type_daily` by `target_date` untuk `actual_occupancy_rate`/`forecast_error_abs`), `_ml_feedback_tests.yml` (12 test: not_null x7 termasuk `model_version`/`feature_snapshot_at`, unique `prediction_id`, relationships x2, accepted_values `model_name`). `dbt_project.yml` ditambah blok `ml_feedback: +tags: ['ml_feedback_loop']`.
+
+`dbt run --select tag:ml_feedback_loop` -- sukses, 504 baris (cocok `ml_output.predictions` saat ini). `dbt test --select tag:ml_feedback_loop` -- **12/12 PASS**, termasuk `not_null_..._model_version` dan `not_null_..._feature_snapshot_at` (bukti otomatis KK2, bukan cuma manual).
+
+**Ditemukan & diperbaiki 2 bug saat verifikasi `promote.py` dengan scope terpisah** (dicatat detail di `decisions.md` Keputusan #10a):
+1. Sintaks selector draf awal (`--select mart_aggregated,exclude:tag:ml_feedback_loop`) bukan sintaks dbt valid -- `dbt` cuma punya `--exclude` sebagai flag terpisah. Diverifikasi ulang: `dbt ls --select mart_aggregated --exclude tag:ml_feedback_loop --resource-type model` -> tepat 76 model.
+2. `promote.py` (M5.3) ternyata mempromosikan SEMUA tabel di dataset staging, tidak benar-benar di-scope oleh `--select` -- cuma kebetulan aman waktu M5.3 karena selalu 1 selector untuk semuanya. Ditambah `--exclude` + tahap promosi sekarang resolve scope lewat `dbt --quiet ls ... --output name` dulu (butuh `--quiet` supaya banner log dbt tidak ikut ke-parse jadi "nama model").
+
+Verifikasi akhir terhadap BigQuery sungguhan: `promote.py --select tag:ml_feedback_loop` -> "1 model(s) selected", 1 tabel dipromosikan. `mart_aggregated` (dataset asli, bukan staging) diquery langsung: **77 tabel total** (76 M5.3 + 1 baru), `fact_ml_occupancy_forecast_property_room_type` berisi 504 baris -- isolasi promosi terbukti bekerja (bukan cuma diklaim), tanpa perlu rebuild 76 tabel lain untuk membuktikannya.

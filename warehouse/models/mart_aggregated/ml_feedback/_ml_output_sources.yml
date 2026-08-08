@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: ml_output
+    database: nirwana-database-elt
+    schema: ml_output
+    description: >
+      Milestone 5.4 -- dataset BigQuery ditulis oleh scripts/ml_scoring/mock_score.py
+      (STAND-IN untuk scoring pipeline eksternal sungguhan, yang tidak ada di repo
+      ini -- lihat milestones/5.4-integrasi-feedback-loop-ml/decisions.md, catatan
+      provisional di header dokumen itu). Skema `predictions` MENYIMPANG dari
+      dokumen arsitektur Bagian 6.3 dengan 1 kolom tambahan (`target_date`,
+      Keputusan #5) -- bukan kontrak final, murni untuk membuktikan mekanisme
+      trigger->sensor->join->test.
+    tables:
+      - name: predictions

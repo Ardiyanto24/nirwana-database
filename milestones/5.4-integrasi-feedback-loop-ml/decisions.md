@@ -92,13 +92,21 @@ Baca histori occupancy dari `mart_aggregated.fact_revenue_room_type_daily` (M5.3
 
 Folder ke-7 di luar 6 folder domain produksi existing — dijustifikasi karena "Feedback Loop ML" adalah Bagian 6 tersendiri di dokumen arsitektur, bukan bagian dari 6 domain bisnis produksi manapun. Tag `ml_feedback_loop` dipakai untuk `--select`/`--exclude` terpisah di `promote.py` (isolasi kegagalan Keputusan #2). Model: `FROM ml_output.predictions` (base — menjamin `model_version`/`feature_snapshot_at` selalu terisi by construction, bukan nullable lewat LEFT JOIN) `LEFT JOIN` data aktual dari `fact_revenue_room_type_daily` (M5.3) by `property_id, room_type_id, date=target_date` untuk kolom `actual_occupancy_rate`/`forecast_error_pct` (nullable — hanya terisi kalau `target_date` sudah lewat dan data aktual tersedia).
 
+### 10a. `scripts/mart_aggregated/promote.py` diperluas: `--exclude` + promosi ter-scope (bukan lagi "copy semua tabel staging")
+
+**Koreksi saat implementasi (Checkpoint 3):** draf awal Keputusan #10 menulis selector gaya `--select mart_aggregated,exclude:tag:ml_feedback_loop` — ternyata **bukan sintaks dbt yang valid** (`dbt ls`/`run`/`test` gagal `'exclude' is not a valid method name`). dbt cuma punya flag `--exclude` terpisah, bukan operator inline di dalam string `--select`. Diverifikasi manual: `dbt ls --select mart_aggregated --exclude tag:ml_feedback_loop --resource-type model` menghasilkan tepat 76 model.
+
+Selain itu ditemukan bug laten di `promote.py` yang sudah ada sejak M5.3: tahap promosi men-`list_tables()` **seluruh** dataset staging dan menyalin semuanya, tidak benar-benar dibatasi oleh `--select` (yang cuma memengaruhi `dbt run`/`dbt test`). Ini tidak masalah waktu 1 selector dipakai untuk semua (M5.3), tapi kalau dipanggil 2x dengan 2 selector berbeda dalam 1 job (Keputusan #10 M5.4) akan diam-diam menyalin ulang tabel yang di luar scope tiap kali salah satu invocation sukses.
+
+**Diperbaiki:** `promote.py` ditambah argumen `--exclude` (diteruskan sebagai flag terpisah ke `dbt run`/`dbt test`), dan tahap promosi sekarang resolve scope sebenarnya lewat `dbt --quiet ls --select ... [--exclude ...] --resource-type model --output name` lebih dulu, baru menyalin tabel staging yang namanya match. (`--quiet` ternyata wajib juga — tanpa itu banner log dbt seperti "Running with dbt=..." ikut ke-parse sebagai "nama model" karena keduanya sama-sama muncul di stdout.) Diverifikasi: `promote.py --select tag:ml_feedback_loop` melaporkan tepat "1 model(s) selected" dan cuma menyalin 1 tabel; `mart_aggregated` setelahnya berisi 77 tabel (76 existing + 1 baru), bukan tersentuh ulang.
+
 ### 10. Dua workflow baru + `--select` ganda di `transform-mart-aggregated.yml` (workflow pertama yang pernah ada untuk `mart_aggregated`)
 
 - `scoring-occupancy-forecast.yml` (`run-scoring-occupancy-forecast`) — trigger `workflow_run` off `"Transform Staging and Mart Cleaned"`, jalankan `mock_score.py`, `renew_expiration.py ml_output`.
 - `transform-mart-aggregated.yml` (`run-transform-mart-aggregated`) — workflow terjadwal pertama untuk `mart_aggregated`, trigger `workflow_run` off `"Transform Staging and Mart Cleaned"` juga (**paralel** dengan scoring, BUKAN `workflow_run` off scoring — supaya sensor polling sungguhan dipakai, bukan sekadar chaining trivial, konsisten Keputusan #1):
-  1. `dbt run`/`test`/`promote.py --select mart_aggregated,exclude:tag:ml_feedback_loop` — wajib sukses (76 tabel existing).
+  1. `promote.py --select mart_aggregated --exclude tag:ml_feedback_loop` — wajib sukses (76 tabel existing; lihat Keputusan #10a untuk kenapa `--exclude` sebagai flag terpisah, bukan sintaks inline).
   2. Sensor: polling `ml_output.predictions` (30x/120 detik) menunggu baris baru muncul.
-  3. Kalau sensor sukses: `dbt run`/`test`/`promote.py --select tag:ml_feedback_loop` — best-effort, `continue-on-error`, tidak menggagalkan job kalau gagal.
+  3. Kalau sensor sukses: `promote.py --select tag:ml_feedback_loop` — best-effort, `continue-on-error`, tidak menggagalkan job kalau gagal.
   4. Kalau sensor timeout: skip step ML, log jelas, job tetap sukses (KK3).
   5. `renew_expiration.py mart_aggregated mart_aggregated_staging`.
 

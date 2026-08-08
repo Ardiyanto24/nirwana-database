@@ -53,3 +53,11 @@ models:
       # bukan strategi incremental dbt.
       +schema: mart_aggregated_staging
       +materialized: table
+      ml_feedback:
+        # Milestone 5.4 -- folder ke-7, di luar 6 folder domain produksi
+        # existing (Feedback Loop ML adalah Bagian 6 tersendiri di dokumen
+        # arsitektur, bukan bagian dari domain bisnis manapun). Tag dipakai
+        # scripts/mart_aggregated/promote.py --select/--exclude untuk
+        # mempromosikan tabel ML terpisah dari 76 tabel existing (isolasi
+        # kegagalan KK3 -- lihat milestones/5.4-.../decisions.md Keputusan #2/#9).
+        +tags: ['ml_feedback_loop']

@@ -1,0 +1,38 @@
+version: 2
+
+# KK2 sumber M5.4: model_version dan feature_snapshot_at WAJIB selalu terisi
+# -- not_null di kedua kolom itu adalah bukti otomatis KK2 tiap kali dbt test
+# jalan, bukan cuma diverifikasi manual sekali di Checkpoint 5.
+models:
+  - name: fact_ml_occupancy_forecast_property_room_type
+    columns:
+      - name: prediction_id
+        tests: [not_null, unique]
+      - name: property_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_property')
+                field: property_id
+      - name: room_type_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_room_type')
+                field: room_type_id
+      - name: target_date
+        tests: [not_null]
+      - name: model_name
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['occupancy_forecast']
+      - name: model_version
+        tests: [not_null]
+      - name: feature_snapshot_at
+        tests: [not_null]
+      - name: predicted_occupancy_rate
+        tests: [not_null]
