@@ -14,3 +14,18 @@ Result: worked. Re-run `verify_reader_isolation.py` -- 3/3 OK, **tidak ada regre
 
 ## Checkpoint 1 -- selesai
 Task 1-2 selesai dan terverifikasi.
+
+## 2026-08-08 -- Task 3 (Fase 2: demo script example_query.py)
+Did: Tulis `scripts/data_scientist_access/example_query.py` -- query tunggal (`properties`), sample (`bookings` LIMIT 5), dan agregasi `GROUP BY` (rata-rata `total_amount` per property, butuh scan penuh) pakai HANYA `DATA_SCIENTIST_READER_CREDENTIALS`. Sempat error kolom (`checkin_date` vs nama asli `check_in_date`) -- dicek lewat `bq show --schema`, diperbaiki. Tambahkan `pandas==3.0.2` ke `requirements.txt` (belum pernah dipin sebelumnya).
+Result: worked. Ketiga query jalan sukses (`properties` 6 baris, `bookings` sample 5, agregasi 5 property dengan `n_bookings`/`avg_amount` masuk akal). Task 3 selesai, KK#1 sumber terbukti end-to-end.
+
+## 2026-08-08 -- Task 4 (Fase 2: README)
+Did: Tulis `scripts/data_scientist_access/README.md` -- autentikasi, contoh query Python, daftar tabel (rujuk `pemetaan-kebutuhan-konsumen-data-mart.md`), catatan kebijakan dirujuk ke M2.6 (bukan didobel di sini).
+Result: worked. Task 4 selesai.
+
+## 2026-08-08 -- Task 5 (Fase 2: verifikasi KK + report.md)
+Did: Sebelum tulis report.md, tambah 1 verifikasi lagi yang belum eksplisit diuji: percobaan `CREATE TABLE` di `mart_cleaned` pakai kredensial `data-scientist-reader` -- untuk membuktikan "read-only" secara empiris, bukan cuma diasumsikan dari "kita cuma grant READER". Cek 2 KK sumber satu-satu. Tulis `report.md`.
+Result: `CREATE TABLE` ditolak (`Forbidden`) -- read-only terbukti. **Kedua KK terpenuhi**. Status: Completed. 1 catatan penting: isolasi dari `mart_aggregated` dibuktikan by-construction (dataset belum ada), bukan uji langsung -- dicatat eksplisit di report.md, bukan diklaim "sudah diuji" secara menyesatkan.
+
+## Checkpoint 2 (final) -- selesai
+Milestone 2.5 selesai. Kedua Kriteria Keberhasilan sumber terpenuhi.

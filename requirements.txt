@@ -10,3 +10,6 @@ google-cloud-bigquery==3.27.0
 # manually until Milestone 2.4's transform-mart-cleaned.yml needed it in CI.
 dbt-core==1.12.0
 dbt-bigquery==1.12.0
+
+# Dependencies for scripts/data_scientist_access/ (Milestone 2.5)
+pandas==3.0.2
