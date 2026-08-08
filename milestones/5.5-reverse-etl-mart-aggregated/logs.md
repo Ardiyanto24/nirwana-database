@@ -20,3 +20,18 @@ REVERSE_ETL_MART_AGGREGATED_READER_CREDENTIALS=scripts/extract/gcp-reverse-etl-m
 ```
 
 `.env.example` diupdate dengan 2 baris baru (reader BigQuery, writer Postgres).
+
+## 2026-08-08 -- Checkpoint 2: copy & adaptasi sync.py (Fase 1)
+
+User membuat key file `gcp-reverse-etl-mart-agg-reader-key.json` dan mengisi `.env` sendiri. `mart_aggregated_tables.py` ditulis -- 76 tabel (27 dim + 49 fact, dikelompokkan per folder dbt), **dicocokkan otomatis terhadap isi riil `warehouse/models/mart_aggregated/`** (bukan disalin dari dokumentasi) -- exact match, 0 selisih, 0 duplikat. `sync.py` ditulis (copy `scripts/reverse_etl/sync.py`, Keputusan #4) -- perbedaan dari versi M2.4: `BQ_DATASET`/`PG_SCHEMA="mart_aggregated"`, `bq_table_id` TANPA prefix `mart_cleaned__` (tabel `mart_aggregated` di BigQuery memang tidak diprefix), `log_sync_result` menulis kolom `dataset_name='mart_aggregated'` (Keputusan #9).
+
+**Smoke test** `sync.py --table dim_property` -- sukses, `BigQuery=6 Postgres=6`.
+
+## 2026-08-08 -- Checkpoint 3: sync penuh 76 tabel + verifikasi independen (Fase 2)
+
+`sync.py --all` dijalankan (background, ~beberapa menit karena beberapa tabel besar) -- **76/76 tabel synced, 0 mismatch**. Diverifikasi independen (bukan cuma percaya log script sendiri):
+- Query langsung `information_schema.tables` schema `mart_aggregated` di Postgres: **76 tabel**, cocok persis. **0 tabel `__staging`/`__old` tersisa** (swap bersih, tidak ada sampah).
+- Spot-check `COUNT(*)` 3 tabel (`dim_property`=6, `fact_revenue_property_daily`=5485, `fact_hr_watchlist_monthly`=24036) -- cocok dengan yang dilaporkan `sync.py`.
+- `monitoring.reverse_etl_sync_log`: 77 baris `dataset_name='mart_aggregated'` (76 dari `--all` + 1 dari smoke test Checkpoint 2 -- `dim_property` disync 2x, sesuai ekspektasi), semua `status='synced'`, 0 `mismatch_aborted`. Baris `mart_cleaned` (93, dari M2.4) tidak terganggu -- migrasi additive terbukti backward-compatible.
+
+**KK1 sumber M5.5 (seluruh tabel tersedia, row count cocok) terbukti** untuk 76/77 tabel (1 tabel ML M5.4 sengaja dikecualikan, Keputusan #2 -- dicatat sebagai deviasi eksplisit di `report.md` nanti).
