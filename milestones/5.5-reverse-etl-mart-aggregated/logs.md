@@ -47,3 +47,7 @@ User membuat key file `gcp-reverse-etl-mart-agg-reader-key.json` dan mengisi `.e
 **Setelah index:** `EXPLAIN ANALYZE` query sama -> `Index Scan using idx_fact_revenue_property_daily_property_period`, **2.386 ms** -- **~14x lebih cepat**, plan berubah dari Seq Scan ke Index Scan. Bukti konkret KK3 (bukan diasumsikan).
 
 **Uji coba terkontrol tambahan (membuktikan mekanisme benar-benar DIPERLUKAN, bukan cuma dekoratif):** `sync.py --table fact_revenue_property_daily` dijalankan ulang (simulasi swap hari berikutnya) -> `pg_indexes` dicek: **index HILANG TOTAL** (`[]`), persis prediksi koreksi Keputusan #3 (staging table baru tidak pernah punya index). `reindex_analyze.py --table fact_revenue_property_daily` dijalankan lagi -> index **kembali ada**, `EXPLAIN ANALYZE` kembali `Index Scan` (0.743 ms). Siklus hilang->pulih dibuktikan nyata, bukan cuma teori "REINDEX aman dijalankan kapan saja."
+
+## 2026-08-08 -- Checkpoint 5: no-downtime swap test (Fase 4)
+
+`test_no_downtime_swap.py` (adaptasi M2.4, tabel `dim_property`) dijalankan -- 8 siklus `sync_table()` penuh (fetch->COPY->gate->RENAME) di foreground, sementara thread background poll `SELECT COUNT(*)` tiap 20ms. Hasil: **250 query konkuren, 0 error**. KK2 sumber M5.5 (swap tidak mengganggu query konsumen yang sedang berjalan) terbukti empiris -- pola bukti sama seperti M2.4 (274 query/0 error), skala mirip.
