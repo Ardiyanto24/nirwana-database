@@ -23,6 +23,7 @@ Setiap kredensial baru yang dibuat untuk konsumen/job baru **wajib** least-privi
 | `reverse_etl_writer` | PostgreSQL (serving project baru) | Schema-scoped `mart_cleaned` saja (CREATE/DROP/ALTER/RENAME table), `REVOKE ALL ON SCHEMA public` eksplisit | M2.4 | `scripts/reverse_etl/setup_writer_role.py` (inline) + re-verified M2.6 (query ad-hoc, tanpa rotasi password) | Ya |
 | `reverse-etl-reader` | BigQuery (`nirwana-database-elt`) | Dataset ACL READER `mart_cleaned` saja + `bigquery.jobUser` | M2.4 | `scripts/reverse_etl/verify_reader_isolation.py` (re-runnable) + re-verified M2.6 | Ya |
 | `data-scientist-reader` | BigQuery (`nirwana-database-elt`) | Dataset ACL READER `mart_cleaned` saja + `bigquery.jobUser` | M2.5 | `scripts/bigquery_common/verify_dataset_isolation.py` (re-runnable) + read-only dibuktikan (`CREATE TABLE` ditolak) + re-verified M2.6 | Ya |
+| `ml-scoring-writer` | BigQuery (`nirwana-database-elt`) | Dataset ACL WRITER `ml_output` saja + `bigquery.jobUser` | M5.4 | Service account + dataset ACL dibuat via `gcloud`/`bq` (dicatat `milestones/5.4-.../logs.md`); isolasi diverifikasi lewat `scripts/bigquery_common/verify_dataset_isolation.py` begitu key file dibuat user | Ya |
 
 ### Pengecualian: `dbt-transform`
 
@@ -30,7 +31,7 @@ Setiap kredensial baru yang dibuat untuk konsumen/job baru **wajib** least-privi
 
 ## Siapa Boleh Memegang Kredensial Ini
 
-- **Kredensial per-job** (`extract_reader`, `extract-writer`, `dbt-transform`, `reverse_etl_writer`, `reverse-etl-reader`): hanya dipakai oleh GitHub Actions workflow terjadwal (`extract-production.yml`, `transform-mart-cleaned.yml`, `reverse-etl-mart-cleaned.yml`) via GitHub Secrets, atau dijalankan manual oleh pemilik infrastruktur data untuk debugging/setup. **Tidak** dibagikan ke konsumen data (Data Analyst/Data Scientist/AI Chatbot) — mereka bukan pengguna akhir kredensial ini.
+- **Kredensial per-job** (`extract_reader`, `extract-writer`, `dbt-transform`, `reverse_etl_writer`, `reverse-etl-reader`, `ml-scoring-writer`): hanya dipakai oleh GitHub Actions workflow terjadwal (`extract-production.yml`, `transform-mart-cleaned.yml`, `reverse-etl-mart-cleaned.yml`, `scoring-occupancy-forecast.yml`) via GitHub Secrets, atau dijalankan manual oleh pemilik infrastruktur data untuk debugging/setup. **Tidak** dibagikan ke konsumen data (Data Analyst/Data Scientist/AI Chatbot) — mereka bukan pengguna akhir kredensial ini.
 - **`data-scientist-reader`**: satu-satunya kredensial di daftar ini yang memang ditujukan untuk dipegang konsumen akhir (tim Data Scientist) — lihat `scripts/data_scientist_access/README.md` untuk cara pakai. Karena `mart_cleaned` memuat data sensitif penuh (PII, payroll — lihat `docs/03-implementation-plans/02-serving-data-scientist.md` "Prinsip Kunci"), permintaan salinan key file baru untuk anggota tim baru harus lewat pemilik infrastruktur data, bukan diteruskan bebas antar anggota tim.
 
 ## Proses Meminta Kredensial Baru
