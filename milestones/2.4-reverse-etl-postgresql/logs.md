@@ -46,3 +46,10 @@ Result: 13/13 tabel synced, seluruh row count cocok persis BigQuery vs Postgres 
 
 ## Checkpoint 3 -- selesai
 13/23 tabel `mart_cleaned` ter-sync ke serving Postgres, seluruh row count parity terverifikasi.
+
+## 2026-08-08 -- Task 11-13 (Fase 3 batch 2: facility_maintenance, spa_event, hr_finance)
+Did: `sync.py --domain facility_maintenance` (3 tabel, termasuk `housekeeping_log` ~425k), `--domain spa_event` (3 tabel), `--domain hr_finance` (4 tabel, termasuk `staff_shifts` ~610k dan `payroll` data sensitif) -- seluruhnya dijalankan di background (pola sudah terbukti stabil dari Task 8-10).
+Result: 10/10 tabel synced, seluruh row count cocok persis (`housekeeping_log` 425.172, `staff_shifts` 610.019, `spa_bookings` 127.890, dll). Verifikasi menyeluruh: `information_schema.tables` schema `mart_cleaned` menunjukkan tepat 23 tabel, **tidak ada** sisa tabel `__staging`/`__old`. Task 11-13 selesai -- **23/23 tabel `mart_cleaned` selesai di-sync**.
+
+## Checkpoint 4 -- selesai
+23/23 tabel `mart_cleaned` tersedia di serving Postgres, seluruh row count cocok BigQuery, tidak ada tabel sisa. KK#1 sumber ("seluruh 23 tabel tersedia, row count cocok pasca-sync") terpenuhi.
