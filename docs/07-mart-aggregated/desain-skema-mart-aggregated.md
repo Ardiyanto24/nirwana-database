@@ -395,7 +395,23 @@ Seluruh kategori/referensi (channel, department, issue_type, dst) sengaja dijadi
 **Partition:** `period_date`. **Cluster:** `property_id`.
 **Cakupan M5.1:** baris 12.
 
-*(diisi lanjut Fase 4 — Task 8)*
+### Kasus Khusus Lintas Domain
+
+Kedua tabel di bawah **sengaja terpisah** dari fact table utama domainnya (Keputusan #9) — grain/karakternya fundamental berbeda dari metrik agregat historis biasa.
+
+#### `fact_revenue_pace_booking_snapshot`
+**Grain:** 1 baris per `property_id` × `room_type_id` × `stay_date` (tanggal check-in masa depan) × `snapshot_date` (tanggal snapshot diambil, "as of").
+**Kolom:** `property_id` (FK), `room_type_id` (FK), `stay_date` (DATE), `snapshot_date` (DATE), `rooms_sold_asof`, `rooms_available_asof`.
+**Partition:** `snapshot_date` (setiap hari snapshot baru masuk partition sendiri). **Cluster:** `property_id`, `stay_date`.
+**Cakupan M5.1:** "Kebutuhan Khusus kategori A" (pace booking).
+**Catatan penting untuk M5.3:** tabel ini secara desain **append-only** (baris `snapshot_date` lama tidak pernah diupdate, hanya ditambah baris baru tiap hari) — beda karakter dari seluruh fact table lain di dokumen ini yang full-refresh mengikuti pola `mart_cleaned`/`mart_aggregated` di bawah BigQuery Sandbox mode (lihat `docs/keputusan-tertunda.md` "Aktivasi billing GCP"). Bagaimana append-only ini didamaikan dengan constraint "DML diblokir total" di Sandbox mode **belum diputuskan** — pertanyaan implementasi eksplisit untuk M5.3, bukan diselesaikan di sini (M5.2 hanya menjamin strukturnya benar).
+
+#### `fact_hr_watchlist_monthly`
+**Grain:** 1 baris per `employee_id` (FK `dim_employee`) × `period_date`.
+**Kolom:** `employee_id` (FK), `period_date` (DATE), `current_absence_rate`, `baseline_absence_rate` (rata-rata historis individu tersebut), `current_late_rate`, `baseline_late_rate`, `absence_deviation_ratio`, `late_deviation_ratio`.
+**Partition:** `period_date`. **Cluster:** `employee_id`.
+**Cakupan M5.1:** "Kebutuhan Khusus kategori B" (watchlist gejala pra-resign).
+**Catatan:** hanya menyimpan rasio deviasi mentah, **tidak** ada kolom flag "masuk watchlist" — threshold "di luar kebiasaan" belum ditentukan (M5.1 "Kebutuhan Khusus kategori C"), konsisten Keputusan #7. Klasifikasi watchlist final ditentukan di layer konsumen (chatbot/analyst) atau M5.3 setelah threshold diputuskan.
 
 ---
 
