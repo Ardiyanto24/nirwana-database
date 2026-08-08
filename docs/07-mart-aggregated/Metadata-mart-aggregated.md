@@ -137,9 +137,20 @@
 
 ---
 
+## 7. Feedback Loop ML (Milestone 5.4, ⚠️ PROVISIONAL)
+
+**Sumber:** `ml_output.predictions` (dataset BigQuery terpisah, ditulis `scripts/ml_scoring/mock_score.py` — STAND-IN untuk scoring pipeline eksternal yang tidak ada di repo ini) `LEFT JOIN` `fact_revenue_room_type_daily`.
+
+**⚠️ Seluruh isi bagian ini PROVISIONAL** — skema `ml_output`, use-case occupancy forecast, dan format `entity_id` murni contoh/simulasi untuk membuktikan mekanisme trigger→sensor→join→test, bukan kontrak final dengan tim ML Engineer sungguhan. Lihat catatan status penuh di header `milestones/5.4-integrasi-feedback-loop-ml/decisions.md`.
+
+### Fact
+- **`fact_ml_occupancy_forecast_property_room_type`**: grain property×room_type×`target_date`×`scored_at`. `predicted_occupancy_rate` = moving average `occupancy_rate` 30 hari terakhir per property×room_type (forecast naif, bukan model ML sungguhan). `confidence_score` = `1 − (stddev÷avg)` occupancy 30 hari itu, dibatasi 0.05–0.99. `entity_id` sumber (`ml_output.predictions`) berformat composite `"property_id:room_type_id"`, di-split saat transformasi. `model_version`/`feature_snapshot_at` **selalu terisi** (`FROM ml_output.predictions` sebagai base query, bukan `LEFT JOIN` dari sisi `mart_aggregated` — jaminan struktural, bukan cuma test). `actual_occupancy_rate`/`forecast_error_abs` nullable, cuma terisi kalau `target_date` sudah lewat. **Isolasi kegagalan**: tabel ini di-tag `ml_feedback_loop`, dipromosikan terpisah dari 45 fact table lain (`scripts/mart_aggregated/promote.py --exclude tag:ml_feedback_loop` untuk yang lain) — kalau `ml_output` telat/gagal, cuma tabel ini yang stale, tidak memblokir refresh 45 tabel lain.
+
+---
+
 ## Audit PII (re-verifikasi terhadap hasil akhir)
 
-Ditelusuri langsung ke `INFORMATION_SCHEMA.COLUMNS` dataset `mart_aggregated` (bukan cuma desain di atas kertas — lihat `milestones/5.3-.../logs.md` Checkpoint 8): **satu-satunya** kolom personal di seluruh 76 tabel adalah `dim_employee.full_name` (domain `employees_directory`, diteruskan apa adanya untuk name-resolution, akses diatur RBAC layer terpisah — Milestone 4.1-4.3, di luar scope repo ini). Tidak ada kolom `email`/`phone`/`guest_id` individual di mana pun — seluruh kebutuhan kontak tamu tetap dilayani row-level dari `mart_cleaned.guests`.
+Ditelusuri langsung ke `INFORMATION_SCHEMA.COLUMNS` dataset `mart_aggregated` (bukan cuma desain di atas kertas — lihat `milestones/5.3-.../logs.md` Checkpoint 8): **satu-satunya** kolom personal di seluruh 76 tabel M5.3 adalah `dim_employee.full_name` (domain `employees_directory`, diteruskan apa adanya untuk name-resolution, akses diatur RBAC layer terpisah — Milestone 4.1-4.3, di luar scope repo ini). Tidak ada kolom `email`/`phone`/`guest_id` individual di mana pun — seluruh kebutuhan kontak tamu tetap dilayani row-level dari `mart_cleaned.guests`. Tabel ML baru M5.4 (`fact_ml_occupancy_forecast_property_room_type`) juga tidak menyentuh data tamu individual — grain-nya property×room_type, bukan per-guest.
 
 ## Validasi Silang (M5.3 Task 11)
 

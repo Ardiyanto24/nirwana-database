@@ -465,4 +465,20 @@ Audit menyeluruh seluruh dimension table dan fact table di atas untuk kolom yang
 
 Ditelusuri ulang seluruh 45 fact table + 27 dimension table (23 awal + 4 amendemen) di dokumen ini — **tidak ada satu pun kolom** yang menyimpan `email`, `phone`, atau `guest_id` individual. Seluruh kebutuhan kontak tamu yang diminta persona chatbot (Front Office Staff — konfirmasi booking; Revenue Manager — retensi loyalty tinggi; Spa & Event Manager — eskalasi komplain; CEO — kasus jarang komplain besar) tetap dilayani **row-level dari `mart_cleaned.guests`**, bukan `mart_aggregated` — konsisten dengan pembagian row-level vs agregat yang sudah ditegaskan di M5.1. Ini bukan kebetulan: setiap metrik yang menyentuh populasi tamu di skema ini (loyalty, nationality, repeat guest rate, capture rate) sudah dalam bentuk hitungan/rasio teragregasi sejak didesain, tidak pernah butuh identitas individual untuk dihitung.
 
+---
+
+## Addendum Milestone 5.4 — Feedback Loop ML (⚠️ PROVISIONAL, bukan bagian desain M5.2 asli)
+
+**Ditambahkan oleh:** Milestone 5.4 (`milestones/5.4-integrasi-feedback-loop-ml/`), bukan Milestone 5.2 — 1 tabel fact baru, di luar 45 fact table hasil M5.2 di atas (total sekarang 46 fact + 27 dimension = 73 tabel di `mart_aggregated`).
+
+**⚠️ Status provisional:** seluruh isi bagian ini (skema `ml_output.predictions`, use-case occupancy forecast, format `entity_id`) murni **contoh/simulasi** untuk membuktikan mekanisme trigger→sensor→join→test M5.4 bisa berjalan — **bukan** kontrak final dengan tim ML Engineer yang sesungguhnya akan membangun scoring pipeline. Lihat catatan status penuh di header `milestones/5.4-integrasi-feedback-loop-ml/decisions.md`.
+
+#### `fact_ml_occupancy_forecast_property_room_type`
+**Grain:** 1 baris per prediksi — `property_id` × `room_type_id` × `target_date` (tanggal yang diramal) × `scored_at` (run scoring kapan).
+**Kolom:** `prediction_id` (PK), `property_id` (FK `dim_property`), `room_type_id` (FK `dim_room_type`), `target_date` (DATE), `model_name`, `model_version` (wajib terisi), `prediction_type`, `predicted_occupancy_rate` (FLOAT), `confidence_score` (FLOAT), `scored_at` (TIMESTAMP), `feature_snapshot_at` (TIMESTAMP, wajib terisi), `actual_occupancy_rate` (FLOAT, nullable — cuma terisi kalau `target_date` sudah lewat), `forecast_error_abs` (FLOAT, nullable).
+**Sumber:** `ml_output.predictions` (dataset BigQuery terpisah, ditulis `scripts/ml_scoring/mock_score.py` — bukan `mart_cleaned`) `LEFT JOIN` `fact_revenue_room_type_daily` (untuk kolom aktual).
+**Partition/Cluster:** belum diset eksplisit (tabel kecil, ~750 baris di scope simulasi ini) — perlu direvisit kalau skala data bertambah signifikan.
+**Isolasi kegagalan (KK3 M5.4):** tabel ini SENGAJA terpisah dari 45 fact table lain — kalau `ml_output` telat/gagal, tabel ini cuma tidak ter-update di run itu, 45 tabel lain di dokumen ini tidak terpengaruh sama sekali (lihat `scripts/mart_aggregated/promote.py --exclude tag:ml_feedback_loop`).
+**Deviasi skema dari dokumen arsitektur:** `ml_output.predictions` (sumbernya) menambah 1 kolom (`target_date`) di luar skema Bagian 6.3 arsitektur — deviasi eksplisit, lihat `milestones/5.4-.../decisions.md` Keputusan #5.
+
 **Kesimpulan audit:** Tidak ada kolom yang perlu masking/anonymization di `mart_aggregated` — bukan karena PII diabaikan, tapi karena desain skema (star schema teragregasi, tanpa grain per-tamu) secara struktural sudah tidak pernah memuat PII tamu mentah sejak awal. Satu-satunya data personal yang diteruskan apa adanya (`dim_employee.full_name`) adalah data internal staf dengan kebutuhan bisnis eksplisit, diamankan lewat RBAC layer terpisah (di luar scope M5.2).
