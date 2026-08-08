@@ -21,5 +21,9 @@ Result: worked. Uji 2 skenario terkontrol -- (1) data bersih: `dbt test` 3/3 PAS
 Did: Generate 13 model `mart_cleaned` passthrough (`select * from {{ ref('stg_...') }}`) untuk 3 schema. `dbt run` batch (13 model) sukses semua sebagai `table` (full refresh, DDL). Validasi row count staging vs `mart_cleaned_staging` per tabel.
 Result: 13/13 OK, cocok persis dengan staging (termasuk `fnb_transactions` 902.574 baris, tabel terbesar).
 
+## 2026-08-08 -- Fase 3 batch 2 (Task 9-11: facility_maintenance, spa_event, hr_finance)
+Did: Generate 10 model `mart_cleaned` passthrough sisa. `dbt run` batch sukses semua 10. Validasi row count menyeluruh untuk SELURUH 23 tabel (bukan cuma batch ini) sekali jalan.
+Result: **23/23 tabel `mart_cleaned_staging` cocok persis dengan staging** -- termasuk `staff_shifts` (610.019 baris, tabel terbesar kedua) dan `housekeeping_log` (425.172 baris).
+
 ## Status saat ini
-Checkpoint 3 selesai. Lanjut Fase 3 batch 2 (Task 9-11: facility_maintenance, spa_event, hr_finance).
+Checkpoint 4 selesai (23/23 tabel dibangun di `mart_cleaned_staging`, belum di-promote ke `mart_cleaned` -- baru `bookings` yang sudah lewat gate di Fase 2). Lanjut Fase 4 (Task 12-14: data quality test lengkap, uji coba terkontrol, penutupan).

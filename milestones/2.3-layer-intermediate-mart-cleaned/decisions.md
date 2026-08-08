@@ -46,11 +46,11 @@ Ini bukan cuma soal partition (M2.1) — tabel `raw_production` yang unpartition
 
 **Checkpoint 3** — commit + push, log Task 6-8 (13/23 tabel, semua model passthrough dari staging sesuai `pemetaan-kebutuhan-konsumen-data-mart.md`).
 
-- [ ] Task 9: `facility_maintenance` (3 tabel)
-- [ ] Task 10: `spa_event` (3 tabel)
-- [ ] Task 11: `hr_finance` (4 tabel)
+- [x] Task 9: `facility_maintenance` (3 tabel) — row count = staging (549/425172/13514)
+- [x] Task 10: `spa_event` (3 tabel) — row count = staging (20/127890/1333)
+- [x] Task 11: `hr_finance` (4 tabel) — row count = staging (610019/3748/23383/756)
 
-**Checkpoint 4** — commit + push, log Task 9-11 (23/23 tabel).
+**Checkpoint 4** — commit + push, log Task 9-11. **23/23 tabel `mart_cleaned_staging` selesai, seluruhnya row-count-identik dengan staging.**
 
 ### Fase 4 — Data Quality Gate + Penutupan
 - [ ] Task 12: dbt test lengkap (`not_null`/`unique`/`relationships`/`accepted_values` + ≥1 custom business rule) untuk 23 tabel
