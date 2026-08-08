@@ -7,7 +7,7 @@
 | **Dihasilkan oleh** | Milestone 5.2 (`milestones/5.2-desain-struktur-tabel-mart-aggregated/`) |
 | **Input utama** | `docs/07-mart-aggregated/konsolidasi-agregasi-mart-aggregated.md` (Milestone 5.1) — 94 baris metrik terkonsolidasi lintas 6 domain |
 | **Dipakai oleh** | Milestone 5.3 (implementasi transformasi SQL + data dictionary penuh), `04-serving-data-analyst.md`, `05-serving-ai-chatbot.md` |
-| **Status** | Draft — dibangun bertahap per checkpoint Milestone 5.2 |
+| **Status** | Selesai — 45 fact table + 27 dimension table, seluruh audit PII tercatat (Milestone 5.2, ditutup 2026-08-08) |
 
 ---
 
@@ -27,7 +27,7 @@ Seluruh kategori/referensi (channel, department, issue_type, dst) sengaja dijadi
 
 ## Dimension Tables
 
-23 dimension table, dikelompokkan per domain asal (beberapa dipakai lintas domain — conformed dimensions).
+27 dimension table (23 diinventarisasi di Task 1 + 4 amendemen ditemukan saat desain fact table), dikelompokkan per domain asal (beberapa dipakai lintas domain — conformed dimensions).
 
 ### Lintas domain (dipakai ≥2 domain)
 
@@ -417,4 +417,16 @@ Kedua tabel di bawah **sengaja terpisah** dari fact table utama domainnya (Keput
 
 ## Audit PII
 
-*(diisi Fase 5 — Task 9)*
+Audit menyeluruh seluruh dimension table dan fact table di atas untuk kolom yang berpotensi menyentuh domain RBAC `guests_pii`, `guests_profile`, atau `employees_directory` (cakupan diperluas — Keputusan #8). Setiap kolom yang teridentifikasi punya keputusan eksplisit di bawah — tidak ada yang masuk skema tanpa keputusan sadar (KK#3).
+
+| Kolom | Tabel | Domain RBAC | Keputusan | Alasan |
+|---|---|---|---|---|
+| `full_name` | `dim_employee` | `employees_directory` | **Diteruskan apa adanya, tidak di-mask** | Name-resolution eksplisit diminta banyak persona chatbot (HR Staff, Finance Staff, F&B Manager, dst) — kebutuhan bisnis nyata, bukan insidental. Akses granular (siapa boleh lihat) diatur di RBAC layer (Milestone 4.1-4.3, view + kredensial), bukan masking di level data — konsisten prinsip *defense in depth* dokumen arsitektur (kontrol akses berlapis, bukan penghilangan data di sumbernya). |
+| `loyalty_tier_name` | `dim_loyalty_tier` | `guests_profile` | **Diteruskan apa adanya** | Label kategori agregat (mis. "Gold", "Silver"), bukan atribut individual. Fact table pemakainya (`fact_revenue_loyalty_daily`) hanya menyimpan hitungan/agregat per bucket per properti per hari — tidak pernah ada baris per-tamu, sehingga tidak ada risiko re-identifikasi individu dari kombinasi ini. |
+| `group_name` | `dim_nationality_group` | `guests_profile` | **Diteruskan apa adanya** | Sama alasan `loyalty_tier_name` — sudah dikategorikan jadi 2 bucket (Domestik/Mancanegara) saat transformasi, bukan nilai `nationality` individual mentah dari `guests`. |
+
+### Konfirmasi: tidak ada kolom `guests_pii` (email, phone) di `mart_aggregated`
+
+Ditelusuri ulang seluruh 45 fact table + 27 dimension table (23 awal + 4 amendemen) di dokumen ini — **tidak ada satu pun kolom** yang menyimpan `email`, `phone`, atau `guest_id` individual. Seluruh kebutuhan kontak tamu yang diminta persona chatbot (Front Office Staff — konfirmasi booking; Revenue Manager — retensi loyalty tinggi; Spa & Event Manager — eskalasi komplain; CEO — kasus jarang komplain besar) tetap dilayani **row-level dari `mart_cleaned.guests`**, bukan `mart_aggregated` — konsisten dengan pembagian row-level vs agregat yang sudah ditegaskan di M5.1. Ini bukan kebetulan: setiap metrik yang menyentuh populasi tamu di skema ini (loyalty, nationality, repeat guest rate, capture rate) sudah dalam bentuk hitungan/rasio teragregasi sejak didesain, tidak pernah butuh identitas individual untuk dihitung.
+
+**Kesimpulan audit:** Tidak ada kolom yang perlu masking/anonymization di `mart_aggregated` — bukan karena PII diabaikan, tapi karena desain skema (star schema teragregasi, tanpa grain per-tamu) secara struktural sudah tidak pernah memuat PII tamu mentah sejak awal. Satu-satunya data personal yang diteruskan apa adanya (`dim_employee.full_name`) adalah data internal staf dengan kebutuhan bisnis eksplisit, diamankan lewat RBAC layer terpisah (di luar scope M5.2).

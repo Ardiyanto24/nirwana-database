@@ -1,7 +1,7 @@
 # Milestone 5.2: Desain Struktur Tabel Mart Aggregated — Decisions
 
 **Source:** `docs/03-implementation-plans/03-mart-aggregated-owner.md`, baris 63-81.
-**Status:** Planned
+**Status:** Done
 **Date started:** 2026-08-08
 
 ## Contract (from source doc)
