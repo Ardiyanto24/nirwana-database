@@ -46,6 +46,8 @@ jobs:
         run: |
           echo "ML_SCORING_WRITER_CREDENTIALS=scripts/extract/gcp-ml-scoring-writer-key.json" >> .env
           echo "GOOGLE_APPLICATION_CREDENTIALS=scripts/extract/gcp-ml-scoring-writer-key.json" >> .env
+          echo "BIGQUERY_PROJECT_ID=nirwana-database-elt" >> .env
+          echo "BIGQUERY_DATASET=ml_output" >> .env
 
       - name: Milestone 5.4 -- mock scoring run (occupancy forecast, PROVISIONAL/contoh)
         run: python scripts/ml_scoring/mock_score.py

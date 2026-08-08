@@ -25,7 +25,24 @@ on:
   workflow_run:
     workflows: ["Transform Staging and Mart Cleaned"]
     types: [completed]
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      sensor_model_name:
+        description: >
+          KK3 controlled-test hook -- override to a bogus value (e.g.
+          nonexistent_model) to force the sensor to find nothing, proving
+          the 76 existing tables still promote successfully even when
+          ml_output isn't ready. Leave default for normal runs.
+        required: false
+        default: occupancy_forecast
+      sensor_max_attempts:
+        description: "KK3 controlled-test hook -- lower this (e.g. 2) to test the timeout path quickly instead of waiting ~60 minutes."
+        required: false
+        default: "30"
+      sensor_interval_seconds:
+        description: "KK3 controlled-test hook -- lower this (e.g. 5) to test the timeout path quickly."
+        required: false
+        default: "120"
 
 jobs:
   run-transform-mart-aggregated:
@@ -78,7 +95,11 @@ jobs:
       - name: Milestone 5.4 -- sensor, tunggu ml_output.predictions (30x/120 detik, ~60 menit)
         id: sensor
         continue-on-error: true
-        run: python scripts/ml_scoring/wait_for_ml_output.py --max-attempts 30 --interval-seconds 120
+        run: >
+          python scripts/ml_scoring/wait_for_ml_output.py
+          --model-name "${{ github.event.inputs.sensor_model_name || 'occupancy_forecast' }}"
+          --max-attempts "${{ github.event.inputs.sensor_max_attempts || '30' }}"
+          --interval-seconds "${{ github.event.inputs.sensor_interval_seconds || '120' }}"
 
       - name: Milestone 5.4 -- build->test->swap gate, 1 tabel ML (best-effort, cuma kalau sensor sukses)
         if: steps.sensor.outcome == 'success'
