@@ -51,3 +51,15 @@ User membuat key file `gcp-reverse-etl-mart-agg-reader-key.json` dan mengisi `.e
 ## 2026-08-08 -- Checkpoint 5: no-downtime swap test (Fase 4)
 
 `test_no_downtime_swap.py` (adaptasi M2.4, tabel `dim_property`) dijalankan -- 8 siklus `sync_table()` penuh (fetch->COPY->gate->RENAME) di foreground, sementara thread background poll `SELECT COUNT(*)` tiap 20ms. Hasil: **250 query konkuren, 0 error**. KK2 sumber M5.5 (swap tidak mengganggu query konsumen yang sedang berjalan) terbukti empiris -- pola bukti sama seperti M2.4 (274 query/0 error), skala mirip.
+
+## 2026-08-08 -- Checkpoint 6: workflow terjadwal + verifikasi CI sungguhan (Fase 5)
+
+`.github/workflows/reverse-etl-mart-aggregated.yml` ditulis -- trigger `workflow_run` off `"Transform Mart Aggregated"` (Keputusan #10), jalankan `sync.py --all` lalu `reindex_analyze.py --all`. 2 GitHub Secret baru ditambahkan setelah izin user (`GCP_REVERSE_ETL_MART_AGG_READER_KEY_JSON`, `REVERSE_ETL_MART_AGGREGATED_WRITER_DB_URL`) -- memindahkan kredensial yang sudah ada, bukan membuat baru.
+
+Push, lalu trigger `transform-mart-aggregated.yml` (`workflow_dispatch`) untuk menguji chaining otomatis ke workflow baru ini (pelajaran M5.4: verifikasi CI sungguhan, bukan cuma baca sintaks). Hasil:
+- `transform-mart-aggregated.yml` sukses ([run 31261676507](https://github.com/Ardiyanto24/nirwana-database/actions/runs/31261676507)) -- 76 tabel + sensor ML sukses menemukan data + ML best-effort ikut ter-promote.
+- **`reverse-etl-mart-aggregated.yml` otomatis terpicu lewat `workflow_run`** tanpa intervensi manual apa pun ([run 31261974429](https://github.com/Ardiyanto24/nirwana-database/actions/runs/31261974429), 9m6s) -- `conclusion: success`, kedua step (`sync.py --all`, `reindex_analyze.py --all`) hijau.
+
+Verifikasi independen pasca-run CI (bukan cuma percaya status hijau workflow): query langsung ke Postgres -- **76 tabel** di schema `mart_aggregated`, index contoh `idx_fact_revenue_property_daily_property_period` **otomatis ada kembali** (dipulihkan `reindex_analyze.py` di dalam workflow, bukan sisa test manual sebelumnya), dan **76 baris baru** di `monitoring.reverse_etl_sync_log` (`dataset_name='mart_aggregated'`) dalam 15 menit terakhir -- cocok persis jumlah tabel yang disync run CI ini.
+
+**KK1 M5.5 terbukti end-to-end via CI sungguhan, dipicu otomatis (workflow_run), bukan cuma workflow_dispatch manual pada workflow yang sedang diuji itu sendiri.**
