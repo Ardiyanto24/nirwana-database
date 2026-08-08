@@ -1,0 +1,1704 @@
+[
+  {
+    "schema": "corporate_master",
+    "table": "properties",
+    "row_count": 6,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "property_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 6,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "property_name",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 6,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "city",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 5,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "region",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 3,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "total_rooms",
+        "data_type": "integer",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 6,
+        "min": 0.0,
+        "max": 200.0,
+        "negative_count": 0
+      },
+      {
+        "column": "star_rating",
+        "data_type": "numeric",
+        "null_count": 1,
+        "null_pct": 16.67,
+        "distinct_count": 2,
+        "min": 4.0,
+        "max": 5.0,
+        "negative_count": 0
+      },
+      {
+        "column": "opening_date",
+        "data_type": "date",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 6,
+        "min": "2010-01-01",
+        "max": "2020-11-05"
+      }
+    ]
+  },
+  {
+    "schema": "corporate_master",
+    "table": "employees",
+    "row_count": 755,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "employee_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 755,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "property_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 6,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "full_name",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 754,
+        "whitespace_issue_count": 11,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "role_title",
+        "data_type": "text",
+        "null_count": 15,
+        "null_pct": 1.99,
+        "distinct_count": 20,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "department",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 19,
+        "whitespace_issue_count": 11,
+        "case_variant_groups": 7
+      },
+      {
+        "column": "access_level",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 3,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "hire_date",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 600,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "status",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 3,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      }
+    ]
+  },
+  {
+    "schema": "corporate_master",
+    "table": "guests",
+    "row_count": 24893,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "guest_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 24893,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "full_name",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 23045,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "email",
+        "data_type": "text",
+        "null_count": 989,
+        "null_pct": 3.97,
+        "distinct_count": 23158,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "phone",
+        "data_type": "text",
+        "null_count": 750,
+        "null_pct": 3.01,
+        "distinct_count": 23791,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "nationality",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 466,
+        "whitespace_issue_count": 362,
+        "case_variant_groups": 156
+      },
+      {
+        "column": "loyalty_tier",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 4,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "registered_date",
+        "data_type": "date",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1067,
+        "min": "2023-07-01",
+        "max": "2026-07-01"
+      }
+    ]
+  },
+  {
+    "schema": "corporate_master",
+    "table": "role_permissions",
+    "row_count": 77,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "role_title",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 20,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "data_domain",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 10,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "access_scope",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 2,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "permission_type",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      }
+    ]
+  },
+  {
+    "schema": "reservation_revenue",
+    "table": "bookings",
+    "row_count": 217654,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "booking_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 217654,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "property_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 5,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "guest_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 17800,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "room_type",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 4,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "booking_channel",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 5,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "check_in_date",
+        "data_type": "date",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1097,
+        "min": "2023-07-01",
+        "max": "2026-07-01"
+      },
+      {
+        "column": "check_out_date",
+        "data_type": "date",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1106,
+        "min": "2023-07-02",
+        "max": "2026-07-14"
+      },
+      {
+        "column": "booking_date",
+        "data_type": "date",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1153,
+        "min": "2023-04-30",
+        "max": "2026-07-01"
+      },
+      {
+        "column": "nights",
+        "data_type": "integer",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 21,
+        "min": 1.0,
+        "max": 21.0,
+        "negative_count": 0
+      },
+      {
+        "column": "room_rate",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 5861,
+        "min": 458000.0,
+        "max": 9675000.0,
+        "negative_count": 0
+      },
+      {
+        "column": "total_amount",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 14650,
+        "min": 464000.0,
+        "max": 111279000.0,
+        "negative_count": 0
+      },
+      {
+        "column": "status",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 4,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      }
+    ]
+  },
+  {
+    "schema": "reservation_revenue",
+    "table": "daily_occupancy",
+    "row_count": 19746,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "property_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 5,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "room_type",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 4,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "date",
+        "data_type": "date",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1097,
+        "min": "2023-07-01",
+        "max": "2026-07-01"
+      },
+      {
+        "column": "rooms_sold",
+        "data_type": "integer",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 83,
+        "min": 1.0,
+        "max": 85.0,
+        "negative_count": 0
+      },
+      {
+        "column": "adr",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 18507,
+        "min": 506500.0,
+        "max": 9011133.0,
+        "negative_count": 0
+      },
+      {
+        "column": "total_rooms_available",
+        "data_type": "integer",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 10,
+        "min": 8.0,
+        "max": 90.0,
+        "negative_count": 0
+      },
+      {
+        "column": "occupancy_rate",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 167,
+        "min": 0.125,
+        "max": 1.0,
+        "negative_count": 0
+      },
+      {
+        "column": "revpar",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 18930,
+        "min": 205275.0,
+        "max": 7919599.0,
+        "negative_count": 0
+      }
+    ]
+  },
+  {
+    "schema": "reservation_revenue",
+    "table": "pricing_history",
+    "row_count": 19746,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "property_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 5,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "room_type",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 4,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "date",
+        "data_type": "date",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1097,
+        "min": "2023-07-01",
+        "max": "2026-07-01"
+      },
+      {
+        "column": "base_rate",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 35,
+        "min": 550000.0,
+        "max": 5603596.0,
+        "negative_count": 0
+      },
+      {
+        "column": "applied_rate",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 4349,
+        "min": 476000.0,
+        "max": 9435000.0,
+        "negative_count": 0
+      },
+      {
+        "column": "reason",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 3,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      }
+    ]
+  },
+  {
+    "schema": "fnb_operations",
+    "table": "fnb_outlets",
+    "row_count": 17,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "outlet_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 17,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "property_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 5,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "outlet_name",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 17,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "outlet_type",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 3,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      }
+    ]
+  },
+  {
+    "schema": "fnb_operations",
+    "table": "recipe_bom",
+    "row_count": 120,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "item_name",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 30,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "ingredient_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 30,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "qty_per_portion",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 105,
+        "min": 0.0126,
+        "max": 1.0128,
+        "negative_count": 0
+      }
+    ]
+  },
+  {
+    "schema": "fnb_operations",
+    "table": "ingredient_price_history",
+    "row_count": 32910,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "ingredient_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 30,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "date",
+        "data_type": "date",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1097,
+        "min": "2023-07-01",
+        "max": "2026-07-01"
+      },
+      {
+        "column": "unit_cost",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 11206,
+        "min": 3960.0,
+        "max": 243600.0,
+        "negative_count": 0
+      }
+    ]
+  },
+  {
+    "schema": "fnb_operations",
+    "table": "fnb_transactions",
+    "row_count": 902574,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "transaction_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 387972,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "outlet_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 17,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "guest_id",
+        "data_type": "text",
+        "null_count": 280359,
+        "null_pct": 31.06,
+        "distinct_count": 23763,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "customer_type",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 2,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "transaction_datetime",
+        "data_type": "timestamp without time zone",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 313404,
+        "min": "2023-07-01 06:00:00",
+        "max": "2026-07-01 23:54:00"
+      },
+      {
+        "column": "item_name",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 30,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "category",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 3,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "quantity",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 3,
+        "min": 1.0,
+        "max": 3.0,
+        "negative_count": 0
+      },
+      {
+        "column": "unit_price",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1327,
+        "min": 21905.0,
+        "max": 193240.0,
+        "negative_count": 0
+      },
+      {
+        "column": "total_price",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1494,
+        "min": 22150.0,
+        "max": 558000.0,
+        "negative_count": 0
+      }
+    ]
+  },
+  {
+    "schema": "fnb_operations",
+    "table": "fnb_waste_log",
+    "row_count": 108733,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "waste_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 108733,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "outlet_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 17,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "date",
+        "data_type": "date",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1097,
+        "min": "2023-07-01",
+        "max": "2026-07-01"
+      },
+      {
+        "column": "ingredient_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 30,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "quantity_wasted",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1223,
+        "min": 0.0003,
+        "max": 3.75,
+        "negative_count": 0
+      },
+      {
+        "column": "reason",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 3,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      }
+    ]
+  },
+  {
+    "schema": "fnb_operations",
+    "table": "fnb_inventory",
+    "row_count": 457,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "ingredient_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 30,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "outlet_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 17,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "ingredient_name",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 30,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "unit",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 3,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "stock_current",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 452,
+        "min": 0.055,
+        "max": 171.749,
+        "negative_count": 0
+      },
+      {
+        "column": "stock_min_threshold",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 338,
+        "min": 0.1,
+        "max": 74.06,
+        "negative_count": 0
+      },
+      {
+        "column": "unit_cost",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 30,
+        "min": 4494.25,
+        "max": 204960.53,
+        "negative_count": 0
+      }
+    ]
+  },
+  {
+    "schema": "facility_maintenance",
+    "table": "rooms",
+    "row_count": 549,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "room_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 549,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "property_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 5,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "room_number",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 258,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "room_type",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 4,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "floor",
+        "data_type": "integer",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 12,
+        "min": 1.0,
+        "max": 12.0,
+        "negative_count": 0
+      },
+      {
+        "column": "status",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 5,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      }
+    ]
+  },
+  {
+    "schema": "facility_maintenance",
+    "table": "housekeeping_log",
+    "row_count": 425172,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "log_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 425172,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "room_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 549,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "date",
+        "data_type": "date",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1097,
+        "min": "2023-07-01",
+        "max": "2026-07-01"
+      },
+      {
+        "column": "cleaning_start_time",
+        "data_type": "time without time zone",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 420
+      },
+      {
+        "column": "cleaning_end_time",
+        "data_type": "time without time zone",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 29197
+      },
+      {
+        "column": "staff_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 174,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "status",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 2,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      }
+    ]
+  },
+  {
+    "schema": "facility_maintenance",
+    "table": "maintenance_tickets",
+    "row_count": 13514,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "ticket_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 13514,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "property_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 5,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "room_id",
+        "data_type": "text",
+        "null_count": 3722,
+        "null_pct": 27.54,
+        "distinct_count": 549,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "facility_area",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 7,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "issue_type",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 7,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "reported_date",
+        "data_type": "date",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1097,
+        "min": "2023-07-01",
+        "max": "2026-07-01"
+      },
+      {
+        "column": "resolved_date",
+        "data_type": "date",
+        "null_count": 17,
+        "null_pct": 0.13,
+        "distinct_count": 1096,
+        "min": "2023-07-02",
+        "max": "2026-07-01"
+      },
+      {
+        "column": "status",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 3,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "priority",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 4,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "assigned_staff_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 113,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "labor_hours",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 122,
+        "min": 0.2,
+        "max": 11.5,
+        "negative_count": 0
+      },
+      {
+        "column": "parts_replaced",
+        "data_type": "text",
+        "null_count": 7055,
+        "null_pct": 52.21,
+        "distinct_count": 31,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "cost",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 2417,
+        "min": 17251.0,
+        "max": 5582000.0,
+        "negative_count": 0
+      }
+    ]
+  },
+  {
+    "schema": "spa_event",
+    "table": "venues",
+    "row_count": 20,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "venue_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 20,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "property_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 5,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "venue_name",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 20,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "venue_type",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 3,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "max_capacity",
+        "data_type": "integer",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 15,
+        "min": 20.0,
+        "max": 800.0,
+        "negative_count": 0
+      }
+    ]
+  },
+  {
+    "schema": "spa_event",
+    "table": "spa_bookings",
+    "row_count": 127890,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "spa_booking_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 127890,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "property_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 5,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "guest_id",
+        "data_type": "text",
+        "null_count": 27057,
+        "null_pct": 21.16,
+        "distinct_count": 20864,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "customer_type",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 2,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "service_name",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 9,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "booking_date",
+        "data_type": "date",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1097,
+        "min": "2023-07-01",
+        "max": "2026-07-01"
+      },
+      {
+        "column": "service_date",
+        "data_type": "date",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1097,
+        "min": "2023-07-01",
+        "max": "2026-07-01"
+      },
+      {
+        "column": "duration_minutes",
+        "data_type": "integer",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 4,
+        "min": 45.0,
+        "max": 120.0,
+        "negative_count": 0
+      },
+      {
+        "column": "price",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 172,
+        "min": 224000.0,
+        "max": 2160000.0,
+        "negative_count": 0
+      },
+      {
+        "column": "status",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 3,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      }
+    ]
+  },
+  {
+    "schema": "spa_event",
+    "table": "event_bookings",
+    "row_count": 1333,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "event_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1333,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "property_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 5,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "venue_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 20,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "client_name",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1290,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "event_type",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 6,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "event_date",
+        "data_type": "date",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 750,
+        "min": "2023-07-01",
+        "max": "2026-07-01"
+      },
+      {
+        "column": "venue_name",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 20,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "capacity_booked",
+        "data_type": "integer",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 454,
+        "min": 5.0,
+        "max": 759.0,
+        "negative_count": 0
+      },
+      {
+        "column": "total_revenue",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1328,
+        "min": 1631000.0,
+        "max": 1836135000.0,
+        "negative_count": 0
+      },
+      {
+        "column": "status",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 3,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      }
+    ]
+  },
+  {
+    "schema": "hr_finance",
+    "table": "staff_shifts",
+    "row_count": 610019,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "shift_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 610019,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "employee_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 755,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "date",
+        "data_type": "date",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1097,
+        "min": "2023-07-01",
+        "max": "2026-07-01"
+      },
+      {
+        "column": "shift_type",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 3,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "clock_in",
+        "data_type": "time without time zone",
+        "null_count": 42418,
+        "null_pct": 6.95,
+        "distinct_count": 186
+      },
+      {
+        "column": "clock_out",
+        "data_type": "time without time zone",
+        "null_count": 42418,
+        "null_pct": 6.95,
+        "distinct_count": 44550
+      },
+      {
+        "column": "status",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 4,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      }
+    ]
+  },
+  {
+    "schema": "hr_finance",
+    "table": "employee_performance",
+    "row_count": 3748,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "review_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 3748,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "employee_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 718,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "review_period",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 6,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "score",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 302,
+        "min": 1.63,
+        "max": 5.0,
+        "negative_count": 0
+      },
+      {
+        "column": "notes",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 12,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      }
+    ]
+  },
+  {
+    "schema": "hr_finance",
+    "table": "payroll",
+    "row_count": 23383,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "payroll_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 23383,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "employee_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 755,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "period",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 36,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "base_salary",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 8406,
+        "min": 2734000.0,
+        "max": 126957000.0,
+        "negative_count": 0
+      },
+      {
+        "column": "service_charge",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 354,
+        "min": 0.0,
+        "max": 11461000.0,
+        "negative_count": 0
+      },
+      {
+        "column": "overtime_pay",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 2419,
+        "min": 0.0,
+        "max": 37694000.0,
+        "negative_count": 0
+      },
+      {
+        "column": "thr",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 1642,
+        "min": 0.0,
+        "max": 125210000.0,
+        "negative_count": 0
+      },
+      {
+        "column": "deduction",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 2797,
+        "min": 322000.0,
+        "max": 18704000.0,
+        "negative_count": 0
+      },
+      {
+        "column": "net_salary",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 10742,
+        "min": 3847000.0,
+        "max": 255216000.0,
+        "negative_count": 0
+      }
+    ]
+  },
+  {
+    "schema": "hr_finance",
+    "table": "financial_summary",
+    "row_count": 756,
+    "duplicate_row_groups": 0,
+    "columns": [
+      {
+        "column": "property_id",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 6,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "period",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 36,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "department",
+        "data_type": "text",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 5,
+        "whitespace_issue_count": 0,
+        "case_variant_groups": 0
+      },
+      {
+        "column": "departmental_revenue",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 721,
+        "min": 0.0,
+        "max": 14020658000.0,
+        "negative_count": 0
+      },
+      {
+        "column": "departmental_expense",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 756,
+        "min": 130491096.0,
+        "max": 6748827329.0,
+        "negative_count": 0
+      },
+      {
+        "column": "departmental_profit",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 756,
+        "min": -1366113000.0,
+        "max": 8026267414.0,
+        "negative_count": 76
+      },
+      {
+        "column": "undistributed_expense",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 181,
+        "min": 0.0,
+        "max": 3140627392.0,
+        "negative_count": 0
+      },
+      {
+        "column": "gop",
+        "data_type": "numeric",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "distinct_count": 217,
+        "min": -1366113000.0,
+        "max": 4885640022.0,
+        "negative_count": 36
+      }
+    ]
+  }
+]
