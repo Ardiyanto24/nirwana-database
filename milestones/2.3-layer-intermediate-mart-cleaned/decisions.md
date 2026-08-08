@@ -53,8 +53,8 @@ Ini bukan cuma soal partition (M2.1) — tabel `raw_production` yang unpartition
 **Checkpoint 4** — commit + push, log Task 9-11. **23/23 tabel `mart_cleaned_staging` selesai, seluruhnya row-count-identik dengan staging.**
 
 ### Fase 4 — Data Quality Gate + Penutupan
-- [ ] Task 12: dbt test lengkap (`not_null`/`unique`/`relationships`/`accepted_values` + ≥1 custom business rule) untuk 23 tabel
-- [ ] Task 13: Uji coba terkontrol — suntik baris melanggar business rule (schema `_simulation`), buktikan gate menangkap
+- [x] Task 12: dbt test lengkap (`not_null`/`unique`/`relationships`/`accepted_values` + custom business rule) untuk 23 tabel — Acceptance: test jalan — Verify: **36/36 PASS** (unique+not_null 15 tabel ber-PK, 2 `relationships` FK, 1 `accepted_values`, 2 custom business rule) → seluruh 23 tabel ter-promote ke `mart_cleaned` sungguhan
+- [x] Task 13: Uji coba terkontrol — suntik baris melanggar business rule — Acceptance: baris tidak muncul di `mart_cleaned`, test tercatat gagal — Verify: suntik 1 baris `total_amount=-500000` (union literal sementara di `mart_cleaned__bookings.sql`, bukan `_simulation` schema — DML/INSERT diblokir Sandbox mode, jadi injeksi lewat SQL model lebih praktis), `assert_bookings_total_amount_non_negative` **FAIL**, promosi diblokir, `mart_cleaned` dicek ulang (`COUNTIF(booking_id='BK_SIMULATION_BAD_ROW')=0`, row count tetap 217.654, `min_amt` tetap positif) — model dikembalikan bersih setelah diverifikasi
 
 **Checkpoint 5** — commit + push, log Task 12-13.
 

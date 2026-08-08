@@ -25,5 +25,12 @@ Result: 13/13 OK, cocok persis dengan staging (termasuk `fnb_transactions` 902.5
 Did: Generate 10 model `mart_cleaned` passthrough sisa. `dbt run` batch sukses semua 10. Validasi row count menyeluruh untuk SELURUH 23 tabel (bukan cuma batch ini) sekali jalan.
 Result: **23/23 tabel `mart_cleaned_staging` cocok persis dengan staging** -- termasuk `staff_shifts` (610.019 baris, tabel terbesar kedua) dan `housekeeping_log` (425.172 baris).
 
+## 2026-08-08 -- Fase 4: DQ gate lengkap + uji coba terkontrol (Task 12-13)
+Did: Tulis `_mart_cleaned_tests.yml` (unique/not_null 15 tabel ber-PK, 2 `relationships` FK ke `properties`, 1 `accepted_values` department) + 2 custom business rule test (`assert_daily_occupancy_rate_valid_range.sql`, `assert_payroll_net_salary_positive.sql`, plus yang sudah ada `assert_bookings_total_amount_non_negative.sql`). Sempat kena error dbt "two schema.yml entries for the same resource" -- `mart_cleaned__bookings` didefinisikan di 2 file (root + subfolder reservation_revenue) -- digabung jadi satu file, subfolder yml dihapus. `promote.py --select mart_cleaned` (full run): 36/36 test PASS, 23/23 tabel ter-promote ke `mart_cleaned` sungguhan (bukan cuma staging). Perbaiki 2 warning deprecation (`relationships`/`accepted_values` butuh `arguments:` nesting di dbt 1.12).
+Result: worked, 23/23 `mart_cleaned` cocok row count dengan `staging`.
+
+Uji coba terkontrol (Task 13): karena DML/INSERT diblokir Sandbox mode, tidak bisa suntik baris lewat `_simulation` schema seperti pola Fase 1 -- diakali dengan `UNION ALL` sementara langsung di `mart_cleaned__bookings.sql` (1 baris literal, `total_amount=-500000`, `booking_id='BK_SIMULATION_BAD_ROW'`). Sempat 2x error teknis (jumlah kolom UNION tidak cocok karena lupa `_synced_at`; lalu urutan kolom tidak cocok posisi -- diperbaiki pakai `bq show --schema` untuk urutan kolom pasti, bukan tebak-tebak nama).
+Result: **gate bekerja persis seperti didesain** -- `assert_bookings_total_amount_non_negative` FAIL, `dbt test` exit nonzero, `promote.py` berhenti sebelum swap (`mart_cleaned tidak tersentuh sama sekali` tercetak eksplisit). Verifikasi: `mart_cleaned.mart_cleaned__bookings` tetap 217.654 baris, `min(total_amount)` tetap 464.000 (positif), `COUNTIF(booking_id='BK_SIMULATION_BAD_ROW')=0`. Model dikembalikan bersih, rebuild ulang, re-promote -- verifikasi akhir 23/23 tabel `mart_cleaned` cocok `staging`.
+
 ## Status saat ini
-Checkpoint 4 selesai (23/23 tabel dibangun di `mart_cleaned_staging`, belum di-promote ke `mart_cleaned` -- baru `bookings` yang sudah lewat gate di Fase 2). Lanjut Fase 4 (Task 12-14: data quality test lengkap, uji coba terkontrol, penutupan).
+Checkpoint 5 selesai. Lanjut Task 14 (verifikasi Kriteria Keberhasilan + report.md, Checkpoint 6 final).

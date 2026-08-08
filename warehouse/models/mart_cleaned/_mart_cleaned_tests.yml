@@ -1,0 +1,100 @@
+version: 2
+
+# Data quality gate Milestone 2.3 -- lebih lengkap dari test dasar M2.2
+# (unique/not_null saja): di sini juga ada relationships (foreign key) dan
+# accepted_values, sesuai Output sumber ("not_null, unique, relationships,
+# accepted_values, dan custom business rule"). unique/not_null hanya untuk
+# 15 tabel ber-PK tunggal genuine (sama seperti M2.2 -- 8 tabel lain punya
+# composite key/tanpa PK, lihat scripts/extract/tables_config.py).
+models:
+  - name: mart_cleaned__properties
+    columns:
+      - name: property_id
+        tests: [unique, not_null]
+
+  - name: mart_cleaned__employees
+    columns:
+      - name: employee_id
+        tests: [unique, not_null]
+      - name: property_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('mart_cleaned__properties')
+                field: property_id
+      - name: department
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Corporate', 'F&B', 'Facility', 'Finance', 'Housekeeping', 'HR', 'Revenue', 'Spa&Event']
+
+  - name: mart_cleaned__guests
+    columns:
+      - name: guest_id
+        tests: [unique, not_null]
+
+  - name: mart_cleaned__bookings
+    columns:
+      - name: booking_id
+        tests: [unique, not_null]
+      - name: property_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('mart_cleaned__properties')
+                field: property_id
+
+  - name: mart_cleaned__fnb_outlets
+    columns:
+      - name: outlet_id
+        tests: [unique, not_null]
+
+  - name: mart_cleaned__fnb_waste_log
+    columns:
+      - name: waste_id
+        tests: [unique, not_null]
+
+  - name: mart_cleaned__rooms
+    columns:
+      - name: room_id
+        tests: [unique, not_null]
+
+  - name: mart_cleaned__housekeeping_log
+    columns:
+      - name: log_id
+        tests: [unique, not_null]
+
+  - name: mart_cleaned__maintenance_tickets
+    columns:
+      - name: ticket_id
+        tests: [unique, not_null]
+
+  - name: mart_cleaned__venues
+    columns:
+      - name: venue_id
+        tests: [unique, not_null]
+
+  - name: mart_cleaned__spa_bookings
+    columns:
+      - name: spa_booking_id
+        tests: [unique, not_null]
+
+  - name: mart_cleaned__event_bookings
+    columns:
+      - name: event_id
+        tests: [unique, not_null]
+
+  - name: mart_cleaned__staff_shifts
+    columns:
+      - name: shift_id
+        tests: [unique, not_null]
+
+  - name: mart_cleaned__employee_performance
+    columns:
+      - name: review_id
+        tests: [unique, not_null]
+
+  - name: mart_cleaned__payroll
+    columns:
+      - name: payroll_id
+        tests: [unique, not_null]
