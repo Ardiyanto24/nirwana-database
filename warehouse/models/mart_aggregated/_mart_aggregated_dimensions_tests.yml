@@ -1,0 +1,202 @@
+version: 2
+
+# Data quality gate Milestone 5.3 -- dimension table, pola sama _mart_cleaned_tests.yml
+# (M2.3): unique/not_null untuk seluruh primary key, accepted_values untuk kategori
+# yang nilainya sudah diketahui pasti (dim_department -- 8 nilai baku hasil normalisasi
+# staging), relationships untuk FK ke dimension lintas-domain.
+models:
+  - name: dim_property
+    columns:
+      - name: property_id
+        tests: [unique, not_null]
+
+  - name: dim_department
+    columns:
+      - name: department_id
+        tests: [unique, not_null]
+      - name: department_name
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Corporate', 'F&B', 'Facility', 'Finance', 'Housekeeping', 'HR', 'Revenue', 'Spa&Event']
+
+  - name: dim_access_level
+    columns:
+      - name: access_level_id
+        tests: [unique, not_null]
+
+  - name: dim_employee
+    columns:
+      - name: employee_id
+        tests: [unique, not_null]
+      - name: department_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_department')
+                field: department_id
+      - name: access_level_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_access_level')
+                field: access_level_id
+
+  - name: dim_customer_type
+    columns:
+      - name: customer_type_id
+        tests: [unique, not_null]
+      - name: customer_type_name
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['inhouse', 'walk-in']
+
+  - name: dim_room_type
+    columns:
+      - name: room_type_id
+        tests: [unique, not_null]
+
+  - name: dim_room
+    columns:
+      - name: room_id
+        tests: [unique, not_null]
+      - name: property_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_property')
+                field: property_id
+      - name: room_type_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_room_type')
+                field: room_type_id
+
+  - name: dim_channel
+    columns:
+      - name: channel_id
+        tests: [unique, not_null]
+
+  - name: dim_loyalty_tier
+    columns:
+      - name: loyalty_tier_id
+        tests: [unique, not_null]
+
+  - name: dim_nationality_group
+    columns:
+      - name: nationality_group_id
+        tests: [unique, not_null]
+      - name: group_name
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Domestik', 'Mancanegara']
+
+  - name: dim_pricing_reason
+    columns:
+      - name: reason_id
+        tests: [unique, not_null]
+
+  - name: dim_outlet_type
+    columns:
+      - name: outlet_type_id
+        tests: [unique, not_null]
+
+  - name: dim_outlet
+    columns:
+      - name: outlet_id
+        tests: [unique, not_null]
+      - name: property_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_property')
+                field: property_id
+
+  - name: dim_fnb_category
+    columns:
+      - name: category_id
+        tests: [unique, not_null]
+      - name: category_name
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Food', 'Beverage', 'Dessert']
+
+  - name: dim_menu_item
+    columns:
+      - name: item_name
+        tests: [unique, not_null]
+
+  - name: dim_waste_reason
+    columns:
+      - name: reason_id
+        tests: [unique, not_null]
+
+  - name: dim_ingredient
+    columns:
+      - name: ingredient_id
+        tests: [unique, not_null]
+
+  - name: dim_facility_area
+    columns:
+      - name: facility_area_id
+        tests: [unique, not_null]
+
+  - name: dim_issue_type
+    columns:
+      - name: issue_type_id
+        tests: [unique, not_null]
+
+  - name: dim_priority
+    columns:
+      - name: priority_id
+        tests: [unique, not_null]
+
+  - name: dim_spa_service
+    columns:
+      - name: service_id
+        tests: [unique, not_null]
+
+  - name: dim_venue_type
+    columns:
+      - name: venue_type_id
+        tests: [unique, not_null]
+
+  - name: dim_venue
+    columns:
+      - name: venue_id
+        tests: [unique, not_null]
+      - name: property_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_property')
+                field: property_id
+
+  - name: dim_event_type
+    columns:
+      - name: event_type_id
+        tests: [unique, not_null]
+
+  - name: dim_shift_type
+    columns:
+      - name: shift_type_id
+        tests: [unique, not_null]
+
+  - name: dim_employee_status
+    columns:
+      - name: status_id
+        tests: [unique, not_null]
+      - name: status_name
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['active', 'resigned', 'terminated']
+
+  - name: dim_business_line
+    columns:
+      - name: business_line_id
+        tests: [unique, not_null]

@@ -1,0 +1,5 @@
+# Milestone 5.3 — Execution Log
+
+## 2026-08-08 — Checkpoint 1: Setup + 27 Dimension Table (Task 1-2)
+Did: Tambah blok `mart_aggregated` di `dbt_project.yml` (+schema mart_aggregated_staging, +materialized table). Scaffold folder hybrid (`corporate_master`, `reservation_revenue`, `fnb_operations`, `facility_maintenance`, `spa_event`, `hr_finance/{hr,corporate_financial}`). Implementasi 27 model dimension table + `_mart_aggregated_dimensions_tests.yml` (65 test: unique/not_null tiap PK, accepted_values untuk kategori dengan nilai pasti, relationships untuk FK lintas dimension).
+Result: `dbt debug` OK (koneksi BigQuery valid). `dbt run --select mart_aggregated` sempat 1 error: `dim_ingredient` referensi kolom `ingredient_name` yang ternyata tidak ada di `mart_cleaned__ingredient_price_history` (dicek langsung via `client.get_table()` -- skema aktual cuma `ingredient_id` STRING, `unit_cost`, `date`, `_synced_at`). Dikoreksi: `dim_ingredient` cuma pakai `ingredient_id` (berperan ganda sebagai nama). Koreksi juga didokumentasikan di `desain-skema-mart-aggregated.md` (bukan diperbaiki diam-diam). Re-run: 27/27 tabel berhasil dibuild. `dbt test`: 65/65 PASS, 0 error.

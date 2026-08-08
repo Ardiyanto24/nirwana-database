@@ -39,3 +39,17 @@ models:
       # aktif (tinggal ganti baris ini ke `incremental`).
       +schema: mart_cleaned_staging
       +materialized: table
+    mart_aggregated:
+      # Milestone 5.3 -- pola identik mart_cleaned di atas: model dbt SELALU
+      # menulis ke mart_aggregated_staging, TIDAK PERNAH langsung ke
+      # mart_aggregated. Promosi hanya lewat scripts/mart_aggregated/promote.py
+      # setelah dbt test lolos (pola sama Milestone 2.3 DQ gate blocking).
+      #
+      # materialized: table untuk alasan yang sama seperti mart_cleaned
+      # (Sandbox mode blokir semua DML). fact_revenue_pace_booking_snapshot
+      # adalah pengecualian: modelnya sendiri melakukan self-union
+      # (SELECT * FROM {{ this }} UNION ALL ...) di dalam query CTAS-nya
+      # untuk mensimulasikan append -- tetap materialized: table biasa,
+      # bukan strategi incremental dbt.
+      +schema: mart_aggregated_staging
+      +materialized: table

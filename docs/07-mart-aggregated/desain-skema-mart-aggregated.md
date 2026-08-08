@@ -101,7 +101,7 @@ Seluruh kategori/referensi (channel, department, issue_type, dst) sengaja dijadi
 |---|---|---|---|---|
 | `dim_pricing_reason` | `reason_id` (PK), `reason_name` (manual/promo/dynamic-pricing-AI) | Surrogate | `pricing_history.reason` | Task 2 (Revenue) — breakdown pricing deviation butuh dimensi ini, terlewat di Task 1 |
 | `dim_waste_reason` | `reason_id` (PK), `reason_name` (overproduction/expired/spillage) | Surrogate | `fnb_waste_log.reason` | Task 3 (F&B) |
-| `dim_ingredient` | `ingredient_id` (PK), `ingredient_name` | Natural key | `ingredient_price_history` | Task 3 (F&B) |
+| `dim_ingredient` | `ingredient_id` (PK, STRING — berperan ganda sebagai nama, mis. "Rice"/"Chicken") | Natural key | `ingredient_price_history` | Task 3 (F&B); **dikoreksi M5.3**: `ingredient_name` terpisah ternyata tidak ada di skema sumber, `ingredient_id` sendiri sudah berupa teks nama |
 | `dim_employee_status` | `status_id` (PK), `status_name` (active/resigned/terminated) | Surrogate | `employees.status` | Task 6 (HR) |
 
 ---
