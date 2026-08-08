@@ -1,0 +1,75 @@
+version: 2
+
+models:
+  - name: fact_facility_room_status_daily
+    columns:
+      - name: room_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_room')
+                field: room_id
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_housekeeping_room_type_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_housekeeping_property_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_housekeeping_staff_daily
+    columns:
+      - name: staff_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_maintenance_ticket_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_maintenance_cost_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_maintenance_room_recurrence_yearly
+    columns:
+      - name: room_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_room')
+                field: room_id
+      - name: year
+        tests: [not_null]
+
+  - name: fact_maintenance_property_benchmark_yearly
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: year
+        tests: [not_null]
+
+  - name: fact_maintenance_technician_daily
+    columns:
+      - name: assigned_staff_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]

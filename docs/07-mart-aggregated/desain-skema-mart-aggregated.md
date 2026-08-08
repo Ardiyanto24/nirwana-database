@@ -222,10 +222,11 @@ Seluruh kategori/referensi (channel, department, issue_type, dst) sengaja dijadi
 ### Facility/Ops
 
 #### `fact_facility_room_status_daily`
-**Grain:** 1 baris per `room_id` (FK `dim_room`) × `period_date` (snapshot harian).
-**Kolom:** `room_id` (FK), `period_date` (DATE), `status`, `is_out_of_order` (BOOL), `out_of_order_hours`.
+**Grain:** 1 baris per `room_id` (FK `dim_room`) × `period_date` (snapshot terkini, `current_date()`).
+**Kolom:** `room_id` (FK), `period_date` (DATE), `status`, `is_out_of_order` (BOOL).
 **Partition:** `period_date`. **Cluster:** `room_id`.
 **Cakupan M5.1:** baris 1, 2. Distribusi status per properti diturunkan via agregasi `GROUP BY property_id` (dari `dim_room`) di query M5.3/serving, tidak perlu tabel terpisah.
+**Koreksi (M5.3):** `mart_cleaned__rooms` ternyata tidak punya kolom tanggal — `status` adalah current-state (state terkini, di-sync ulang tiap ekstraksi), bukan histori harian per kamar. Sama seperti `fact_fnb_inventory_status`, tabel ini snapshot `current_date()`, bukan deret waktu. Kolom `out_of_order_hours` (durasi) **dihapus** — tidak ada sumber histori perubahan status berwaktu per kamar untuk menghitungnya.
 
 #### `fact_housekeeping_room_type_daily`
 **Grain:** 1 baris per `property_id` × `room_type_id` × `period_date`.
@@ -235,9 +236,10 @@ Seluruh kategori/referensi (channel, department, issue_type, dst) sengaja dijadi
 
 #### `fact_housekeeping_property_daily`
 **Grain:** 1 baris per `property_id` × `period_date`.
-**Kolom:** `property_id` (FK), `period_date` (DATE), `delayed_rate`, `delayed_rate_vs_occupancy` (cross-domain, precompute — Keputusan #6).
+**Kolom:** `property_id` (FK), `period_date` (DATE), `delayed_rate`, `occupancy_rate` (cross-domain, precompute — Keputusan #6).
 **Partition:** `period_date`. **Cluster:** `property_id`.
 **Cakupan M5.1:** baris 4, 5.
+**Koreksi kolom (M5.3):** kolom tunggal "delayed_rate_vs_occupancy" di draf awal dikoreksi jadi 2 kolom terpisah (`delayed_rate`, `occupancy_rate`) — pola sama seperti koreksi `gop_pricing_impact` di Revenue, 1 baris tidak bisa mengekspresikan korelasi secara bermakna.
 
 #### `fact_housekeeping_staff_daily`
 **Grain:** 1 baris per `staff_id` (FK `dim_employee`) × `period_date`.
