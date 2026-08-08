@@ -382,10 +382,11 @@ Seluruh kategori/referensi (channel, department, issue_type, dst) sengaja dijadi
 **Catatan wajib:** margin per lini bisnis (baris 4) HARUS filter `business_line_id` ke `Room`/`F&B`/`Spa&Event` saja saat dipakai untuk metrik "departmental margin" — jangan sertakan `Overall`/`Corporate Overhead` (risiko double counting, ditegaskan sejak M5.1).
 
 #### `fact_financial_overall_monthly`
-**Grain:** 1 baris per `property_id` × `period_date` (setara baris `Overall` di `financial_summary`).
-**Kolom:** `property_id` (FK), `period_date` (DATE), `gop`, `gop_margin_pct`, `mom_gop_growth`, `yoy_gop_growth`, `undistributed_expense_admin_general`, `undistributed_expense_sales_marketing`, `undistributed_expense_utilities`, `undistributed_expense_property_maintenance`, `undistributed_expense_it`, `overhead_ratio`.
+**Grain:** 1 baris per `property_id` × `period_date` (setara baris `Overall`/`Corporate Overhead` di `financial_summary` — P06 kantor pusat pakai `Corporate Overhead` sebagai baris P&L-nya, bukan `Overall`, per `warehouse/README.md`).
+**Kolom:** `property_id` (FK), `period_date` (DATE), `gop`, `gop_margin_pct`, `mom_gop_growth`, `yoy_gop_growth`, `undistributed_expense_total`, `overhead_ratio`.
 **Partition:** `period_date`. **Cluster:** `property_id`.
 **Cakupan M5.1:** baris 2, 3, 5.
+**Koreksi (M5.3), penting:** `mart_cleaned__financial_summary` cuma punya **1 kolom** `undistributed_expense` (total) — **tidak ada breakdown per komponen** (Admin&General/Sales&Marketing/Utilities/Property Maintenance/IT) di skema sumber manapun. Asumsi breakdown 5-komponen di M5.1/M5.2 ternyata berasal dari narasi role-play "laporan USALI formal" (deskripsi tipikal laporan USALI di industri), bukan dari skema data aktual yang tersedia — gap ini seharusnya sudah tertangkap sebagai "Luar Cakupan" sejak M5.1 tapi baru ketahuan saat implementasi SQL M5.3 mengecek `client.get_table()` langsung. Kolom diubah jadi `undistributed_expense_total` (angka tunggal), breakdown per komponen dicatat sebagai gap data sumber tambahan (lihat Known Gaps `report.md`).
 
 #### `fact_financial_revenue_runrate_daily`
 **Grain:** 1 baris per `property_id` × `period_date`.
@@ -399,11 +400,12 @@ Seluruh kategori/referensi (channel, department, issue_type, dst) sengaja dijadi
 **Partition:** `period_date`. **Cluster:** `property_id`, `department_id`.
 **Cakupan M5.1:** baris 7.
 
-#### `fact_financial_service_charge_daily`
-**Grain:** 1 baris per `property_id` × `period_date`.
-**Kolom:** `property_id` (FK), `period_date` (DATE), `service_charge_pool`, `occupancy_rate` (cross-domain, precompute — Keputusan #6), `deviation_from_correlation`.
+#### `fact_financial_service_charge_monthly`
+**Grain:** 1 baris per `property_id` × `period_date` (bulanan — mengikuti grain asli `payroll.period`).
+**Kolom:** `property_id` (FK), `period_date` (DATE, awal bulan), `service_charge_pool`, `occupancy_rate` (cross-domain, precompute dari `daily_occupancy` di-roll-up bulanan — Keputusan #6).
 **Partition:** `period_date`. **Cluster:** `property_id`.
 **Cakupan M5.1:** baris 8.
+**Koreksi grain & nama (M5.3):** draf M5.2 menyebut grain "harian" — ternyata `payroll.period` grain aslinya bulanan (sama seperti `financial_summary`), bukan harian. Kolom `deviation_from_correlation` juga dihapus (pola sama koreksi `gop_pricing_impact`/`delayed_rate_vs_occupancy` — korelasi tidak bisa dihitung bermakna dari 1 baris, cukup 2 nilai mentah untuk dibandingkan lintas periode oleh konsumen).
 
 #### `fact_financial_labor_cost_monthly`
 **Grain:** 1 baris per `property_id` × `period_date`.

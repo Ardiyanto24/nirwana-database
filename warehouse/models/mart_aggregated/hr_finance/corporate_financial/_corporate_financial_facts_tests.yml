@@ -1,0 +1,70 @@
+version: 2
+
+models:
+  - name: fact_financial_business_line_monthly
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_financial_overall_monthly
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_financial_revenue_runrate_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_payroll_department_monthly
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_financial_service_charge_monthly
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_financial_labor_cost_monthly
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_payroll_access_level_monthly
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_financial_business_line_group_monthly
+    columns:
+      - name: business_line_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_business_line')
+                field: business_line_id
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_financial_property_benchmark_monthly
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
