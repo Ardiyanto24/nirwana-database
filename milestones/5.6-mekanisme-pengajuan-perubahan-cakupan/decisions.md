@@ -1,7 +1,7 @@
 # Milestone 5.6: Mekanisme Pengajuan Perubahan Cakupan — Decisions
 
 **Source:** `docs/03-implementation-plans/03-mart-aggregated-owner.md`, baris 142-157.
-**Status:** In Progress
+**Status:** Done
 **Date started:** 2026-08-08
 
 ## Contract (from source doc)
