@@ -17,5 +17,9 @@ Pelajaran: constraint Sandbox mode jauh lebih luas dari yang terlihat di insiden
 Did: Tulis `scripts/mart_cleaned/promote.py` (`dbt run` -> `dbt test` -> `CREATE OR REPLACE TABLE` per tabel ke `mart_cleaned`, HANYA kalau semua test lolos). Percobaan pertama gagal: `get_client()` dari `scripts/extract/bq.py` pakai kredensial `extract-writer` (scope dataset `raw_production` saja), tidak punya akses ke `mart_cleaned_staging` -- `403 Forbidden`. Diperbaiki: `promote.py` pakai client terpisah dengan kredensial `dbt-transform` (env var baru `DBT_TRANSFORM_CREDENTIALS`), bukan reuse helper `bq.py` yang memang didesain untuk `extract-writer`.
 Result: worked. Uji 2 skenario terkontrol -- (1) data bersih: `dbt test` 3/3 PASS, `mart_cleaned__bookings` ter-promote, row count `mart_cleaned` = 217.654 (cocok staging). (2) tes sengaja dibuat gagal (`tests/_temp_always_fails.sql`, dihapus setelah diverifikasi): `dbt test` FAIL, script berhenti SEBELUM promote, `COUNT(*)` di `mart_cleaned` dicek ulang -- tetap 217.654, tidak berubah sama sekali. Gate terbukti benar-benar blocking, bukan cuma laporan setelah fakta.
 
+## 2026-08-08 -- Fase 3 batch 1 (Task 6-8: corporate_master, reservation_revenue, fnb_operations)
+Did: Generate 13 model `mart_cleaned` passthrough (`select * from {{ ref('stg_...') }}`) untuk 3 schema. `dbt run` batch (13 model) sukses semua sebagai `table` (full refresh, DDL). Validasi row count staging vs `mart_cleaned_staging` per tabel.
+Result: 13/13 OK, cocok persis dengan staging (termasuk `fnb_transactions` 902.574 baris, tabel terbesar).
+
 ## Status saat ini
-Checkpoint 2 selesai. Lanjut Fase 3 (Task 6-11: 23 model mart_cleaned per schema).
+Checkpoint 3 selesai. Lanjut Fase 3 batch 2 (Task 9-11: facility_maintenance, spa_event, hr_finance).

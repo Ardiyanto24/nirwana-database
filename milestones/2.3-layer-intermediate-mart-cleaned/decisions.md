@@ -40,11 +40,11 @@ Ini bukan cuma soal partition (M2.1) — tabel `raw_production` yang unpartition
 **Checkpoint 2** — commit + push, log Task 4-5.
 
 ### Fase 3 — 23 Model `mart_cleaned`
-- [ ] Task 6: `corporate_master` (4 tabel)
-- [ ] Task 7: `reservation_revenue` (3 tabel)
-- [ ] Task 8: `fnb_operations` (6 tabel)
+- [x] Task 6: `corporate_master` (4 tabel) — row count = staging (6/755/24893/77)
+- [x] Task 7: `reservation_revenue` (2 tabel sisa, `bookings` sudah Task 5) — row count = staging (19746/19746)
+- [x] Task 8: `fnb_operations` (6 tabel) — row count = staging (17/120/32910/902574/108733/457)
 
-**Checkpoint 3** — commit + push, log Task 6-8 (13/23 tabel).
+**Checkpoint 3** — commit + push, log Task 6-8 (13/23 tabel, semua model passthrough dari staging sesuai `pemetaan-kebutuhan-konsumen-data-mart.md`).
 
 - [ ] Task 9: `facility_maintenance` (3 tabel)
 - [ ] Task 10: `spa_event` (3 tabel)
