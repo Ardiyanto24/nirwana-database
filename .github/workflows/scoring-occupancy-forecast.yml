@@ -1,0 +1,54 @@
+name: Scoring Occupancy Forecast (Mock)
+
+# Milestone 5.4 -- STAND-IN for the real external ML scoring pipeline (does
+# not exist -- platform not yet decided by the ML Engineering team, see
+# milestones/5.4-integrasi-feedback-loop-ml/decisions.md provisional-status
+# note at the top of that file). Runs scripts/ml_scoring/mock_score.py as
+# its own workflow, deliberately separate from transform-mart-aggregated.yml,
+# so the sensor in that workflow has something genuine to poll for instead
+# of a trivial workflow_run chain (Keputusan #1).
+# Rujukan: docs/05-orchestrator/konvensi-job-dependency.md (domain "scoring",
+# sudah diantisipasi di baris 14 dokumen itu).
+#
+# Triggers off the same upstream event as transform-mart-aggregated.yml
+# (workflow_run on "Transform Staging and Mart Cleaned"), not the other way
+# around -- both start close together, transform-mart-aggregated.yml's
+# sensor tolerates the gap via a lookback window (see wait_for_ml_output.py).
+
+on:
+  workflow_run:
+    workflows: ["Transform Staging and Mart Cleaned"]
+    types: [completed]
+  workflow_dispatch: {}
+
+jobs:
+  run-scoring-occupancy-forecast:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write GCP service account key (dari GitHub Secret, tidak pernah disimpan permanen)
+        env:
+          GCP_KEY_JSON: ${{ secrets.GCP_ML_SCORING_WRITER_KEY_JSON }}
+        run: printf '%s' "$GCP_KEY_JSON" > scripts/extract/gcp-ml-scoring-writer-key.json
+
+      - name: Write .env untuk mock_score.py dan renew_expiration.py
+        run: |
+          echo "ML_SCORING_WRITER_CREDENTIALS=scripts/extract/gcp-ml-scoring-writer-key.json" >> .env
+          echo "GOOGLE_APPLICATION_CREDENTIALS=scripts/extract/gcp-ml-scoring-writer-key.json" >> .env
+
+      - name: Milestone 5.4 -- mock scoring run (occupancy forecast, PROVISIONAL/contoh)
+        run: python scripts/ml_scoring/mock_score.py
+
+      - name: Milestone 5.4 -- renew ml_output expiration (Sandbox mode mitigation, no billing yet)
+        run: python scripts/extract/renew_expiration.py ml_output

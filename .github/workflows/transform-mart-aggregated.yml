@@ -1,0 +1,93 @@
+name: Transform Mart Aggregated
+
+# Milestone 5.4 -- first-ever scheduled workflow for mart_aggregated (M5.3's
+# 76 tables were only ever promoted manually until now -- see
+# milestones/5.3-.../report.md Handoff Notes). Also implements the feedback
+# loop's sensor + isolated ML promotion (Bagian 6.4 arsitektur: refresh ->
+# trigger -> sensor -> LEFT JOIN transform -> test).
+# Rujukan: milestones/5.4-integrasi-feedback-loop-ml/decisions.md
+# (Keputusan #1, #2, #9, #10, #10a), docs/05-orchestrator/konvensi-job-dependency.md.
+#
+# Triggers off "Transform Staging and Mart Cleaned" directly -- NOT off
+# scoring-occupancy-forecast.yml -- so the sensor step below is a real
+# polling wait, not a trivial workflow_run chain (Keputusan #1: the scoring
+# job is deliberately treated as if external).
+#
+# KK3 (partial-failure isolation): steps 1-2 (76 existing tables) are
+# REQUIRED -- if they fail, the job fails. Steps 4-5 (the 1 ML table) are
+# best-effort (continue-on-error) -- a missing/late/failing ml_output never
+# blocks or fails this job. scripts/mart_aggregated/promote.py --select/
+# --exclude keeps the two promotions scoped so neither invocation touches
+# tables outside its own scope (see decisions.md Keputusan #10a for the bug
+# this fixed).
+
+on:
+  workflow_run:
+    workflows: ["Transform Staging and Mart Cleaned"]
+    types: [completed]
+  workflow_dispatch: {}
+
+jobs:
+  run-transform-mart-aggregated:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write GCP service account key (dari GitHub Secret, tidak pernah disimpan permanen)
+        env:
+          GCP_KEY_JSON: ${{ secrets.GCP_DBT_TRANSFORM_KEY_JSON }}
+        run: printf '%s' "$GCP_KEY_JSON" > scripts/extract/gcp-dbt-transform-key.json
+
+      - name: Write .env untuk promote.py, wait_for_ml_output.py, dan renew_expiration.py
+        run: |
+          echo "DBT_TRANSFORM_CREDENTIALS=scripts/extract/gcp-dbt-transform-key.json" >> .env
+          echo "GOOGLE_APPLICATION_CREDENTIALS=scripts/extract/gcp-dbt-transform-key.json" >> .env
+          echo "BIGQUERY_PROJECT_ID=nirwana-database-elt" >> .env
+          echo "BIGQUERY_DATASET=raw_production" >> .env
+
+      - name: Write warehouse/profiles.yml (dari template, keyfile menunjuk key CI di atas)
+        run: |
+          mkdir -p warehouse
+          cat > warehouse/profiles.yml << 'EOF'
+          nirwana_elt:
+            target: dev
+            outputs:
+              dev:
+                type: bigquery
+                method: service-account
+                project: nirwana-database-elt
+                dataset: mart_aggregated_staging
+                keyfile: ../scripts/extract/gcp-dbt-transform-key.json
+                threads: 4
+                location: US
+          EOF
+
+      - name: Milestone 5.3/5.4 -- build->test->swap gate, 76 tabel existing (WAJIB, tag ml_feedback_loop dikecualikan)
+        run: python scripts/mart_aggregated/promote.py --select mart_aggregated --exclude tag:ml_feedback_loop
+
+      - name: Milestone 5.4 -- sensor, tunggu ml_output.predictions (30x/120 detik, ~60 menit)
+        id: sensor
+        continue-on-error: true
+        run: python scripts/ml_scoring/wait_for_ml_output.py --max-attempts 30 --interval-seconds 120
+
+      - name: Milestone 5.4 -- build->test->swap gate, 1 tabel ML (best-effort, cuma kalau sensor sukses)
+        if: steps.sensor.outcome == 'success'
+        continue-on-error: true
+        run: python scripts/mart_aggregated/promote.py --select tag:ml_feedback_loop
+
+      - name: Milestone 5.4 -- log skip kalau sensor timeout (mart_aggregated tetap sukses tanpa ML, KK3)
+        if: steps.sensor.outcome != 'success'
+        run: echo "ml_output not ready within the sensor timeout -- fact_ml_occupancy_forecast_property_room_type left at its previous state, 76 other tables already promoted above. Job still succeeds (KK3)."
+
+      - name: Milestone 5.4 -- renew mart_aggregated expiration (Sandbox mode mitigation, no billing yet)
+        run: python scripts/extract/renew_expiration.py mart_aggregated mart_aggregated_staging
