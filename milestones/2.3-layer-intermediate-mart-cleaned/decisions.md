@@ -1,7 +1,7 @@
 # Milestone 2.3: Layer Intermediate dan Mart Cleaned (Fase 2)
 
 **Source:** `docs/03-implementation-plans/02-serving-data-scientist.md` (baris 104-121, "Milestone 2.3 — Layer Intermediate dan Mart Cleaned")
-**Status:** In Progress
+**Status:** Done (lihat `report.md` — Partially Completed, KK#4 tidak terpenuhi karena gap billing)
 **Date started:** 2026-08-08
 
 ## Contract (from source doc)
@@ -58,7 +58,7 @@ Ini bukan cuma soal partition (M2.1) — tabel `raw_production` yang unpartition
 
 **Checkpoint 5** — commit + push, log Task 12-13.
 
-- [ ] Task 14: Verifikasi Kriteria Keberhasilan + `report.md`
+- [x] Task 14: Verifikasi Kriteria Keberhasilan + `report.md` — 3/4 KK terpenuhi, KK#4 (incremental lebih murah dari full refresh) tidak terpenuhi (gap billing, sama seperti gap "full history")
 
 **Checkpoint 6 (final)** — commit + push, tutup milestone.
 

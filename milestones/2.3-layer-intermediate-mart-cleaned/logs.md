@@ -32,5 +32,8 @@ Result: worked, 23/23 `mart_cleaned` cocok row count dengan `staging`.
 Uji coba terkontrol (Task 13): karena DML/INSERT diblokir Sandbox mode, tidak bisa suntik baris lewat `_simulation` schema seperti pola Fase 1 -- diakali dengan `UNION ALL` sementara langsung di `mart_cleaned__bookings.sql` (1 baris literal, `total_amount=-500000`, `booking_id='BK_SIMULATION_BAD_ROW'`). Sempat 2x error teknis (jumlah kolom UNION tidak cocok karena lupa `_synced_at`; lalu urutan kolom tidak cocok posisi -- diperbaiki pakai `bq show --schema` untuk urutan kolom pasti, bukan tebak-tebak nama).
 Result: **gate bekerja persis seperti didesain** -- `assert_bookings_total_amount_non_negative` FAIL, `dbt test` exit nonzero, `promote.py` berhenti sebelum swap (`mart_cleaned tidak tersentuh sama sekali` tercetak eksplisit). Verifikasi: `mart_cleaned.mart_cleaned__bookings` tetap 217.654 baris, `min(total_amount)` tetap 464.000 (positif), `COUNTIF(booking_id='BK_SIMULATION_BAD_ROW')=0`. Model dikembalikan bersih, rebuild ulang, re-promote -- verifikasi akhir 23/23 tabel `mart_cleaned` cocok `staging`.
 
-## Status saat ini
-Checkpoint 5 selesai. Lanjut Task 14 (verifikasi Kriteria Keberhasilan + report.md, Checkpoint 6 final).
+## 2026-08-08 -- Penutupan (Task 14)
+Did: Perpanjang expirationTime manual untuk `staging`/`mart_cleaned`/`mart_cleaned_staging` (belum masuk workflow terjadwal -- dicatat sebagai gap prioritas tinggi). Tulis `report.md`, cek 4 Kriteria Keberhasilan sumber satu-satu.
+Result: Milestone selesai dengan status **Partially Completed** -- 3/4 KK terpenuhi. KK#4 (refresh incremental lebih murah dari full refresh) tidak terpenuhi, akar masalah sama dengan gap "full history" (billing GCP belum aktif) -- bukan kegagalan desain, konsekuensi eksplisit dari batasan platform yang sudah didokumentasikan sejak awal milestone ini.
+
+## Status akhir: Completed (dengan 1 KK tidak terpenuhi + gap terdokumentasi, lihat report.md)
