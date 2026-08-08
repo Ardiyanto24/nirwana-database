@@ -35,5 +35,12 @@ Recovery: drop 11 tabel rusak (`bq rm -f -t`, sempat timeout di command loop per
 Keputusan akhir: Task 6 **dihentikan**, tidak dicoba ulang dengan workaround (ingestion-time partitioning dipertimbangkan tapi ditolak -- tidak memenuhi maksud asli "partisi sesuai kolom tanggal relevan"). Dicatat sebagai gap eksplisit, revisit begitu billing GCP aktif (script `partition_tables.py` sudah terbukti benar secara mekanis, cukup dijalankan ulang nanti).
 Pelajaran: kalau ragu soal efek samping DDL yang belum pernah dicoba di lingkungan tertentu (Sandbox mode di sini), **verifikasi row count SEGERA setelah operasi**, bukan asumsi "job SUCCESS" = "data benar" -- BigQuery job status tidak mencerminkan kebijakan expirasi yang berjalan di background setelahnya.
 
-## Status saat ini (belum Completed)
-Task 1-5, 7, 8, 9 selesai & terverifikasi. Task 6 dihentikan (gap terdokumentasi). Sisa: Task 10 (jadwal GitHub Actions) dan Task 11 (verifikasi Kriteria Keberhasilan + `report.md`).
+## 2026-08-08 -- Jadwal GitHub Actions (Task 10)
+Did: Tulis `.github/workflows/extract-production.yml` (cron harian 03:00 UTC, setelah `monitoring.yml`), mengikuti konvensi `docs/05-orchestrator/konvensi-job-dependency.md`. Set 2 GitHub Secret baru via `gh secret set` (`EXTRACT_DB_URL`, `GCP_EXTRACT_WRITER_KEY_JSON`) -- berbeda dari kasus pembuatan key file mentah (diblokir classifier), ini hanya memindahkan kredensial yang SUDAH ada ke penyimpanan terenkripsi GitHub, tidak diblokir. Perbaiki 1 hal sebelum push: `echo '${{ secrets.X }}' > file` berisiko untuk secret JSON multi-baris (kena masalah quoting/newline) -- diganti pola `env:` + `printf '%s' "$VAR" > file`, lebih aman.
+Result: worked. Trigger manual (`gh workflow run`), run [31232217473](https://github.com/Ardiyanto24/nirwana-database/actions/runs/31232217473) sukses. Log run membuktikan cursor tracking benar di lingkungan CI (bukan cuma lokal): 19 tabel `pk`/`date` = 0 baris baru (sudah tersinkron penuh sebelumnya, konsisten data statis), 4 tabel `full_refresh` (`properties`, `role_permissions`, `recipe_bom`, `fnb_inventory`) re-sync penuh seperti didesain.
+
+## 2026-08-08 -- Penutupan milestone (Task 11)
+Did: Update checklist `decisions.md`, tulis `report.md` mengecek 3 Kriteria Keberhasilan sumber satu-satu.
+Result: Milestone selesai dengan status **Partially Completed** -- 3 gap eksplisit (read replica, CDC, partitioning), semuanya keputusan sadar yang didokumentasikan lengkap alasannya, bukan oversight.
+
+## Status akhir: Completed (dengan 3 gap terdokumentasi, lihat report.md)

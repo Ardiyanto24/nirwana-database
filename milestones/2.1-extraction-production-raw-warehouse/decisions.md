@@ -1,7 +1,7 @@
 # Milestone 2.1: Extraction Production ke Raw Warehouse (Fase 2)
 
 **Source:** `docs/03-implementation-plans/02-serving-data-scientist.md` (baris 64-81, "Milestone 2.1 — Extraction Production ke Raw Warehouse")
-**Status:** In Progress
+**Status:** Done (lihat `report.md` untuk verifikasi Kriteria Keberhasilan — Partially Completed, 3 gap eksplisit)
 **Date started:** 2026-08-08
 
 ## Contract (from source doc)
@@ -32,8 +32,8 @@ Breakdown (`planning-and-task-breakdown`) menemukan 3 fakta yang tidak sesuai as
 - [x] Task 7: Sync awal (full load) 23 tabel + validasi row count vs sumber — Acceptance: row count cocok persis pada snapshot sama — Verify: script pembanding `COUNT(*)` Postgres vs BigQuery per tabel — **23/23 OK, seluruh baris cocok persis** (total ~2.529.584 baris, sesuai `CLAUDE.md` "~2.53M rows")
 - [x] Task 8: Uji coba terkontrol cursor tracking — insert baris uji coba langsung ke `fnb_outlets` (bukan schema `_simulation` terpisah -- tabel sudah cukup kecil/aman untuk insert+cleanup terkontrol via admin connection) — Acceptance: delta count cocok jumlah baris uji coba — Verify: insert `OUT018` -> sync mendeteksi tepat 1 baris baru (18 total), cleanup (delete Postgres + reset cursor + full re-sync) -> BigQuery kembali 17 baris bersih. **Temuan penting:** BigQuery Sandbox mode (tanpa billing) tidak mengizinkan DML (`UPDATE`/`DELETE`) langsung — cleanup harus lewat reset cursor + `WRITE_TRUNCATE` full reload, bukan `DELETE` biasa
 - [x] Task 9: Uji privilese user replikasi — akses ke tabel di luar whitelist harus ditolak — Acceptance: percobaan akses gagal — Verify: sudah terverifikasi di Task 2 (`setup_extract_role.py` — SELECT `monitoring.alerts` & INSERT keduanya ditolak), tidak diulang
-- [ ] Task 10: Jadwalkan job ekstraksi lewat GitHub Actions (`extract-*.yml`, mengikuti `docs/05-orchestrator/konvensi-job-dependency.md`) — Acceptance: job jalan terjadwal — Verify: run history — S
-- [ ] Task 11: Dokumentasi + verifikasi Kriteria Keberhasilan (termasuk gap read replica & sandbox BigQuery) + `logs.md`/`report.md` — Acceptance: semua KK sumber dicek eksplisit, gap dicatat jelas — Verify: `report.md` — S
+- [x] Task 10: Jadwalkan job ekstraksi lewat GitHub Actions (`.github/workflows/extract-production.yml`, cron harian 03:00 UTC + `workflow_dispatch`) — Acceptance: job jalan terjadwal — Verify: trigger manual, run [`31232217473`](https://github.com/Ardiyanto24/nirwana-database/actions/runs/31232217473) sukses — cursor tracking terbukti benar di CI (0 baris baru untuk tabel `pk`/`date`, full_refresh table re-sync seperti seharusnya)
+- [x] Task 11: Dokumentasi + verifikasi Kriteria Keberhasilan (termasuk gap read replica, CDC, & partitioning) + `logs.md`/`report.md` — Acceptance: semua KK sumber dicek eksplisit, gap dicatat jelas — Verify: `report.md`
 
 **Checkpoint** setelah Task 4: kalau cursor tracking tidak terbukti benar untuk 1 tabel percobaan, Task 5-8 (skema penuh 23 tabel) belum ada gunanya dikerjakan.
 
