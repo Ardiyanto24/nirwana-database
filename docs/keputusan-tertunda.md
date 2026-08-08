@@ -56,3 +56,13 @@
 - **Alternatives considered:** Job drop+recreate berkala (lebih berat & berisiko daripada sekadar memperpanjang `expirationTime`); tetap Sandbox mode permanen tanpa mitigasi apa pun (ditolak — bertentangan langsung dengan syarat "full history" yang eksplisit diminta beberapa milestone).
 - **Revisit when:** Begitu kendala kartu kredit user selesai. Setelah billing aktif: (1) hapus `defaultTableExpirationMs`/`defaultPartitionExpirationMs` di seluruh dataset (`raw_production`, `staging`, `mart_cleaned`), (2) reset `expirationTime` tabel-tabel existing yang masih membawa timestamp lama, (3) migrasi `mart_cleaned` ke partition-based incremental (`insert_overwrite`) sesuai desain asli dokumen sumber, (4) hapus langkah `bq update --expiration` dari workflow terjadwal (sudah tidak perlu).
 - **Status:** Open
+
+---
+
+### Data dictionary/metadata kolom `mart_aggregated` (deferred dari Milestone 5.2 ke Milestone 5.3)
+
+- **Date:** 2026-08-08
+- **What was deferred:** Menulis data dictionary lengkap untuk `mart_aggregated` (cara hitung detail tiap kolom, unit, contoh nilai) — mirip `docs/01-architecture/Metadata.md` untuk tabel produksi. Milestone 5.2 hanya menulis skema **struktural** (nama tabel, nama/tipe kolom, FK dimension, partition/cluster key, keterangan singkat 1 baris per kolom) di `docs/07-mart-aggregated/desain-skema-mart-aggregated.md`.
+- **Why deferred:** Dibahas eksplisit dengan user saat breakdown Milestone 5.2 (setelah membaca `04-serving-data-analyst.md` dan `05-serving-ai-chatbot.md` untuk memastikan kedua pekerjaan konsumen tidak diam-diam mengharapkan metadata dari sana). Keputusan: data dictionary penuh baru masuk akal ditulis **setelah** SQL transformasi (Milestone 5.3) selesai dan teruji — mendeskripsikan skema yang sudah nyata berjalan, bukan yang baru didesain di atas kertas, mengikuti pola `Metadata.md` vs `DataSchema.md` di produksi (`DataSchema.md` = histori/keputusan desain, peran itu yang diisi dokumen M5.2; `Metadata.md` = deskripsi skema aktual, peran itu untuk dokumen M5.3 nanti).
+- **Revisit when:** Segera setelah Milestone 5.3 (implementasi transformasi `mart_aggregated`) selesai dan lolos data quality gate — data dictionary ditulis sebagai bagian output M5.3, bukan milestone terpisah.
+- **Status:** Open (rumah sudah jelas di M5.3, bukan penundaan tanpa arah)
