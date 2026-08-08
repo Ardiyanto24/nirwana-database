@@ -1,7 +1,7 @@
 # Milestone 5.5: Reverse ETL Mart Aggregated ke PostgreSQL — Decisions
 
 **Source:** `docs/03-implementation-plans/03-mart-aggregated-owner.md`, baris 122-140.
-**Status:** In Progress
+**Status:** Done
 **Date started:** 2026-08-08
 
 ## Contract (from source doc)
