@@ -1,0 +1,87 @@
+version: 2
+
+# Test dasar Milestone 2.2 -- bukti awal bahwa staging benar, BUKAN gerbang data
+# quality penuh (itu Milestone 2.3). unique/not_null hanya dipasang untuk 15 tabel
+# yang genuinely punya primary key kolom tunggal (dicek information_schema saat
+# Milestone 2.1 -- 8 tabel lain punya composite key atau tanpa PK sama sekali,
+# lihat scripts/extract/tables_config.py -- tidak dipaksakan unique test di sini).
+models:
+  - name: stg_corporate_master__properties
+    columns:
+      - name: property_id
+        tests: [unique, not_null]
+
+  - name: stg_corporate_master__employees
+    columns:
+      - name: employee_id
+        tests: [unique, not_null]
+      - name: department
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Corporate', 'F&B', 'Facility', 'Finance', 'Housekeeping', 'HR', 'Revenue', 'Spa&Event']
+
+  - name: stg_corporate_master__guests
+    columns:
+      - name: guest_id
+        tests: [unique, not_null]
+
+  - name: stg_reservation_revenue__bookings
+    columns:
+      - name: booking_id
+        tests: [unique, not_null]
+
+  - name: stg_fnb_operations__fnb_outlets
+    columns:
+      - name: outlet_id
+        tests: [unique, not_null]
+
+  - name: stg_fnb_operations__fnb_waste_log
+    columns:
+      - name: waste_id
+        tests: [unique, not_null]
+
+  - name: stg_facility_maintenance__rooms
+    columns:
+      - name: room_id
+        tests: [unique, not_null]
+
+  - name: stg_facility_maintenance__housekeeping_log
+    columns:
+      - name: log_id
+        tests: [unique, not_null]
+
+  - name: stg_facility_maintenance__maintenance_tickets
+    columns:
+      - name: ticket_id
+        tests: [unique, not_null]
+
+  - name: stg_spa_event__venues
+    columns:
+      - name: venue_id
+        tests: [unique, not_null]
+
+  - name: stg_spa_event__spa_bookings
+    columns:
+      - name: spa_booking_id
+        tests: [unique, not_null]
+
+  - name: stg_spa_event__event_bookings
+    columns:
+      - name: event_id
+        tests: [unique, not_null]
+
+  - name: stg_hr_finance__staff_shifts
+    columns:
+      - name: shift_id
+        tests: [unique, not_null]
+
+  - name: stg_hr_finance__employee_performance
+    columns:
+      - name: review_id
+        tests: [unique, not_null]
+
+  - name: stg_hr_finance__payroll
+    columns:
+      - name: payroll_id
+        tests: [unique, not_null]

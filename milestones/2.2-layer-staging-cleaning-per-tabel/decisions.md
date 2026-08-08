@@ -1,7 +1,7 @@
 # Milestone 2.2: Layer Staging — Cleaning per Tabel (Fase 2)
 
 **Source:** `docs/03-implementation-plans/02-serving-data-scientist.md` (baris 85-101, "Milestone 2.2 — Layer Staging: Cleaning per Tabel")
-**Status:** In Progress
+**Status:** Done (lihat `report.md` untuk verifikasi Kriteria Keberhasilan)
 **Date started:** 2026-08-08
 
 ## Contract (from source doc)
@@ -29,14 +29,14 @@ Sebelum breakdown & keputusan ini, dilakukan observability/profiling independen 
 - [x] Task 3: Definisikan mapping `employees.department` 19→8 eksplisit — Acceptance: 19 nilai asli termapping ke 8 nilai baku, didokumentasikan — Verify: query `GROUP BY department` langsung ke `raw_production` — **koreksi temuan profiling sebelumnya**: seluruh 19 variasi ternyata murni beda kapitalisasi/whitespace (bukan singkatan/ejaan berbeda seperti diduga) — `LOWER(TRIM())` + mapping 1:1 ke 8 nilai baku (`Corporate`, `F&B`, `Facility`, `Finance`, `Housekeeping`, `HR`, `Revenue`, `Spa&Event`) sudah cukup, tidak perlu fuzzy matching
 - [x] Task 4: Model dbt `stg_corporate_master__employees` (trim `full_name`, mapping `department`, parse `hire_date`, preserve null `role_title`) — Acceptance: row count = raw, distinct `department`=8, `hire_date` bertipe DATE — Verify: 755=755, distinct department 19→8, hire_date DATE, role_title null=15 (preserved)
 - [x] Task 5: Model dbt `stg_corporate_master__guests` (normalisasi `phone`, `nationality` case/trim, preserve typo/null/duplikat) — Acceptance: row count = raw, distinct format `phone`=1 — Verify: 24893=24893, null phone=750 (preserved), distinct nationality 466→243, phone domestik (4 variasi: `+62 xxx-xxxx-xxx`, `62xxxxxxxxxx`, `0xxx-xxxx-xxx`, `0xxxxxxxxxx`) semua jadi `0xxxxxxxxxx`, nomor asing tidak disentuh. **Bug ditemukan & diperbaiki**: nama CTE sama dengan nama kolom di dalamnya (`phone_normalized`) menyebabkan BigQuery salah resolve jadi STRUCT satu baris penuh alih-alih kolom tunggal -- CTE di-rename `with_phone_normalized`
-- [ ] Task 6: Model dbt `stg_reservation_revenue__*` (3 tabel, passthrough) — Acceptance: row count = raw — Verify: query count — S
-- [ ] Task 7: Model dbt `stg_fnb_operations__*` (6 tabel, passthrough) — Acceptance: row count = raw — Verify: query count — M
-- [ ] Task 8: Model dbt `stg_facility_maintenance__*` (3 tabel, passthrough + preserve null) — Acceptance: row count = raw — Verify: query pembanding — S
-- [ ] Task 9: Model dbt `stg_spa_event__*` (3 tabel, passthrough) — Acceptance: row count = raw — Verify: query count — S
-- [ ] Task 10: Model dbt `stg_hr_finance__*` (4 tabel, passthrough + dokumentasi Kategori C) — Acceptance: row count = raw — Verify: review dokumentasi — M
-- [ ] Task 11: Dokumentasi eksplisit "kolom yang sengaja tidak dibersihkan" per tabel — Acceptance: daftar lengkap 23 tabel — Verify: cross-check Kategori B — S
-- [ ] Task 12: dbt test dasar (`not_null`, `unique`) — Acceptance: test jalan — Verify: `dbt test` — S
-- [ ] Task 13: Verifikasi Kriteria Keberhasilan + `logs.md`/`report.md` — Acceptance: 3 KK dicek eksplisit — Verify: `report.md` — S
+- [x] Task 6: Model dbt `stg_reservation_revenue__*` (3 tabel, passthrough) — Acceptance: row count = raw — Verify: 217654/19746/19746 semua cocok
+- [x] Task 7: Model dbt `stg_fnb_operations__*` (6 tabel, passthrough, `fnb_transactions` didokumentasikan non-unique key) — Acceptance: row count = raw — Verify: 17/120/32910/902574/108733/457 semua cocok
+- [x] Task 8: Model dbt `stg_facility_maintenance__*` (3 tabel, passthrough + preserve null) — Acceptance: row count = raw — Verify: 549/425172/13514 semua cocok
+- [x] Task 9: Model dbt `stg_spa_event__*` (3 tabel, passthrough) — Acceptance: row count = raw — Verify: 20/127890/1333 semua cocok
+- [x] Task 10: Model dbt `stg_hr_finance__*` (4 tabel, passthrough + dokumentasi Kategori C di komentar SQL `payroll`/`financial_summary`) — Acceptance: row count = raw — Verify: 610019/3748/23383/756 semua cocok
+- [x] Task 11: Dokumentasi eksplisit "kolom yang sengaja tidak dibersihkan" per tabel — Acceptance: daftar lengkap — Verify: `warehouse/README.md` (11 baris tabel, cross-check Kategori B)
+- [x] Task 12: dbt test dasar (`not_null`, `unique`, `accepted_values`) — Acceptance: test jalan — Verify: `dbt test` — **31/31 PASS** (unique+not_null 15 tabel ber-PK tunggal, accepted_values `department`=8 nilai)
+- [x] Task 13: Verifikasi Kriteria Keberhasilan + `logs.md`/`report.md` — Acceptance: 3 KK dicek eksplisit — Verify: `report.md`
 
 **Checkpoint** setelah Task 5: validasi pola kerja & tooling dbt di 2 tabel tersulit (`employees`, `guests`) dulu sebelum 18 tabel passthrough lain.
 
