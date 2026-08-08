@@ -1,0 +1,77 @@
+name: Transform Staging and Mart Cleaned
+
+# Milestone 2.4 -- closes the M2.3 known gap: dbt staging (M2.2) build and
+# scripts/mart_cleaned/promote.py (M2.3, build->test->swap gate) were only
+# ever run manually until now. Also renews expirationTime for staging/
+# mart_cleaned/mart_cleaned_staging (BigQuery Sandbox mode mitigation, same
+# pattern as extract-production.yml's raw_production renewal).
+# Rujukan: milestones/2.4-reverse-etl-postgresql/decisions.md,
+# docs/05-orchestrator/konvensi-job-dependency.md (naming: transform-*.yml).
+#
+# Scheduled 2 hours after extract-production.yml (03:00 UTC) so raw_production
+# has landed before staging views are queried -- not a hard `workflow_run`
+# dependency (GitHub Actions has no data-readiness sensor, see konvensi doc's
+# "Batasan yang Perlu Diketahui"), just a time buffer.
+# reverse-etl-mart-cleaned.yml (Task 14) chains off THIS workflow via
+# workflow_run, since it has a real data dependency on mart_cleaned being fresh.
+
+on:
+  schedule:
+    - cron: "0 5 * * *"  # tiap hari jam 05:00 UTC (12:00 WIB)
+  workflow_dispatch: {}
+
+jobs:
+  run-transform-mart-cleaned:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write GCP service account key (dari GitHub Secret, tidak pernah disimpan permanen)
+        env:
+          GCP_KEY_JSON: ${{ secrets.GCP_DBT_TRANSFORM_KEY_JSON }}
+        run: printf '%s' "$GCP_KEY_JSON" > scripts/extract/gcp-dbt-transform-key.json
+
+      - name: Write .env untuk promote.py dan renew_expiration.py
+        run: |
+          echo "DBT_TRANSFORM_CREDENTIALS=scripts/extract/gcp-dbt-transform-key.json" >> .env
+          echo "GOOGLE_APPLICATION_CREDENTIALS=scripts/extract/gcp-dbt-transform-key.json" >> .env
+          echo "BIGQUERY_PROJECT_ID=nirwana-database-elt" >> .env
+          echo "BIGQUERY_DATASET=raw_production" >> .env
+
+      - name: Write warehouse/profiles.yml (dari template, keyfile menunjuk key CI di atas)
+        run: |
+          mkdir -p warehouse
+          cat > warehouse/profiles.yml << 'EOF'
+          nirwana_elt:
+            target: dev
+            outputs:
+              dev:
+                type: bigquery
+                method: service-account
+                project: nirwana-database-elt
+                dataset: staging
+                keyfile: ../scripts/extract/gcp-dbt-transform-key.json
+                threads: 4
+                location: US
+          EOF
+
+      - name: Milestone 2.2 -- dbt run staging (23 view, cleaning per tabel)
+        working-directory: warehouse
+        run: dbt run --select staging --profiles-dir .
+
+      - name: Milestone 2.2 -- dbt test staging (31 test)
+        working-directory: warehouse
+        run: dbt test --select staging --profiles-dir .
+
+      - name: Milestone 2.3 -- build->test->swap gate ke mart_cleaned (scripts/mart_cleaned/promote.py)
+        run: python scripts/mart_cleaned/promote.py --select mart_cleaned
+
+      - name: Milestone 2.3 -- renew table/view expiration (Sandbox mode mitigation, no billing yet)
+        run: python scripts/extract/renew_expiration.py staging mart_cleaned mart_cleaned_staging
