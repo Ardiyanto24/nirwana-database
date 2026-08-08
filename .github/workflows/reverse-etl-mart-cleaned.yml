@@ -1,0 +1,50 @@
+name: Reverse ETL Mart Cleaned to Serving PostgreSQL
+
+# Milestone 2.4 -- pushes all 23 mart_cleaned tables from BigQuery to the
+# serving PostgreSQL project via scripts/reverse_etl/sync.py (full refresh +
+# RENAME swap, row-count-parity gate before swap).
+# Rujukan: milestones/2.4-reverse-etl-postgresql/decisions.md,
+# docs/05-orchestrator/konvensi-job-dependency.md (naming: reverse-etl-*.yml).
+#
+# Chains via workflow_run off transform-mart-cleaned.yml -- a REAL data
+# dependency (mart_cleaned must be freshly rebuilt before it's worth pushing
+# to Postgres), unlike extract-production.yml -> transform-mart-cleaned.yml's
+# time-buffer-only relationship. Konvensi doc: cross-workflow dependency uses
+# workflow_run, not editing the upstream workflow file.
+
+on:
+  workflow_run:
+    workflows: ["Transform Staging and Mart Cleaned"]
+    types: [completed]
+  workflow_dispatch: {}
+
+jobs:
+  run-reverse-etl-mart-cleaned:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write GCP service account key (dari GitHub Secret, tidak pernah disimpan permanen)
+        env:
+          GCP_KEY_JSON: ${{ secrets.GCP_REVERSE_ETL_READER_KEY_JSON }}
+        run: printf '%s' "$GCP_KEY_JSON" > scripts/extract/gcp-reverse-etl-reader-key.json
+
+      - name: Write .env untuk sync.py
+        run: |
+          echo "REVERSE_ETL_READER_CREDENTIALS=scripts/extract/gcp-reverse-etl-reader-key.json" >> .env
+          echo "REVERSE_ETL_WRITER_DB_URL=${{ secrets.REVERSE_ETL_WRITER_DB_URL }}" >> .env
+          echo "SUPABASE_DB_URL=${{ secrets.SUPABASE_DB_URL }}" >> .env
+
+      - name: Milestone 2.4 -- sync seluruh 23 tabel mart_cleaned ke serving PostgreSQL
+        working-directory: scripts/reverse_etl
+        run: python sync.py --all
