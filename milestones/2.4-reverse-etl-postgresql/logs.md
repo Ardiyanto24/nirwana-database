@@ -53,3 +53,14 @@ Result: 10/10 tabel synced, seluruh row count cocok persis (`housekeeping_log` 4
 
 ## Checkpoint 4 -- selesai
 23/23 tabel `mart_cleaned` tersedia di serving Postgres, seluruh row count cocok BigQuery, tidak ada tabel sisa. KK#1 sumber ("seluruh 23 tabel tersedia, row count cocok pasca-sync") terpenuhi.
+
+## 2026-08-08 -- Task 14 (Fase 4: workflow reverse-etl-mart-cleaned.yml)
+Did: Tulis `.github/workflows/reverse-etl-mart-cleaned.yml` -- trigger `workflow_run` menunggu `transform-mart-cleaned.yml` sukses (cek `github.event.workflow_run.conclusion == 'success'`) + `workflow_dispatch`. Minta izin user untuk 2 GitHub Secret baru (`GCP_REVERSE_ETL_READER_KEY_JSON`, `REVERSE_ETL_WRITER_DB_URL`) -- disetujui, berhasil ditambahkan (`SUPABASE_DB_URL` reuse yang sudah ada, dipakai `log_sync_result()` untuk tulis ke `monitoring.reverse_etl_sync_log`).
+Result: worked, 2x diverifikasi. (1) `workflow_dispatch` manual: sukses 8m4s, 23/23 baris log tercatat `status=synced` (dicek query manual ke `monitoring.reverse_etl_sync_log`, total 47 baris kumulatif termasuk run lokal Task 8-13). (2) **Uji rantai `workflow_run` sesungguhnya**: trigger `transform-mart-cleaned.yml` manual -> selesai -> `reverse-etl-mart-cleaned.yml` **otomatis** ter-trigger (`gh run list` menunjukkan trigger `workflow_run`) -> sukses 6m46s. End-to-end orchestrator chain (extract -> transform -> reverse-etl) terbukti nyata, bukan cuma jadwal independen. Task 14 selesai.
+
+## 2026-08-08 -- Task 15 (Fase 4: verifikasi KK + report.md)
+Did: Cek 2 Kriteria Keberhasilan sumber satu-satu terhadap bukti yang sudah terkumpul sepanjang milestone ini (bukan diasumsikan dari "task selesai"). Tulis `report.md`.
+Result: **Kedua KK terpenuhi** -- KK#1 (23 tabel + row count cocok) dibuktikan lewat 47+23 baris `monitoring.reverse_etl_sync_log` tanpa mismatch; KK#2 (swap tanpa downtime) dibuktikan lewat `test_no_downtime_swap.py` (274 query konkuren, 0 error). Status: **Completed** (bukan Partially -- beda dari M2.3, tidak ada gap billing yang menghalangi scope M2.4 secara langsung). 3 Known Gap dicatat (role read-only Data Analyst belum ada, sync selalu `--all` bukan selektif, 8 tabel tanpa PK tunggal) -- semuanya sudah diketahui/diwariskan, bukan temuan baru yang mengejutkan.
+
+## Checkpoint 5 (final) -- selesai
+Milestone 2.4 selesai. Kedua Kriteria Keberhasilan sumber terpenuhi penuh.
