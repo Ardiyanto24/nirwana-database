@@ -197,13 +197,54 @@ Bagian "Pemetaan Persona → Domain" di bawah adalah tabel rujukan lintas-domain
 
 ## 5. HR
 
-*(diisi Fase 3 — Task 6)*
+**Sumber:** `pemetaan-kebutuhan-data-analyst.md` §5.3. **Tabel sumber:** `staff_shifts`, `employee_performance`, `employees`.
+
+| Metrik/Agregasi | Grain | Konsumen Analyst | Konsumen Chatbot | Status | Catatan |
+|---|---|---|---|---|---|
+| Attendance rate (present/late/leave/absent) | property_id/department × periode | HR Analyst | HR Staff (hari ini), HR Manager (per departemen), Corporate HR Director (rata-rata grup) | Cakupan Awal | — |
+| Jam lembur total & distribusi | property_id/department × periode | HR Analyst | — | Cakupan Awal | — |
+| Jam lembur per individu vs rata-rata departemen | employee_id × periode | HR Analyst | HR Manager | Cakupan Awal | Deteksi lembur berlebihan kronis |
+| Rate keterlambatan per individu vs rata-rata departemen | employee_id × periode | HR Analyst | HR Staff (daftar administratif keterlambatan), HR Manager (dibanding rata-rata) | Cakupan Awal | — |
+| Rasio perubahan pola individu vs baseline historis (watchlist pra-resign) | employee_id × periode | HR Analyst | HR Manager (eksplisit: metrik inti watchlist) | Cakupan Awal | Metrik *within-entity over time*, bukan agregasi antar-entitas biasa. Threshold "di luar kebiasaan" untuk early warning **belum ditentukan** (Bagian 10 No. 3 dokumen induk) — di luar cakupan pemetaan ini, metrik dasarnya tetap disediakan |
+| Skor performa terakhir & tren antar periode review | employee_id × periode review | HR Analyst | HR Staff (skor + catatan kualitatif), HR Manager (tren) | Cakupan Awal | — |
+| Turnover rate per departemen/properti, MoM & YoY | property_id/department × periode | HR Analyst | HR Manager, Corporate HR Director (ranking antar properti) | Cakupan Awal | — |
+| Distribusi status karyawan (active/resigned/terminated) | property_id/department × snapshot | HR Analyst | HR Manager, Corporate HR Director (jumlah karyawan aktif grup) | Cakupan Awal | — |
+| Rata-rata skor performa per departemen, tren antar periode | property_id/department × periode | HR Analyst | HR Manager, Corporate HR Director (rata-rata grup) | Cakupan Awal | — |
+| Perbandingan skor performa: populasi resign/terminated vs aktif | property_id × periode | HR Analyst | — | Cakupan Awal | Analisis korelasi kinerja-retensi, tidak diminta eksplisit oleh persona chatbot manapun |
+| Payroll/kompensasi | — | HR Analyst (sengaja dikeluarkan) | — | Luar Cakupan | **Bukan gap data** — sengaja dipisah mengikuti segregation of duties HR vs Finance; sepenuhnya cakupan Corporate/Financial (lihat bagian 6) |
+| Exit interview / alasan resign | — | HR Analyst | — | Luar Cakupan | `employees.status` hanya status akhir, tanpa tanggal/alasan resign — gap data sumber |
+| Training/sertifikasi karyawan | — | HR Analyst | — | Luar Cakupan | Tidak ada tabel ini di skema manapun — gap data sumber |
+
+**Row-level (`mart_cleaned`, bukan `mart_aggregated`):** investigasi lonjakan absensi departemen/periode tertentu, investigasi karyawan tertentu yang masuk watchlist (row-level histori shift & performance).
 
 ---
 
 ## 6. Corporate/Financial
 
-*(diisi Fase 3 — Task 7)*
+**Sumber:** `pemetaan-kebutuhan-data-analyst.md` §6.3. **Tabel sumber:** `financial_summary`, `payroll`; `bookings` (koherensi check, cross-domain); `employees` (`access_level` untuk breakdown service charge).
+
+| Metrik/Agregasi | Grain | Konsumen Analyst | Konsumen Chatbot | Status | Catatan |
+|---|---|---|---|---|---|
+| Departmental revenue/expense/profit (Room/F&B/Spa&Event) | property_id/department × periode | Corporate/Financial Analyst | Finance Staff, Corporate Finance Director (agregasi lanjut ke total grup) | Cakupan Awal | — |
+| GOP dan GOP margin (%), MoM & YoY | property_id × periode, baris `Overall` | Corporate/Financial Analyst | Finance Staff, Finance Manager, Corporate Finance Director (ranking antar properti), CEO (vs rata-rata grup) | Cakupan Awal | — |
+| Undistributed expense breakdown per komponen | property_id × periode, baris `Overall` | Corporate/Financial Analyst | Finance Staff, Corporate Finance Director (perbandingan antar properti) | Cakupan Awal | Wajib filter baris `Overall` — tidak dijumlah dengan baris departemen lain |
+| Departmental margin (%) per lini bisnis | property_id/department × periode, filter `Room`/`F&B`/`Spa&Event` | Corporate/Financial Analyst | Finance Staff (bagian revenue/expense/profit per departemen) | Cakupan Awal | Wajib filter `department IN ('Room','F&B','Spa&Event')`, tidak menyertakan `Overall`/`Corporate Overhead` — risiko double counting jika salah filter |
+| Overhead ratio (undistributed expense ÷ revenue) | property_id × periode, baris `Overall` | Corporate/Financial Analyst | — | Cakupan Awal | — |
+| Revenue run-rate harian/mingguan (dari agregasi domain sumber lain, bukan `financial_summary`) | property_id × harian/mingguan | Corporate/Financial Analyst | — | Cakupan Awal | Pengganti GOP mingguan yang tidak bisa dihitung akurat (granularitas sumber bulanan) |
+| Total komponen payroll (base_salary, service_charge, overtime_pay, THR, deduction, net_salary) | property_id/department × periode, MoM | Corporate/Financial Analyst | Finance Manager, Corporate Finance Director (breakdown per properti) | Cakupan Awal | — |
+| Service charge pool vs occupancy rate | property_id × periode | Corporate/Financial Analyst | Finance Manager, Corporate Finance Director (properti mana paling menyimpang) | Cakupan Awal | **Cross-domain**: join `daily_occupancy` (domain Revenue) |
+| Labor cost sebagai % revenue | property_id × periode | Corporate/Financial Analyst | Finance Manager, Corporate Finance Director (antar properti) | Cakupan Awal | — |
+| Rasio service charge vs base salary, per `access_level` | property_id/access_level × periode | Corporate/Financial Analyst | — | Cakupan Awal | — |
+| Kontribusi tiap lini bisnis terhadap revenue grup, pergeseran antar periode | group × periode | Corporate/Financial Analyst | — | Cakupan Awal | — |
+| Benchmarking/ranking GOP margin antar 5 properti | properti × periode | Corporate/Financial Analyst | Corporate Finance Director, CEO | Cakupan Awal | — |
+| Overhead korporat (`department='Corporate Overhead'`) | property_id/group × periode | — (bukan kebutuhan Data Analyst eksplisit) | Corporate Finance Director | Cakupan Awal | **Temuan baru** saat audit persona chatbot layer Korporat — value `department` terpisah dari `'Overall'`, belum pernah dibahas di layer manapun sebelumnya |
+| Breakdown komponen cost dari domain lain (food cost, maintenance cost, dst) | — | Corporate/Financial Analyst (sengaja tidak dimasukkan) | — | Luar Cakupan | **Bukan gap data** — `departmental_expense` sudah agregat jadi; breakdown detail tetap tanggung jawab domain analyst masing-masing (F&B, Facility/Ops) — batasan cakupan yang disengaja |
+| GOP/financial granularitas mingguan atau harian | — | Corporate/Financial Analyst | — | Luar Cakupan | `financial_summary` granularitas bulanan saja — diganti dengan revenue run-rate untuk kebutuhan mingguan |
+| Cost of capital, depresiasi, komponen finansial non-operasional (below GOP line) | — | Corporate/Financial Analyst | — | Luar Cakupan | Tidak ada kolom ini di skema manapun — konsisten dengan struktur USALI yang berhenti di GOP |
+
+**Kebutuhan validasi/monitoring (bukan metrik analisis — terkait Data Quality Gate, Bagian 9 dokumen arsitektur induk):** koherensi revenue Room di `financial_summary` terhadap total transaksi booking (status completed/confirmed) dari sumbernya — selisih harus 0 atau dalam toleransi yang disepakati. Relevan untuk implementasi DQ gate `mart_aggregated` di Milestone 5.3, bukan untuk skema tabel metrik itu sendiri.
+
+**Row-level (`mart_cleaned`, bukan `mart_aggregated`):** investigasi penurunan margin lini bisnis tertentu, audit alokasi service charge (butuh `payroll` row-level per karyawan).
 
 ---
 
