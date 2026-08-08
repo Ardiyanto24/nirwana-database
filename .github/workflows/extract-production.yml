@@ -1,0 +1,45 @@
+name: Extract Production to Raw Warehouse
+
+# Milestone 2.1 -- runs scripts/extract/extract.py for all 23 tables, syncing
+# production Postgres -> raw_production (BigQuery) on a schedule.
+# Rujukan: milestones/2.1-extraction-production-raw-warehouse/decisions.md,
+# docs/05-orchestrator/konvensi-job-dependency.md (naming: extract-*.yml).
+#
+# Scheduled AFTER monitoring.yml (01:00 UTC) and the M2.0 demo jobs (02:00 UTC)
+# to avoid contending for the same Postgres connection pool at once -- not a
+# hard dependency (extract.py only reads the 23 whitelisted tables via
+# extract_reader, independent of monitoring's own snapshot tables).
+
+on:
+  schedule:
+    - cron: "0 3 * * *"  # tiap hari jam 03:00 UTC (10:00 WIB)
+  workflow_dispatch: {}
+
+jobs:
+  run-extract-production:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write GCP service account key (dari GitHub Secret, tidak pernah disimpan permanen)
+        env:
+          GCP_KEY_JSON: ${{ secrets.GCP_EXTRACT_WRITER_KEY_JSON }}
+        run: printf '%s' "$GCP_KEY_JSON" > scripts/extract/gcp-extract-writer-key.json
+
+      - name: Write .env for scripts (dari GitHub Secret, tidak pernah disimpan permanen)
+        run: |
+          echo "SUPABASE_DB_URL=${{ secrets.SUPABASE_DB_URL }}" >> .env
+          echo "EXTRACT_DB_URL=${{ secrets.EXTRACT_DB_URL }}" >> .env
+          echo "GOOGLE_APPLICATION_CREDENTIALS=scripts/extract/gcp-extract-writer-key.json" >> .env
+          echo "BIGQUERY_PROJECT_ID=nirwana-database-elt" >> .env
+          echo "BIGQUERY_DATASET=raw_production" >> .env
+
+      - name: Milestone 2.1 -- extract 23 production tables to raw_production
+        run: python scripts/extract/extract.py
