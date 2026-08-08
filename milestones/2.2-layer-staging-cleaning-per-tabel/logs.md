@@ -20,5 +20,9 @@ Pelajaran: pemeriksaan otomatis generik (null/distinct/duplicate full-row) menan
 Did: Tulis `milestones/2.2-layer-staging-cleaning-per-tabel/data-profiling-findings.md` (dokumen ke-4 di luar 3 file standar milestone, sesuai arahan user) -- struktur: konfirmasi vs dokumentasi, temuan baru/koreksi, catatan tambahan, keterbatasan metodologi, dan daftar item yang perlu keputusan eksplisit di `decisions.md` nanti.
 Result: worked. Dokumen ini jadi input untuk breakdown+decisions Milestone 2.2 berikutnya, bukan pengganti `Metadata.md`.
 
+## 2026-08-08 -- Kategorisasi solusi per temuan (sebelum breakdown task)
+Did: User minta setiap temuan di `data-profiling-findings.md` dikategorikan: dibersihkan di staging vs dibiarkan untuk Data Scientist. Saat menyusun kategorisasi, ditemukan **kontradiksi eksplisit** di `docs/03-implementation-plans/02-serving-data-scientist.md` sendiri: baris 88 (lingkup M2.2) minta normalisasi format telepon, tapi baris 30 (Prinsip Kunci) menyebut "format telepon tidak konsisten" sebagai contoh dirty data yang sengaja dipertahankan untuk DS. Tidak menebak salah satu -- diajukan ke user via `AskUserQuestion`.
+Result: User pilih **bersihkan** (ikuti lingkup M2.2 literal, bukan Prinsip Kunci). Dicatat sebagai deviasi sadar terhadap Prinsip Kunci, bukan oversight -- akan direferensikan lagi saat `decisions.md` M2.2 ditulis. Kategorisasi lengkap (Kategori A: dibersihkan, B: dibiarkan, C: bukan soal kotor/bersih tapi butuh keputusan dokumentasi/struktur) ditambahkan sebagai Section 6 di `data-profiling-findings.md`.
+
 ## Status saat ini
-Observability/profiling selesai. Breakdown task + `decisions.md` Milestone 2.2 (cleaning rule per tabel) belum dikerjakan -- menunggu instruksi lanjut dari user.
+Observability/profiling + kategorisasi solusi selesai. Breakdown task + `decisions.md` Milestone 2.2 (cleaning rule per tabel) belum dikerjakan -- menunggu instruksi lanjut dari user.

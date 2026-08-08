@@ -95,3 +95,40 @@ Sudah diketahui dari M2.1 bahwa tabel ini **tidak punya primary key sama sekali*
 3. `nationality`: putuskan apakah normalisasi case/whitespace saja (cakupan sebagian, 156 dari 466 distinct) atau perlu mapping lebih menyeluruh (cakupan lebih besar, effort lebih tinggi).
 4. `department`: pastikan mapping normalisasi berbasis tabel referensi 19→8, bukan fungsi mekanis `LOWER(TRIM())` semata.
 5. `fnb_transactions`: putuskan definisi row-level key untuk layer berikutnya (`transaction_id`+`item_name` composite, atau surrogate key baru).
+
+---
+
+## 6. Kategorisasi Solusi — Bersihkan vs Biarkan (dikonfirmasi user, 2026-08-08)
+
+Sebelum breakdown task Milestone 2.2, setiap temuan di atas dikategorikan: **dibersihkan di staging**, **dibiarkan** (bermakna bisnis / diserahkan ke eksperimen Data Scientist, sesuai prinsip kunci `02-serving-data-scientist.md`), atau **bukan soal kotor-tidaknya data** (butuh keputusan dokumentasi/struktur, bukan transformasi nilai).
+
+### Kategori A — Dibersihkan
+
+| Temuan | Tindakan |
+|---|---|
+| `employees.department` (19 variasi → 8 nyata) | Normalisasi via tabel mapping eksplisit 19→8 (bukan `LOWER(TRIM())` saja — 7 dari 19 variasi bukan cuma beda kapitalisasi) |
+| `employees.full_name` (whitespace ~2%) | Trim whitespace |
+| `employees.hire_date` (format campuran DD/MM/YYYY vs ISO) | Parse kedua format → cast ke tipe `DATE` asli |
+| `guests.nationality` (466 distinct, 156 grup varian) | Normalisasi kapitalisasi/whitespace — cakupan pasti (case/trim) vs mapping menyeluruh masih perlu diputuskan saat breakdown |
+| `guests.phone` (4 variasi format domestik) | **Dinormalisasi ke satu format standar** — keputusan sadar user meski berlawanan dengan contoh eksplisit di Prinsip Kunci (`02-serving-data-scientist.md` baris 30) yang menyebut "format telepon tidak konsisten" sebagai dirty data yang sengaja dipertahankan. Ikuti lingkup literal M2.2 (baris 88: "normalisasi format (telepon, kapitalisasi, tanggal)") — **kontradiksi ini dicatat di `decisions.md` Milestone 2.2 nanti sebagai deviasi sadar dari Prinsip Kunci, bukan oversight.** Bagian null (~3%, walk-in) tetap di Kategori B, tidak terpengaruh. |
+
+### Kategori B — Dibiarkan (bermakna / untuk Data Scientist)
+
+| Temuan | Alasan |
+|---|---|
+| `guests` 367 duplikat (kunci: `full_name`) | Eksplisit pengecualian di Prinsip Kunci — dedup diserahkan ke DS |
+| `guests.full_name` typo (~2%) | Eksplisit pengecualian di Prinsip Kunci |
+| `employees.role_title` null (~2%, belum diisi HR) | Bukan masalah format — tidak ada yang bisa dibersihkan tanpa mengarang data |
+| `guests.email`/`phone` null (walk-in) | Missing value bermakna |
+| `fnb_transactions.guest_id`, `spa_bookings.guest_id` null | Missing value bermakna (walk-in anonim) |
+| `maintenance_tickets.room_id`/`parts_replaced`/`resolved_date` null | Missing value bermakna |
+| `staff_shifts.clock_in`/`clock_out` null | Missing value bermakna (absent/leave) |
+| `properties.star_rating` null (P06) | Missing value bermakna (kantor pusat) |
+
+### Kategori C — Bukan soal bersih/kotor, butuh keputusan dokumentasi/struktur
+
+| Temuan | Tindakan |
+|---|---|
+| `payroll.thr` & `financial_summary.gop`/`undistributed_expense` = 0 (bukan NULL) | Nilai tidak diubah — didokumentasikan eksplisit supaya business rule tidak salah asumsi NULL |
+| `financial_summary` — `Corporate Overhead` (P06) setara `Overall` (P01-P05) | Dokumentasikan aturan filter P&L yang benar; pertimbangkan update `Metadata.md` |
+| `fnb_transactions.transaction_id` tidak unik | Definisikan row-key `mart_cleaned` (komposit atau surrogate key) |
