@@ -1,0 +1,7 @@
+version: 2
+
+models:
+  - name: mart_cleaned__bookings
+    columns:
+      - name: booking_id
+        tests: [unique, not_null]

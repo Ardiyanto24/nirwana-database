@@ -6,6 +6,7 @@ profile: 'nirwana_elt'
 
 model-paths: ["models"]
 seed-paths: ["seeds"]
+macro-paths: ["macros"]
 
 clean-targets:
   - "target"
@@ -19,3 +20,22 @@ models:
       # sebagai target schema. Menambah +schema di sini membuat dbt
       # menggabungkannya jadi "staging_staging" (perilaku default
       # generate_schema_name dbt: <target_schema>_<custom_schema>).
+    mart_cleaned:
+      # +schema literal "mart_cleaned_staging" (lihat macros/generate_schema_name.sql
+      # untuk kenapa ini tidak digabung dengan dataset target). Model dbt
+      # SELALU menulis ke mart_cleaned_staging -- TIDAK PERNAH langsung ke
+      # mart_cleaned. Promosi hanya lewat scripts/mart_cleaned/promote.py
+      # setelah dbt test lolos (Milestone 2.3 Decision: DQ gate blocking).
+      #
+      # materialized: table (full refresh murni, CREATE OR REPLACE TABLE),
+      # BUKAN incremental -- Sandbox mode (belum billing) memblokir SEMUA
+      # DML (MERGE/INSERT/UPDATE/DELETE), yang berarti *seluruh* strategi
+      # incremental dbt (termasuk "append") tidak bisa jalan sama sekali,
+      # bukan cuma soal partitioning. Lihat decisions.md "DML diblokir
+      # total di Sandbox mode". Model tetap boleh menulis blok
+      # {{ config(unique_key=...) }} + {% if is_incremental() %} -- macro
+      # itu otomatis selalu False saat materialized=table, jadi logic-nya
+      # aman dibiarkan dormant di kode untuk diaktifkan lagi begitu billing
+      # aktif (tinggal ganti baris ini ke `incremental`).
+      +schema: mart_cleaned_staging
+      +materialized: table

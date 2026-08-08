@@ -2,6 +2,13 @@ nirwana_elt:
   target: dev
   outputs:
     dev:
+      # Dataset dasar "staging" -- dipakai model staging/ yang tidak set
+      # +schema. Model mart_cleaned/ selalu di-override eksplisit ke
+      # mart_cleaned_staging lewat +schema di dbt_project.yml +
+      # macros/generate_schema_name.sql (custom schema dipakai literal,
+      # TIDAK digabung dengan dataset target -- lihat catatan di macro itu,
+      # perilaku default dbt yang menggabungkan menyebabkan bug
+      # "staging_staging" di M2.2).
       type: bigquery
       method: service-account
       project: nirwana-database-elt
