@@ -1,12 +1,9 @@
-# ERD — `mart_aggregated`
-
-**Nirwana Hospitality Group — Data Platform ELT**
-
-Diagram relasi entitas (ERD) star schema `mart_aggregated`: 27 dimension table + 49 fact table, 1 diagram tunggal (Keputusan #9 `milestones/5.3-.../decisions.md` — dipilih eksplisit oleh user dibanding opsi split per domain untuk keterbacaan). Kolom yang ditampilkan per entitas dibatasi ke primary/foreign key + 1-2 kolom representatif — daftar kolom lengkap ada di `DataSchema-mart-aggregated.md` dan cara hitungnya di `Metadata-mart-aggregated.md`.
-
-**Versi file Mermaid murni (`.mmd`, tanpa pembungkus markdown)**: [`ERD-mart-aggregated.mmd`](./ERD-mart-aggregated.mmd) — konten identik, untuk dipakai langsung di tool/editor yang butuh format `.mmd` (mis. Mermaid CLI, ekstensi IDE). Versi markdown ini dipertahankan sebagai versi yang gampang dibaca di GitHub/browser (render inline + narasi pendamping).
-
-```mermaid
+%% ERD -- mart_aggregated (Nirwana Hospitality Group -- Data Platform ELT)
+%% Star schema: 27 dimension table + 49 fact table, 1 diagram tunggal (Keputusan #9,
+%% milestones/5.3-implementasi-transformasi-mart-aggregated/decisions.md).
+%% Kolom per entitas dibatasi ke PK/FK + 1-2 kolom representatif -- daftar kolom
+%% lengkap: docs/07-mart-aggregated/DataSchema-mart-aggregated.md
+%% cara hitung tiap kolom: docs/07-mart-aggregated/Metadata-mart-aggregated.md
 erDiagram
     %% ================= DIMENSION TABLES (lintas-domain) =================
     dim_property {
@@ -530,14 +527,3 @@ erDiagram
     dim_business_line ||--o{ fact_financial_business_line_monthly : business_line_id
     dim_business_line ||--o{ fact_financial_business_line_group_monthly : business_line_id
     dim_access_level ||--o{ fact_payroll_access_level_monthly : access_level_id
-```
-
-## Cara Membaca Diagram
-
-- **`||--o{`**: relasi satu-ke-banyak (1 baris dimension → 0 atau banyak baris fact). Baca dari kiri (dimension) ke kanan (fact/dimension turunan).
-- **Kolom cross-domain**: beberapa fact table (mis. `fact_fnb_outlet_daily.capture_rate`, `fact_housekeeping_property_daily.occupancy_rate`) berisi nilai yang di-*precompute* dari domain lain saat transformasi (M5.3) — relasi FK-nya tetap ke dimension domain tabel itu sendiri, bukan panah lintas-domain terpisah di diagram ini (join sumbernya didokumentasikan di `Metadata-mart-aggregated.md`, bukan digambar sebagai relasi ERD).
-- **`dim_property`, `dim_employee`, `dim_customer_type`, `dim_room`, `dim_outlet`, `dim_venue`** adalah *conformed dimensions* — dipakai berulang lintas banyak domain, terlihat dari banyaknya garis relasi yang keluar dari entitas-entitas ini.
-
-## Catatan Ukuran Diagram
-
-Diagram ini sengaja dibuat sebagai 1 file tunggal mencakup seluruh 76 entitas (27 dimension + 49 fact) dan ~90 relasi, sesuai preferensi eksplisit user (Keputusan #9) — bukan dipecah per domain. Konsekuensinya: diagram butuh scroll/zoom signifikan saat dirender. Untuk navigasi per domain tanpa scroll penuh, rujuk section per domain di `DataSchema-mart-aggregated.md`/`Metadata-mart-aggregated.md` yang sudah dipecah rapi.

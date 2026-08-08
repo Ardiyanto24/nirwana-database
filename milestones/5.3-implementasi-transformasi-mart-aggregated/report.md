@@ -15,7 +15,7 @@
 - 244 dbt test (`_*_tests.yml` per folder) + 1 singular test (`warehouse/tests/assert_gop_no_double_counting.sql`).
 - `scripts/mart_aggregated/promote.py` — DQ gate build→test→swap, pola sama `mart_cleaned`.
 - Dataset BigQuery `mart_aggregated` (baru, disediakan sebagai bagian pekerjaan ini) — 76 tabel live, teruji.
-- `docs/07-mart-aggregated/DataSchema-mart-aggregated.md` (rename dari M5.2, referensi diperbarui + 8 catatan koreksi grain), `Metadata-mart-aggregated.md` (baru — data dictionary penuh), `ERD-mart-aggregated.md` (baru — 1 diagram Mermaid, 76 entitas).
+- `docs/07-mart-aggregated/DataSchema-mart-aggregated.md` (rename dari M5.2, referensi diperbarui + 8 catatan koreksi grain), `Metadata-mart-aggregated.md` (baru — data dictionary penuh), `ERD-mart-aggregated.md` + `ERD-mart-aggregated.mmd` (baru — 1 diagram Mermaid, 76 entitas, disediakan 2 format: markdown untuk dibaca di GitHub/browser, `.mmd` murni untuk tool Mermaid).
 - `docs/keputusan-tertunda.md` — entri "Data dictionary/metadata kolom mart_aggregated" ditutup Resolved.
 - `milestones/5.3-implementasi-transformasi-mart-aggregated/{decisions,logs}.md`.
 

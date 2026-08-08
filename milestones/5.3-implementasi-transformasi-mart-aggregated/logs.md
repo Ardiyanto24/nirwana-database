@@ -45,3 +45,7 @@ Result: 3 file dokumentasi pendamping selesai. Tidak ada referensi tersisa ke na
 ## 2026-08-08 — Checkpoint 10 (final): Verifikasi KK + Report (Task 15)
 Did: Verifikasi 3 KK sumber satu per satu dengan bukti konkret (6/6 validasi metrik, uji coba terkontrol DQ gate, re-audit PII). Tulis `report.md` -- Deliverables, Deviations (dikelompokkan 4 kategori: grain mismatch, sumber tidak sesuai asumsi, kolom korelasi 1-baris, simplifikasi terukur), Known Gaps (5 item), Handoff Notes untuk M5.4/M5.5/04/05. Update `decisions.md` status In Progress -> Done.
 Result: Ketiga KK sumber terpenuhi dengan bukti eksplisit. Milestone 5.3 ditutup Completed -- 76 tabel (27 dimension + 49 fact) live di BigQuery `mart_aggregated`, teruji penuh (244 dbt test + 1 singular test), tervalidasi manual, PII aman.
+
+## 2026-08-08 — Koreksi pasca-closure: format ERD
+Did: User mengoreksi permintaan awal Task 14 -- ERD seharusnya format file `.mmd` (Mermaid murni), bukan markdown dengan blok kode mermaid. Dibuat `docs/07-mart-aggregated/ERD-mart-aggregated.mmd` (konten diagram identik, tanpa pembungkus markdown/narasi), versi `.md` dipertahankan (user eksplisit minta tetap ada) dengan tambahan cross-reference ke file `.mmd`.
+Result: 2 versi ERD tersedia -- `.md` untuk dibaca di GitHub/browser (render inline + narasi), `.mmd` untuk dipakai langsung di tool yang butuh format Mermaid murni (Mermaid CLI, ekstensi IDE).
