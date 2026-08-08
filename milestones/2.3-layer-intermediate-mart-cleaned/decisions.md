@@ -27,9 +27,9 @@ Ini bukan cuma soal partition (M2.1) — tabel `raw_production` yang unpartition
 14 task, 4 fase. **Commit + push + log progres di tiap checkpoint** (bukan cuma di akhir milestone).
 
 ### Fase 1 — Fondasi
-- [ ] Task 1: Tambah langkah perpanjang `expirationTime` (`bq update --expiration`) ke `extract-production.yml` — Acceptance: expirationTime tabel maju tiap job jalan — Verify: `bq show` sebelum/sesudah
-- [ ] Task 2: Konfirmasi & dokumentasikan tidak perlu layer intermediate — Acceptance: keputusan sadar tercatat — Verify: review manual
-- [ ] Task 3: Setup dataset `mart_cleaned` + `mart_cleaned_staging` — Acceptance: kedua dataset ada — Verify: `bq ls`
+- [x] Task 1: Tambah langkah perpanjang `expirationTime` (`bq update --expiration`) ke `extract-production.yml` — Acceptance: expirationTime tabel maju tiap job jalan — Verify: `scripts/extract/renew_expiration.py`, diuji lokal (raw_production 23 + staging 24 berhasil) dan di CI sungguhan ([run 31239354131](https://github.com/Ardiyanto24/nirwana-database/actions/runs/31239354131), sukses)
+- [x] Task 2: Konfirmasi & dokumentasikan tidak perlu layer intermediate — Acceptance: keputusan sadar tercatat — Verify: lihat Technical Decision "Tidak perlu layer intermediate" di bawah
+- [x] Task 3: Setup dataset `mart_cleaned` + `mart_cleaned_staging` — Acceptance: kedua dataset ada — Verify: `bq ls` menampilkan keduanya (region US)
 
 **Checkpoint 1** — commit + push, log Task 1-3.
 
