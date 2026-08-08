@@ -168,10 +168,18 @@ def main():
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--table", help="Sync a single table (bare name, e.g. 'properties')")
+    group.add_argument("--domain", help="Sync all tables under one production schema (e.g. 'corporate_master')")
     group.add_argument("--all", action="store_true", help="Sync all 23 mart_cleaned tables")
     args = parser.parse_args()
 
-    tables = [t for _, t in SERVING_TABLES] if args.all else [args.table]
+    if args.all:
+        tables = [t for _, t in SERVING_TABLES]
+    elif args.domain:
+        tables = [t for s, t in SERVING_TABLES if s == args.domain]
+        if not tables:
+            parser.error(f"no tables found for domain '{args.domain}'")
+    else:
+        tables = [args.table]
 
     bq_client = get_reverse_etl_reader_client()
     pg_conn = get_serving_writer_connection()

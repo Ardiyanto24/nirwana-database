@@ -39,3 +39,10 @@ Result: worked. Re-run `sync.py --table properties` -- 1 baris log tercatat (`ta
 
 ## Checkpoint 2 -- selesai
 Task 5-7 selesai dan terverifikasi (mekanisme sync+swap+gate+log terbukti benar di 1 tabel + uji no-downtime). Siap lanjut Fase 3 (rollout 23 tabel).
+
+## 2026-08-08 -- Task 8-10 (Fase 3 batch 1: corporate_master, reservation_revenue, fnb_operations)
+Did: Tambah opsi `--domain` ke `sync.py` (sync semua tabel di 1 schema sumber sekaligus, konsisten pola batch M2.2/M2.3). Jalankan `sync.py --domain corporate_master` (4 tabel), `--domain reservation_revenue` (3 tabel, termasuk `bookings` -- run pertama kena Bash 120s timeout, dilanjutkan otomatis di background), `--domain fnb_operations` (6 tabel, termasuk `fnb_transactions` ~902k baris -- run pertama gagal `FileNotFoundError` karena working directory background command reset ke repo root, bukan `scripts/reverse_etl/` -- diperbaiki dengan `cd` eksplisit di command yang sama sebelum background run).
+Result: 13/13 tabel synced, seluruh row count cocok persis BigQuery vs Postgres -- `bookings` 217.654, `fnb_transactions` 902.574 (tabel terbesar sejauh ini), `fnb_waste_log` 108.733, dll. Tidak ada mismatch. Task 8-10 selesai.
+
+## Checkpoint 3 -- selesai
+13/23 tabel `mart_cleaned` ter-sync ke serving Postgres, seluruh row count parity terverifikasi.
