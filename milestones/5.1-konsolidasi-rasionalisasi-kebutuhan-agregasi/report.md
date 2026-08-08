@@ -19,7 +19,7 @@ Tidak ada deviasi pada keputusan inti (lokasi output, skema kolom, metode penger
 
 ## Known Gaps / Follow-ups
 
-- 3 kebutuhan di kategori "Kebutuhan Khusus" (pace booking, watchlist HR, 2 threshold pending) belum punya keputusan desain final — sengaja didokumentasikan sebagai isolasi kebutuhan untuk Milestone 5.2, bukan diselesaikan di sini (di luar scope M5.1 sesuai kontrak sumber).
+- 3 kebutuhan di kategori "Kebutuhan Khusus" (pace booking, watchlist HR, 2 threshold pending) belum punya keputusan desain final — sengaja didokumentasikan sebagai isolasi kebutuhan untuk Milestone 5.2, bukan diselesaikan di sini (di luar scope M5.1 sesuai kontrak sumber). **Update Milestone 5.6 (2026-08-08): threshold watchlist HR diselesaikan** lewat siklus pengajuan-evaluasi-tindak lanjut — lihat `docs/07-mart-aggregated/pengajuan-perubahan-cakupan.md` dan `milestones/5.6-mekanisme-pengajuan-perubahan-cakupan/report.md`. Threshold SLA breach masih terbuka.
 - 10 item "Gap Data Sumber" (komisi OTA, target/budget, dll) berpotensi jadi rekomendasi penambahan kolom/tabel ke sistem produksi jika suatu saat dianggap penting — tidak ditindaklanjuti di sini, murni dicatat sebagai referensi supaya tidak ditanyakan ulang.
 - Beberapa pemetaan "Konsumen Chatbot" bersifat pendekatan terbaik (best-effort matching) ketika dokumen chatbot tidak menyebut metrik persis sama kata dengan dokumen Data Analyst (mis. "revenue per kunjungan inhouse/walk-in" F&B dicocokkan ke "walk-in ratio dan tren" F&B Manager) — dicatat eksplisit di kolom Catatan tiap kali terjadi, bukan disembunyikan sebagai kecocokan pasti. Pemilik Milestone 5.2 sebaiknya tetap merujuk ke dokumen chatbot asli untuk detail kata-per-kata bila ragu.
 

@@ -444,10 +444,10 @@ Kedua tabel di bawah **sengaja terpisah** dari fact table utama domainnya (Keput
 
 #### `fact_hr_watchlist_monthly`
 **Grain:** 1 baris per `employee_id` (FK `dim_employee`) × `period_date`.
-**Kolom:** `employee_id` (FK), `period_date` (DATE), `current_absence_rate`, `baseline_absence_rate` (rata-rata historis individu tersebut), `current_late_rate`, `baseline_late_rate`, `absence_deviation_ratio`, `late_deviation_ratio`.
+**Kolom:** `employee_id` (FK), `period_date` (DATE), `current_absence_rate`, `baseline_absence_rate` (rata-rata historis individu tersebut), `current_late_rate`, `baseline_late_rate`, `absence_deviation_ratio`, `late_deviation_ratio`, `in_watchlist` (BOOLEAN, **Milestone 5.6**).
 **Partition:** `period_date`. **Cluster:** `employee_id`.
 **Cakupan M5.1:** "Kebutuhan Khusus kategori B" (watchlist gejala pra-resign).
-**Catatan:** hanya menyimpan rasio deviasi mentah, **tidak** ada kolom flag "masuk watchlist" — threshold "di luar kebiasaan" belum ditentukan (M5.1 "Kebutuhan Khusus kategori C"), konsisten Keputusan #7. Klasifikasi watchlist final ditentukan di layer konsumen (chatbot/analyst) atau M5.3 setelah threshold diputuskan.
+**Koreksi (M5.6):** threshold "di luar kebiasaan" (M5.1 "Kebutuhan Khusus kategori C") **sudah diputuskan** lewat siklus pengajuan-evaluasi-tindak lanjut M5.6 — `in_watchlist = true` kalau `absence_deviation_ratio` ATAU `late_deviation_ratio` > 5x baseline individu (dikalibrasi terhadap distribusi riil — bukan angka sembarang, lihat `docs/07-mart-aggregated/pengajuan-perubahan-cakupan.md` untuk detail evaluasi & kalibrasi). Menggantikan catatan lama "belum ada kolom flag" — sekarang ada.
 
 ---
 

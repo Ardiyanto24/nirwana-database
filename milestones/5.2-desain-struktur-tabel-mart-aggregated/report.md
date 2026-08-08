@@ -22,7 +22,7 @@ Tidak ada deviasi pada 10 keputusan inti. Satu penambahan wajar muncul selama ek
 ## Known Gaps / Follow-ups
 
 - **Tension append-only vs Sandbox mode belum terpecahkan** — `fact_revenue_pace_booking_snapshot` butuh perilaku append-only (baris snapshot historis tidak pernah diupdate), sementara BigQuery Sandbox mode saat ini memblokir seluruh DML dan seluruh tabel lain di skema ini didesain full-refresh. Dicatat eksplisit sebagai pertanyaan implementasi terbuka untuk M5.3 — di luar scope M5.2 yang hanya menjamin struktur benar.
-- **Threshold SLA breach dan watchlist HR masih belum diputuskan** — skema sudah mengakomodasi (kolom nilai mentah tersedia, tanpa flag), tapi nilai ambang batas aktualnya tetap perlu keputusan bisnis terpisah sebelum M5.3 bisa menghasilkan kolom klasifikasi (breach/tidak, watchlist/tidak).
+- **Threshold SLA breach dan watchlist HR masih belum diputuskan** — skema sudah mengakomodasi (kolom nilai mentah tersedia, tanpa flag), tapi nilai ambang batas aktualnya tetap perlu keputusan bisnis terpisah sebelum M5.3 bisa menghasilkan kolom klasifikasi (breach/tidak, watchlist/tidak). **Update Milestone 5.6 (2026-08-08): threshold watchlist HR diselesaikan** (`in_watchlist`, threshold 5x baseline individu) — lihat `docs/07-mart-aggregated/pengajuan-perubahan-cakupan.md`. Threshold SLA breach masih terbuka.
 - **Data dictionary penuh belum ditulis** — sesuai Keputusan #10, sengaja ditunda ke M5.3 setelah SQL transformasi selesai dan teruji (dicatat di `docs/keputusan-tertunda.md`).
 - **Aturan kategorisasi `nationality` → `dim_nationality_group`** (Domestik vs Mancanegara) belum diformalkan jadi aturan eksplisit (mis. daftar kode negara) — perlu diputuskan sebelum implementasi M5.3, diwariskan dari catatan M5.1.
 
