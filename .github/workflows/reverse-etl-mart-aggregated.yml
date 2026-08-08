@@ -1,0 +1,60 @@
+name: Reverse ETL Mart Aggregated to Serving PostgreSQL
+
+# Milestone 5.5 -- pushes all 76 mart_aggregated tables from BigQuery to the
+# serving PostgreSQL project (same project as M2.4, new schema mart_aggregated)
+# via scripts/reverse_etl_mart_aggregated/sync.py (full refresh + RENAME swap,
+# row-count-parity gate before swap), then reindex_analyze.py (REINDEX/ANALYZE
+# pasca-swap -- see decisions.md Keputusan #3 for why plain REINDEX alone
+# isn't enough).
+# Rujukan: milestones/5.5-reverse-etl-mart-aggregated/decisions.md,
+# docs/05-orchestrator/konvensi-job-dependency.md (naming: reverse-etl-*.yml).
+#
+# Deliberately excludes fact_ml_occupancy_forecast_property_room_type (M5.4,
+# provisional -- decisions.md Keputusan #2), even though it exists in
+# BigQuery mart_aggregated -- mart_aggregated_tables.py's hardcoded list
+# simply never mentions it.
+#
+# Chains via workflow_run off transform-mart-aggregated.yml -- a REAL data
+# dependency (mart_aggregated must be freshly rebuilt before it's worth
+# pushing to Postgres), same pattern as reverse-etl-mart-cleaned.yml.
+
+on:
+  workflow_run:
+    workflows: ["Transform Mart Aggregated"]
+    types: [completed]
+  workflow_dispatch: {}
+
+jobs:
+  run-reverse-etl-mart-aggregated:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write GCP service account key (dari GitHub Secret, tidak pernah disimpan permanen)
+        env:
+          GCP_KEY_JSON: ${{ secrets.GCP_REVERSE_ETL_MART_AGG_READER_KEY_JSON }}
+        run: printf '%s' "$GCP_KEY_JSON" > scripts/extract/gcp-reverse-etl-mart-agg-reader-key.json
+
+      - name: Write .env untuk sync.py dan reindex_analyze.py
+        run: |
+          echo "REVERSE_ETL_MART_AGGREGATED_READER_CREDENTIALS=scripts/extract/gcp-reverse-etl-mart-agg-reader-key.json" >> .env
+          echo "REVERSE_ETL_MART_AGGREGATED_WRITER_DB_URL=${{ secrets.REVERSE_ETL_MART_AGGREGATED_WRITER_DB_URL }}" >> .env
+          echo "SUPABASE_DB_URL=${{ secrets.SUPABASE_DB_URL }}" >> .env
+
+      - name: Milestone 5.5 -- sync seluruh 76 tabel mart_aggregated ke serving PostgreSQL
+        working-directory: scripts/reverse_etl_mart_aggregated
+        run: python sync.py --all
+
+      - name: Milestone 5.5 -- REINDEX/ANALYZE pasca-swap (76 tabel + index contoh)
+        working-directory: scripts/reverse_etl_mart_aggregated
+        run: python reindex_analyze.py --all
