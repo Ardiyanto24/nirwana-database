@@ -43,3 +43,6 @@ jobs:
 
       - name: Milestone 2.1 -- extract 23 production tables to raw_production
         run: python scripts/extract/extract.py
+
+      - name: Milestone 2.3 -- renew table/view expiration (Sandbox mode mitigation, no billing yet)
+        run: python scripts/extract/renew_expiration.py raw_production
