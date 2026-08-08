@@ -1,0 +1,74 @@
+version: 2
+
+models:
+  - name: fact_fnb_outlet_daily
+    columns:
+      - name: outlet_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_outlet')
+                field: outlet_id
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_fnb_category_daily
+    columns:
+      - name: outlet_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_fnb_hourly
+    columns:
+      - name: outlet_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_fnb_customer_type_daily
+    columns:
+      - name: outlet_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_fnb_menu_item_daily
+    columns:
+      - name: outlet_id
+        tests: [not_null]
+      - name: item_name
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_menu_item')
+                field: item_name
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_fnb_waste_daily
+    columns:
+      - name: outlet_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_fnb_inventory_status
+    columns:
+      - name: outlet_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_fnb_ingredient_price_daily
+    columns:
+      - name: ingredient_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_ingredient')
+                field: ingredient_id
+      - name: period_date
+        tests: [not_null]
