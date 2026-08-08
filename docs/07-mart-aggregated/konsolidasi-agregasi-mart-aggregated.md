@@ -7,7 +7,7 @@
 | **Dihasilkan oleh** | Milestone 5.1 (`milestones/5.1-konsolidasi-rasionalisasi-kebutuhan-agregasi/`) |
 | **Dokumen sumber** | `docs/02-requirements/pemetaan-kebutuhan-data-analyst.md` (6 pola domain), `pemetaan-kebutuhan-chatbot-layer-staff.md` (7 persona), `-manager.md` (8 persona), `-korporat.md` (5 persona) |
 | **Dipakai oleh** | Milestone 5.2 (`docs/03-implementation-plans/03-mart-aggregated-owner.md`) — desain skema tabel `mart_aggregated` |
-| **Status** | Draft — dibangun bertahap per checkpoint Milestone 5.1 |
+| **Status** | Selesai — seluruh 6 domain terkonsolidasi (Milestone 5.1, ditutup 2026-08-08) |
 
 ---
 
@@ -250,10 +250,52 @@ Bagian "Pemetaan Persona → Domain" di bawah adalah tabel rujukan lintas-domain
 
 ## Kebutuhan Khusus (Cakupan Khusus, Lintas Domain)
 
-*(diisi Fase 4 — Task 8)*
+Dikelompokkan per jenis perlakuan khusus yang dibutuhkan — semua tetap **dalam cakupan** `mart_aggregated`, hanya butuh keputusan desain tambahan sebelum diimplementasikan (Milestone 5.2/5.3), bukan alasan untuk dikeluarkan.
+
+### A. Butuh mekanisme snapshot harian terpisah (bukan agregasi dari histori yang sudah terjadi)
+
+| Domain | Kebutuhan | Kenapa Khusus |
+|---|---|---|
+| Revenue | Pace booking (kamar terjual untuk tanggal check-in masa depan, "as of hari ini") | Nilainya berubah tiap hari untuk tanggal check-in yang sama — bukan fakta historis tetap seperti metrik lain. Butuh tabel/mekanisme snapshot harian tersendiri, desainnya di luar cakupan konsolidasi ini (menyusul Milestone 5.2) |
+
+### B. Butuh pola query *within-entity over time* (individu dibanding baseline historisnya sendiri, bukan agregasi antar-entitas biasa)
+
+| Domain | Kebutuhan | Kenapa Khusus |
+|---|---|---|
+| HR | Rasio perubahan pola individu (watchlist gejala pra-resign) — rate absen/telat periode terkini dibanding baseline historis individu yang sama | Beda struktur dari metrik agregat standar (`GROUP BY` per periode/entitas) — perlu window function atau tabel baseline per `employee_id` yang di-refresh berkala. Tetap masuk `mart_aggregated`, tapi desain kolom/mekanismenya perlu diputuskan eksplisit di Milestone 5.2, bukan dianggap sama dengan metrik agregat biasa |
+
+### C. Parameter/threshold belum ditentukan (data pendukung tersedia, ambang batas menunggu keputusan terpisah)
+
+| Domain | Kebutuhan | Status Parameter |
+|---|---|---|
+| Facility/Ops | SLA breach rate per `priority` | Cara hitung breach sudah jelas (`resolved_date−reported_date > SLA_hours`), tapi nilai `SLA_hours` per `priority` belum ditentukan di dokumen manapun — konsisten dengan Bagian 10 dokumen arsitektur induk yang menandai area ini untuk didiskusikan terpisah |
+| HR | Threshold "di luar kebiasaan" untuk early warning watchlist pra-resign | Dokumen arsitektur induk (Bagian 10 No. 3) eksplisit menandai ambang batas drift/anomali sebagai area yang perlu didiskusikan terpisah dengan pihak berwenang |
 
 ---
 
 ## Eksplisit Luar Cakupan
 
-*(diisi Fase 4 — Task 8)*
+16 kebutuhan dikonsolidasi dari 6 domain, dipisah 2 kategori:
+- **Gap Data Sumber** — data benar-benar tidak tersedia di 23 tabel produksi (kandidat untuk dipertimbangkan penambahan kolom/tabel di production jika dianggap penting, tapi di luar cakupan pekerjaan ini).
+- **Batasan Disengaja** — data sebenarnya tersedia, tapi sengaja tidak dimasukkan ke `mart_aggregated` karena alasan struktural (bukan keterbatasan data) — mis. dipindah ke domain lain, atau butuh asumsi cross-domain yang tidak cukup andal.
+
+| Domain | Kebutuhan | Kategori | Alasan |
+|---|---|---|---|
+| Revenue | Komisi OTA per booking | Gap Data Sumber | Tidak ada kolom komisi di `bookings` |
+| Revenue | Target/budget okupansi & revenue | Gap Data Sumber | Tidak ada tabel target/budget di skema manapun |
+| F&B | Waktu penyiapan/kecepatan servis outlet | Gap Data Sumber | Tidak ada kolom timestamp granular servis di `fnb_transactions` |
+| F&B | Data supplier/vendor bahan baku | Gap Data Sumber | Tidak ada tabel supplier di skema manapun |
+| Facility/Ops | Preventive maintenance (jadwal terjadwal) | Gap Data Sumber | Semua tiket bersifat reaktif, tidak ada tabel jadwal preventive |
+| Facility/Ops | Estimasi kehilangan revenue akibat kamar out-of-order | Batasan Disengaja | Butuh asumsi cross-domain (`daily_occupancy`/`bookings`) yang belum tentu akurat |
+| Facility/Ops | Breakdown biaya per jenis part | Gap Data Sumber | `parts_replaced` teks bebas, bukan kategori terstruktur |
+| Spa & Event | Diskon/promo pada spa maupun event | Gap Data Sumber | Tidak ada kolom promo/discount di `spa_bookings`/`event_bookings` |
+| Spa & Event | Repeat client event | Gap Data Sumber | `client_name` teks bebas tanpa ID terstruktur |
+| Spa & Event | Cross-sell spa × event | Gap Data Sumber | Tidak ada penghubung `guest_id` konsisten antar tabel |
+| HR | Payroll/kompensasi | Batasan Disengaja | Dipindah ke Corporate/Financial mengikuti segregation of duties — bukan gap |
+| HR | Exit interview / alasan resign | Gap Data Sumber | `employees.status` hanya status akhir, tanpa tanggal/alasan |
+| HR | Training/sertifikasi karyawan | Gap Data Sumber | Tidak ada tabel ini di skema manapun |
+| Corporate/Financial | Breakdown komponen cost dari domain lain (food cost, maintenance cost, dst) | Batasan Disengaja | `departmental_expense` sudah agregat jadi; breakdown detail tetap tanggung jawab domain analyst masing-masing |
+| Corporate/Financial | GOP/financial granularitas mingguan atau harian | Gap Data Sumber | `financial_summary` granularitas bulanan saja |
+| Corporate/Financial | Cost of capital, depresiasi, komponen finansial non-operasional | Gap Data Sumber | Tidak ada kolom ini di skema manapun — konsisten dengan struktur USALI yang berhenti di GOP |
+
+**Ringkasan kuantitatif seluruh dokumen:** 94 baris metrik/kebutuhan terkonsolidasi lintas 6 domain — 77 Cakupan Awal, 1 Cakupan Khusus (pace booking; ditambah 2 pola khusus lain yang tetap berstatus Cakupan Awal tapi butuh perlakuan desain — lihat kategori B dan C di atas), 16 Luar Cakupan (10 Gap Data Sumber murni, 3 Batasan Disengaja struktural, sisanya kombinasi kemampuan terbatas).

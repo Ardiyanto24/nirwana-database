@@ -1,7 +1,7 @@
 # Milestone 5.1: Konsolidasi dan Rasionalisasi Kebutuhan Agregasi — Decisions
 
 **Source:** `docs/03-implementation-plans/03-mart-aggregated-owner.md`, baris 44-60.
-**Status:** Planned
+**Status:** Done
 **Date started:** 2026-08-08
 
 ## Contract (from source doc)
