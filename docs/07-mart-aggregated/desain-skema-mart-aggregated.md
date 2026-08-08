@@ -329,16 +329,24 @@ Seluruh kategori/referensi (channel, department, issue_type, dst) sengaja dijadi
 **Cakupan M5.1:** baris 1, 2.
 
 #### `fact_hr_employee_monthly`
-**Grain:** 1 baris per `employee_id` (FK `dim_employee`) × `period` (bulanan/periode review).
-**Kolom:** `employee_id` (FK), `period_date` (DATE, awal bulan/periode), `overtime_hours`, `overtime_vs_dept_avg`, `late_rate`, `late_vs_dept_avg`, `latest_performance_score`.
+**Grain:** 1 baris per `employee_id` (FK `dim_employee`) × `period_date` (bulanan).
+**Kolom:** `employee_id` (FK), `period_date` (DATE, awal bulan), `overtime_hours`, `overtime_vs_dept_avg`, `late_rate`, `late_vs_dept_avg`.
 **Partition:** `period_date`. **Cluster:** `employee_id`.
-**Cakupan M5.1:** baris 3, 4, 6 (tren antar periode diturunkan via query lintas baris periode berbeda pada tabel yang sama, bukan kolom terpisah).
+**Cakupan M5.1:** baris 3, 4.
+**Koreksi grain (M5.3):** `latest_performance_score` dipindah ke tabel terpisah `fact_hr_employee_performance_semester` — `employee_performance.review_period` grain aslinya **semesteran** (`'2023-S2'`, dst, bukan bulanan), memaksakannya ke tabel bulanan berarti nilai yang sama diulang ~6× tanpa makna — grain mismatch yang sama seperti temuan Revenue/Facility di atas.
 
-#### `fact_hr_turnover_monthly`
-**Grain:** 1 baris per `property_id` × `department_id` × `period_date`.
-**Kolom:** `property_id` (FK), `department_id` (FK), `period_date` (DATE), `turnover_rate`, `mom_growth`, `yoy_growth`.
-**Partition:** `period_date`. **Cluster:** `property_id`, `department_id`.
+#### `fact_hr_employee_performance_semester`
+**Grain:** 1 baris per `employee_id` (FK `dim_employee`) × `review_period` (STRING, mis. `'2025-S1'`).
+**Kolom:** `employee_id` (FK), `review_period` (STRING), `score`, `notes`.
+**Cluster:** `employee_id`.
+**Cakupan M5.1:** baris 6.
+
+#### `fact_hr_turnover_snapshot`
+**Grain:** 1 baris per `property_id` × `department_id` × `period_date` (snapshot terkini, `current_date()`).
+**Kolom:** `property_id` (FK), `department_id` (FK), `period_date` (DATE), `turnover_rate`.
+**Cluster:** `property_id`, `department_id`.
 **Cakupan M5.1:** baris 7.
+**Koreksi (M5.3):** `mart_cleaned__employees` cuma punya `status` akhir (active/resigned/terminated), **tidak ada kolom tanggal resign/terminasi** — tidak mungkin menghitung turnover rate per bulan historis (kapan seseorang keluar tidak diketahui, cuma status akhirnya). Diubah jadi snapshot current-state (pola sama `fact_facility_room_status_daily`/`fact_fnb_inventory_status`), kolom `mom_growth`/`yoy_growth` **dihapus** — tidak ada dasar historis untuk menghitungnya.
 
 #### `fact_hr_headcount_status_daily`
 **Grain:** 1 baris per `property_id` × `department_id` × `status_id` (FK `dim_employee_status`) × `period_date` (snapshot).
@@ -346,17 +354,19 @@ Seluruh kategori/referensi (channel, department, issue_type, dst) sengaja dijadi
 **Partition:** `period_date`. **Cluster:** `property_id`, `department_id`.
 **Cakupan M5.1:** baris 8.
 
-#### `fact_hr_performance_department_monthly`
-**Grain:** 1 baris per `property_id` × `department_id` × `period_date`.
-**Kolom:** `property_id` (FK), `department_id` (FK), `period_date` (DATE), `avg_performance_score`.
-**Partition:** `period_date`. **Cluster:** `property_id`, `department_id`.
+#### `fact_hr_performance_department_semester`
+**Grain:** 1 baris per `property_id` × `department_id` × `review_period`.
+**Kolom:** `property_id` (FK), `department_id` (FK), `review_period` (STRING), `avg_performance_score`.
+**Cluster:** `property_id`, `department_id`.
 **Cakupan M5.1:** baris 9.
+**Koreksi grain (M5.3):** sama seperti `fact_hr_employee_performance_semester` — grain `employee_performance` semesteran, bukan bulanan.
 
-#### `fact_hr_performance_by_status_monthly`
-**Grain:** 1 baris per `property_id` × `status_id` (FK `dim_employee_status`) × `period_date`.
-**Kolom:** `property_id` (FK), `status_id` (FK), `period_date` (DATE), `avg_performance_score`.
-**Partition:** `period_date`. **Cluster:** `property_id`.
+#### `fact_hr_performance_by_status_semester`
+**Grain:** 1 baris per `property_id` × `status_id` (FK `dim_employee_status`) × `review_period`.
+**Kolom:** `property_id` (FK), `status_id` (FK), `review_period` (STRING), `avg_performance_score`.
+**Cluster:** `property_id`.
 **Cakupan M5.1:** baris 10 (korelasi kinerja-retensi — perbandingan `status_id`='resigned'/'terminated' vs `status_id`='active' dilakukan di query, bukan kolom terpisah).
+**Koreksi grain (M5.3):** sama seperti dua tabel performance di atas.
 
 ---
 

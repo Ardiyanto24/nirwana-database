@@ -1,0 +1,68 @@
+version: 2
+
+models:
+  - name: fact_hr_attendance_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_hr_employee_monthly
+    columns:
+      - name: employee_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_employee')
+                field: employee_id
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_hr_employee_performance_semester
+    columns:
+      - name: employee_id
+        tests: [not_null]
+      - name: review_period
+        tests: [not_null]
+
+  - name: fact_hr_turnover_snapshot
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_hr_headcount_status_daily
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: period_date
+        tests: [not_null]
+
+  - name: fact_hr_performance_department_semester
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: review_period
+        tests: [not_null]
+
+  - name: fact_hr_performance_by_status_semester
+    columns:
+      - name: property_id
+        tests: [not_null]
+      - name: review_period
+        tests: [not_null]
+
+  - name: fact_hr_watchlist_monthly
+    columns:
+      - name: employee_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_employee')
+                field: employee_id
+      - name: period_date
+        tests: [not_null]
