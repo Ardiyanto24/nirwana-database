@@ -26,3 +26,9 @@
 - `whitelist_fnb.py` (8 view aggregate — filter `outlet_id`/`property_id`/`date_from`/`date_to`, `hourly` tambah `hour_of_day`, `ingredient-price-daily` pakai `ingredient_id` karena tidak terikat outlet; 1 tabel row-level `fnb_transactions`, tabel terbesar project 902rb baris — filter `outlet_id`/tanggal/`customer_type`/`item_name`).
 - Server direstart (bukan `--reload`), port 8103.
 - Verifikasi HTTP: `v_fnb_outlet_daily` filter `outlet_id=OUT001` bulan Juli → 31 baris (cocok jumlah hari); `fnb_transactions` row-level dengan paginasi `limit=5` → tepat 5 baris transaksi granular.
+
+## 2026-08-09 — Checkpoint 4: Facility/Ops API
+
+- `whitelist_facility.py` (9 view aggregate; 1 tabel row-level `maintenance_tickets` — filter `property_id`/`room_id`/tanggal/`status`/`priority`).
+- Server direstart, port 8104.
+- Verifikasi HTTP: `v_maintenance_ticket_daily` lewat endpoint tetap mengembalikan `pending_count` dan `avg_exceeds_sla_threshold` sebagai kolom terpisah apa adanya (business rule M3.1/M3.2 tidak disederhanakan di layer API); `maintenance_tickets` row-level mengembalikan tiket granular sesuai filter.

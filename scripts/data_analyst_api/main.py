@@ -84,6 +84,8 @@ def register_domain_routes(domain, aggregate_whitelist, rowlevel_whitelist):
 
 from whitelist_revenue import AGGREGATE_WHITELIST as REVENUE_AGGREGATE, ROWLEVEL_WHITELIST as REVENUE_ROWLEVEL
 from whitelist_fnb import AGGREGATE_WHITELIST as FNB_AGGREGATE, ROWLEVEL_WHITELIST as FNB_ROWLEVEL
+from whitelist_facility import AGGREGATE_WHITELIST as FACILITY_AGGREGATE, ROWLEVEL_WHITELIST as FACILITY_ROWLEVEL
 
 register_domain_routes("revenue", REVENUE_AGGREGATE, REVENUE_ROWLEVEL)
 register_domain_routes("fnb", FNB_AGGREGATE, FNB_ROWLEVEL)
+register_domain_routes("facility", FACILITY_AGGREGATE, FACILITY_ROWLEVEL)
