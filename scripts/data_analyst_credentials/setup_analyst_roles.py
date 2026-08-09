@@ -30,6 +30,7 @@ from role_config_fnb import ROLE_CONFIG as FNB_CONFIG
 from role_config_facility import ROLE_CONFIG as FACILITY_CONFIG
 from role_config_spa_event import ROLE_CONFIG as SPA_EVENT_CONFIG
 from role_config_hr import ROLE_CONFIG as HR_CONFIG
+from role_config_corporate_financial import ROLE_CONFIG as CORPORATE_FINANCIAL_CONFIG
 
 ROLE_CONFIGS = [
     REVENUE_CONFIG,
@@ -37,6 +38,7 @@ ROLE_CONFIGS = [
     FACILITY_CONFIG,
     SPA_EVENT_CONFIG,
     HR_CONFIG,
+    CORPORATE_FINANCIAL_CONFIG,
 ]
 # Populated by importing role_config_<domain> modules as they're added,
 # one per M3.5 checkpoint -- see decisions.md task breakdown.

@@ -44,3 +44,9 @@
 - `role_config_hr.py` ditulis, GRANT target dari `whitelist_hr.py` (8 view + `staff_shifts`/`employee_performance`, tanpa payroll sama sekali).
 - **Deny-check diperkuat khusus untuk KK1 M3.5** (contoh literal dokumen sumber, "HR Analyst tidak bisa mengakses `payroll`") — 5 deny-check terkait payroll sekaligus: `mart_cleaned.payroll` langsung, `v_payroll_department_monthly`, `v_payroll_access_level_monthly`, `v_financial_service_charge_monthly`, `v_financial_labor_cost_monthly`. Semua gagal `InsufficientPrivilege` sesuai harapan.
 - Lolos verifikasi bersih tanpa retry.
+
+## 2026-08-09 — Checkpoint 7: Corporate/Financial role — pengujian paling kritis di seluruh milestone
+
+- `role_config_corporate_financial.py` ditulis, GRANT target dari `whitelist_corporate_financial.py` (9 view + `financial_summary`/`payroll` — satu-satunya role yang memang berhak payroll).
+- **Deny-check terpenting M3.5**: `SELECT` langsung ke `mart_aggregated.fact_financial_business_line_monthly` (tabel dasar di balik `v_financial_departmental_margin`) — kalau ini tembus, role bisa melihat baris `Overall`/`Corporate Overhead` yang sengaja disembunyikan filter view (business rule M3.2). Hasil: **gagal `InsufficientPrivilege`**, konsisten temuan Keputusan #8 Checkpoint 1 (view privilege pemilik, bypass tabel dasar otomatis mustahil tanpa grant eksplisit).
+- Verifikasi lengkap: `ALLOW` ke `v_financial_departmental_margin`/`payroll`/`financial_summary` sukses; `DENY` ke tabel dasar bypass, `bookings`, `fnb_transactions`, HR watchlist view semua gagal; `WRITE` gagal. Lolos bersih tanpa retry.
