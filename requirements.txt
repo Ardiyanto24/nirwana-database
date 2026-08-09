@@ -13,3 +13,7 @@ dbt-bigquery==1.12.0
 
 # Dependencies for scripts/data_scientist_access/ (Milestone 2.5)
 pandas==3.0.2
+
+# Dependencies for scripts/data_analyst_api/ (Milestone 3.4)
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
