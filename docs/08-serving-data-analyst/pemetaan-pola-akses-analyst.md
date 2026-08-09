@@ -59,7 +59,29 @@ Skema kolom tabel pemetaan per peran:
 
 ## Pemetaan per Peran
 
-*(diisi bertahap per checkpoint — lihat `milestones/3.1-pemetaan-pola-akses-analyst/logs.md`)*
+### 1. Revenue Analyst
+
+| Field | Isi |
+|---|---|
+| **Cakupan Properti** | Semua 5 properti |
+| **Tabel `mart_aggregated` Relevan** | `fact_revenue_room_type_daily`, `fact_revenue_channel_daily`, `fact_revenue_los_daily`, `fact_revenue_property_daily`, `fact_revenue_gop_impact_monthly`, `fact_revenue_pricing_deviation`, `fact_revenue_loyalty_daily`, `fact_revenue_nationality_daily` — dim: `dim_property`, `dim_room_type`, `dim_channel`, `dim_loyalty_tier`, `dim_nationality_group`, `dim_pricing_reason` |
+| **Tabel `mart_cleaned` Relevan (row-level)** | `bookings` (investigasi ad-hoc cancellation, mis. "kenapa cancellation Bali Maret 2024 tinggi"), `pricing_history` (price elasticity — histori harian harga vs okupansi) |
+| **Filter Wajib** | `property_id` (filter standar, tidak ada filter eksklusif khusus di domain ini) |
+| **Business Rule Kritis Terkait** | `fact_revenue_pace_booking_snapshot` (di skema tapi didesain append-only, snapshot "as of hari ini" — **bukan** metrik historis biasa; jangan digabung dengan agregasi reguler `fact_revenue_property_daily`. Status implementasi append-only vs constraint BigQuery Sandbox (DML diblokir) masih dicatat sebagai belum final di `DataSchema-mart-aggregated.md` §Fact Tables Revenue — cek status aktual sebelum dipakai di Milestone 3.2). |
+| **Catatan Gap** | Net revenue setelah komisi OTA — tidak tersedia (tidak ada kolom komisi di `bookings`). Target/budget okupansi & revenue — tidak ada tabel target di skema. |
+
+### 2. F&B Analyst
+
+| Field | Isi |
+|---|---|
+| **Cakupan Properti** | Semua 5 properti |
+| **Tabel `mart_aggregated` Relevan** | `fact_fnb_outlet_daily`, `fact_fnb_category_daily`, `fact_fnb_hourly`, `fact_fnb_customer_type_daily`, `fact_fnb_menu_item_daily`, `fact_fnb_waste_daily`, `fact_fnb_inventory_status`, `fact_fnb_ingredient_price_daily` — dim: `dim_outlet`, `dim_outlet_type`, `dim_fnb_category`, `dim_menu_item`, `dim_waste_reason`, `dim_ingredient` |
+| **Tabel `mart_cleaned` Relevan (row-level)** | `fnb_transactions` (investigasi anomali penjualan menu tertentu; basket analysis per `transaction_id`) |
+| **Filter Wajib** | `property_id` (via `dim_outlet.property_id` — outlet selalu terikat 1 properti) |
+| **Business Rule Kritis Terkait** | **Basket analysis WAJIB dari `mart_cleaned.fnb_transactions` row-level, tidak pernah dari `mart_aggregated`** — grain per struk hilang total di seluruh fact table F&B (semua sudah teragregasi per outlet/periode), mencoba merekonstruksinya dari fact table akan menghasilkan hasil salah, bukan sekadar kurang detail. |
+| **Catatan Gap** | Data supplier/vendor bahan baku — tidak ada tabel ini. Waktu penyiapan/kecepatan servis — tidak ada kolom timestamp granular di `fnb_transactions` selain `transaction_datetime`. |
+
+*(4 peran lain — Facility/Ops, Spa & Event, HR, Corporate/Financial, dan Property/GM Analyst — diisi di checkpoint berikutnya, lihat `milestones/3.1-pemetaan-pola-akses-analyst/logs.md`.)*
 
 ---
 
