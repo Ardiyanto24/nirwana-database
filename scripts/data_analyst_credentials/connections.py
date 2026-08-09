@@ -38,6 +38,23 @@ def get_serving_connection(readonly=False):
     return conn
 
 
+def get_mart_cleaned_owner_connection():
+    """Connection as reverse_etl_writer -- the actual OWNER of mart_cleaned
+    tables (created via that role's connection in scripts/reverse_etl/sync.py).
+
+    Found empirically in M3.5 Checkpoint 2: the admin SERVING_DB_URL role
+    ("postgres" in this Supabase project) is NOT a superuser and has no grant
+    authority over objects it doesn't own -- GRANT SELECT run as admin on a
+    mart_cleaned table silently succeeds (no error) but never actually takes
+    effect (confirmed via pg_class.relacl). GRANT statements on mart_cleaned
+    tables must be issued by their owning role. analyst_views is unaffected --
+    those views ARE owned by the admin role (created via get_serving_connection()
+    in scripts/data_analyst_views/apply_views.py, M3.2)."""
+    env = _load_env(os.path.join(REPO_ROOT, ".env"))
+    conn = psycopg2.connect(env["REVERSE_ETL_WRITER_DB_URL"])
+    return conn
+
+
 def build_role_connection_string(role, password):
     """Builds a Supavisor pooler connection string for a newly created role,
     reusing the admin SERVING_DB_URL's project ref/host/port/db."""

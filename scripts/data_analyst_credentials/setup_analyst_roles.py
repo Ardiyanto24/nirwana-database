@@ -17,10 +17,19 @@ import argparse
 import secrets
 import sys
 
-from connections import build_role_connection_string, get_serving_connection, write_env_var
+from connections import (
+    build_role_connection_string,
+    get_mart_cleaned_owner_connection,
+    get_serving_connection,
+    write_env_var,
+)
 from verify_role_isolation import verify_role_isolation
 
-ROLE_CONFIGS = []
+from role_config_revenue import ROLE_CONFIG as REVENUE_CONFIG
+
+ROLE_CONFIGS = [
+    REVENUE_CONFIG,
+]
 # Populated by importing role_config_<domain> modules as they're added,
 # one per M3.5 checkpoint -- see decisions.md task breakdown.
 
@@ -46,14 +55,52 @@ def create_or_rotate_role(admin_conn, role, password):
 
 
 def apply_grants(admin_conn, role, grant_targets):
+    """Routes each GRANT to the connection that actually owns the target.
+
+    Found empirically in M3.5 Checkpoint 2: schema-level ownership and
+    table-level ownership are separate in this project. Every schema here
+    (analyst_views, mart_cleaned) was CREATEd via the admin connection, so
+    `GRANT USAGE ON SCHEMA` always goes through admin_conn regardless of who
+    owns the objects inside it. But the mart_cleaned *tables* are owned by
+    reverse_etl_writer (created via that role's connection in sync.py's
+    swap), so `GRANT SELECT` on those specific tables must go through
+    connections.get_mart_cleaned_owner_connection() -- admin_conn silently
+    no-ops (no error, no effect) on objects it doesn't own. analyst_views
+    *views* ARE owned by admin_conn's role (created via
+    scripts/data_analyst_views/apply_views.py, M3.2), so those object-level
+    grants go through admin_conn too.
+
+    mart_aggregated is deliberately NOT routable here -- Keputusan #8: analyst
+    roles never get grants on that schema at all (views run with owner
+    privilege, so GRANT SELECT on the view is always sufficient)."""
+    object_owner_connections = {"analyst_views": admin_conn}
     schemas_granted = set()
-    with admin_conn.cursor() as cur:
-        for target in grant_targets:
-            schema, obj = _grant_target_to_schema_object(target)
-            if schema not in schemas_granted:
+    mart_cleaned_conn = None
+
+    for target in grant_targets:
+        schema, obj = _grant_target_to_schema_object(target)
+        if schema == "mart_cleaned" and mart_cleaned_conn is None:
+            mart_cleaned_conn = get_mart_cleaned_owner_connection()
+            mart_cleaned_conn.autocommit = True
+            object_owner_connections["mart_cleaned"] = mart_cleaned_conn
+        if schema not in object_owner_connections:
+            raise ValueError(
+                f"No owner connection configured for schema '{schema}' -- "
+                f"Keputusan #8 forbids analyst roles from being granted access to "
+                f"mart_aggregated directly, and no other schema is expected here."
+            )
+
+        if schema not in schemas_granted:
+            with admin_conn.cursor() as cur:
                 cur.execute(f"GRANT USAGE ON SCHEMA {schema} TO {role}")
-                schemas_granted.add(schema)
+            schemas_granted.add(schema)
+
+        with object_owner_connections[schema].cursor() as cur:
             cur.execute(f"GRANT SELECT ON {schema}.{obj} TO {role}")
+
+    if mart_cleaned_conn:
+        mart_cleaned_conn.close()
+
     print(f"  {len(grant_targets)} object(s) granted across schema(s): {sorted(schemas_granted)}")
 
 
