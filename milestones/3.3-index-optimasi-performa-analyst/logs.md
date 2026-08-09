@@ -49,3 +49,12 @@
 - **Verifikasi setelah index**: seluruh 7 query beralih ke Index Scan, termasuk 2 tabel terkecil domain ini (`fact_event_property_daily` 1.177 baris, `fact_event_type_daily` 1.300 baris) yang tetap terbukti terpakai planner — dipertahankan sesuai bukti empiris, bukan dikeluarkan berdasar ukuran semata. Waktu eksekusi: spa_service_daily 115.9ms→1.2ms, spa_daily 17.5ms→1.1ms, event_bookings 14.6ms→0.13ms. `pg_stat_user_indexes.idx_scan` ≥1 untuk seluruh 7 index.
 
 **✅ Checkpoint 5 selesai.**
+
+## 2026-08-09 — Checkpoint 6: Index HR
+
+- Row count live sisa tabel: `fact_hr_turnover_snapshot` 43, `fact_hr_headcount_status_daily` 89, `fact_hr_performance_department_semester` 258, `fact_hr_performance_by_status_semester` 90 — keempatnya dikeluarkan tanpa perlu uji empiris, jauh di bawah tabel terkecil manapun yang pernah terbukti diuntungkan index sejauh ini (Keputusan #2).
+- **Baseline (sebelum index)**: `fact_hr_attendance_daily` 183.9ms; `fact_hr_employee_monthly` 102.8ms; `fact_hr_employee_performance_semester` 12.9ms; `fact_hr_watchlist_monthly` 66.8ms; `dim_employee` (filter `property_id`) 1.7ms; `mart_cleaned.staff_shifts` (610rb baris) **1702.8ms** — baseline terlambat di seluruh milestone ini, lebih lambat dari `fnb_transactions`; `mart_cleaned.employee_performance` 16.6ms.
+- Index dipasang: 5 tabel `mart_aggregated` (`fact_hr_attendance_daily` composite `(property_id, department_id, period_date)` — 2 filter wajib sekaligus, satu-satunya domain begitu; `fact_hr_employee_monthly`/`fact_hr_watchlist_monthly` `(employee_id, period_date)`; `fact_hr_employee_performance_semester` `(employee_id, review_period)`; `dim_employee` `(property_id)` — diuji empiris meski tabel kecil karena 3 view besar join lewat situ) + 2 tabel `mart_cleaned` (`staff_shifts` `(employee_id, date)`, `employee_performance` `(employee_id, review_period)`).
+- **Verifikasi setelah index**: seluruh 7 query beralih ke Index Scan, termasuk `dim_employee` yang cuma 755 baris — terbukti terpakai planner meski tabelnya kecil. Waktu eksekusi: `staff_shifts` 1702.8ms→2.5ms (680x lebih cepat, penurunan terbesar di seluruh milestone), `fact_hr_attendance_daily` 183.9ms→7.4ms, `fact_hr_employee_monthly` 102.8ms→3.9ms. `pg_stat_user_indexes.idx_scan` ≥1 untuk seluruh 7 index.
+
+**✅ Checkpoint 6 selesai.**

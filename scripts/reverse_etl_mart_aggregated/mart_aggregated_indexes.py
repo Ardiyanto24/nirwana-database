@@ -173,4 +173,41 @@ MART_AGGREGATED_INDEXES = [
         "index_name": "idx_fact_event_type_daily_property_period",
         "columns": ["property_id", "period_date"],
     },
+
+    # --- HR (Checkpoint 6) ---
+    # HR is the only domain with 2 mandatory filters at once (property_id AND
+    # department_id, per pemetaan-pola-akses-analyst.md #5).
+    {
+        "table": "fact_hr_attendance_daily",
+        "index_name": "idx_fact_hr_attendance_daily_property_department_period",
+        "columns": ["property_id", "department_id", "period_date"],
+    },
+    {
+        "table": "fact_hr_employee_monthly",
+        "index_name": "idx_fact_hr_employee_monthly_employee_period",
+        "columns": ["employee_id", "period_date"],
+    },
+    {
+        "table": "fact_hr_employee_performance_semester",
+        "index_name": "idx_fact_hr_employee_performance_semester_employee_period",
+        "columns": ["employee_id", "review_period"],
+    },
+    {
+        "table": "fact_hr_watchlist_monthly",
+        "index_name": "idx_fact_hr_watchlist_monthly_employee_period",
+        "columns": ["employee_id", "period_date"],
+    },
+    # dim_employee (755 rows) tested empirically per Keputusan #2 despite being a small
+    # dimension table -- 3 large HR views (24k+24k+3.7k rows) join through
+    # dim_employee.property_id/department_id (M5.7 retrofit), so the join-side index is
+    # worth checking even though the table itself is small.
+    {
+        "table": "dim_employee",
+        "index_name": "idx_dim_employee_property",
+        "columns": ["property_id"],
+    },
+    # fact_hr_turnover_snapshot (43), fact_hr_headcount_status_daily (89),
+    # fact_hr_performance_department_semester (258), fact_hr_performance_by_status_semester
+    # (90) deliberately excluded -- snapshot/semester-grain tables in the hundreds of rows,
+    # far below any table that has empirically benefited from an index so far (Keputusan #2).
 ]

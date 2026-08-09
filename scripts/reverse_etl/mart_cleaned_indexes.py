@@ -45,4 +45,15 @@ MART_CLEANED_INDEXES = [
         "index_name": "idx_event_bookings_property_eventdate",
         "columns": ["property_id", "event_date"],
     },
+    # --- HR (Checkpoint 6) ---
+    {
+        "table": "staff_shifts",
+        "index_name": "idx_staff_shifts_employee_date",
+        "columns": ["employee_id", "date"],
+    },
+    {
+        "table": "employee_performance",
+        "index_name": "idx_employee_performance_employee_period",
+        "columns": ["employee_id", "review_period"],
+    },
 ]
