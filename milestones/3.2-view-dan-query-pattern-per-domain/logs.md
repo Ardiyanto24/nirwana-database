@@ -18,3 +18,9 @@
 - `views_revenue.sql` (8 view: room_type_daily, channel_daily, los_daily, property_daily, gop_impact_monthly, pricing_deviation, loyalty_daily, nationality_daily) dan `views_fnb.sql` (8 view: outlet_daily, category_daily, hourly, customer_type_daily, menu_item_daily, waste_daily, inventory_status, ingredient_price_daily) ditulis dan di-apply ke `analyst_views` sungguhan.
 - Kolom fact/dim diambil langsung dari `information_schema.columns` live (bukan asumsi dari dokumen desain) untuk memastikan akurasi.
 - Verifikasi KK1: (a) `v_revenue_room_type_daily` — row count identik fact vs view (19.746), sampel `occupancy_rate`/`adr`/`revpar` cocok persis, dimensi ter-resolve benar (P01 → "Nirwana Beach Resort Bali", room_type_id 1 → "Deluxe"). (b) `v_fnb_menu_item_daily` — row count identik (289.938), sampel `food_cost_ratio_actual`/`food_cost_ratio_target` cocok persis, outlet ter-resolve ke property lewat `dim_outlet` (OUT001 → P01/"Sunset Restaurant").
+
+## 2026-08-09 — Checkpoint 3
+
+- `views_facility.sql` (9 view) dan `views_spa_event.sql` (6 view) ditulis dan di-apply.
+- `v_maintenance_ticket_daily` mengimplementasikan business rule kritis #5/#6 M3.1: `pending_count` tetap kolom terpisah, `sla_threshold_hours` (CASE per `priority_name`: critical=8, high=24, medium=48, low=72, sesuai `Metadata.md`) dan `avg_exceeds_sla_threshold` (boolean turunan) ditanam permanen di view.
+- Verifikasi: (a) row count `fact_maintenance_ticket_daily` vs view identik (12.840); breach logic diuji manual — priority medium (threshold 48 jam) dengan `avg_sla_duration_hours=120` menghasilkan `avg_exceeds_sla_threshold=True`, sedangkan `avg_sla_duration_hours=24` menghasilkan `False`; threshold mapping 4 priority dikonfirmasi persis (8/24/48/72). (b) `v_event_venue_daily` — row count identik (1.333), sampel `utilization_rate` cocok persis, venue ter-resolve ke property (VN001 → P01/"Nirwana Grand Ballroom").
