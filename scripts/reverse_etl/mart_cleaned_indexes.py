@@ -27,4 +27,10 @@ MART_CLEANED_INDEXES = [
         "index_name": "idx_pricing_history_property_date",
         "columns": ["property_id", "date"],
     },
+    # --- F&B (Checkpoint 3) ---
+    {
+        "table": "fnb_transactions",
+        "index_name": "idx_fnb_transactions_outlet_datetime",
+        "columns": ["outlet_id", "transaction_datetime"],
+    },
 ]

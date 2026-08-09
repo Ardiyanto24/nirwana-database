@@ -22,3 +22,12 @@
 - **Verifikasi setelah index**: seluruh 9 query `EXPLAIN ANALYZE` beralih ke Index Scan/Bitmap Index Scan (tidak ada Seq Scan tersisa). Waktu eksekusi: room_type_daily 88.2ms→2.2ms, channel_daily 130.7ms→1.8ms, los_daily 276.6ms→0.48ms, bookings 82.1ms→3.3ms. `pg_stat_user_indexes.idx_scan` dikonfirmasi ≥1 untuk seluruh 9 index — KK2 terbukti dua arah (query plan + runtime usage), bukan cuma index ada di skema.
 
 **✅ Checkpoint 2 selesai.**
+
+## 2026-08-09 — Checkpoint 3: Index F&B
+
+- Row count live sisa tabel F&B: `fact_fnb_outlet_daily` 18.649, `fact_fnb_category_daily` 53.121, `fact_fnb_customer_type_daily` 31.812, `fact_fnb_waste_daily` 45.889, `fact_fnb_inventory_status` 17 (dikeluarkan — snapshot state terkini, terlalu kecil), `fact_fnb_ingredient_price_daily` 32.910.
+- **Baseline (sebelum index)**, filter `outlet_id`+`period_date` 1 bulan (`OUT001`): `fact_fnb_outlet_daily` Seq Scan 111.1ms; `fact_fnb_menu_item_daily` Parallel Seq Scan 793.2ms (144.579 baris dibuang filter); `fact_fnb_hourly` Parallel Seq Scan 299.7ms; `mart_cleaned.fnb_transactions` (902rb baris, tabel terbesar project) Parallel Seq Scan **1004.4ms** (449.440 baris dibuang filter per worker) — paling lambat dari seluruh domain, bukti kuat kenapa `mart_cleaned` wajib masuk cakupan M3.3.
+- Index dipasang: 7 tabel `mart_aggregated` (composite `(outlet_id, period_date)`, kecuali `fact_fnb_ingredient_price_daily` pakai `(ingredient_id, period_date)` — tabel ini tidak terikat 1 outlet) + `mart_cleaned.fnb_transactions` → `(outlet_id, transaction_datetime)`.
+- **Verifikasi setelah index**: seluruh 8 query beralih ke Index/Bitmap Index Scan. Waktu eksekusi: outlet_daily 111.1ms→3.0ms, menu_item_daily 793.2ms→7.6ms, hourly 299.7ms→9.6ms. `fnb_transactions` sempat terukur 1473.5ms pada run pertama pasca-`REINDEX` (anomali cache-dingin, buffer belum warm) — diverifikasi ulang 3x run berikutnya: 64.7ms → 5.6ms → 4.9ms, stabil cepat begitu cache warm. Dicatat jujur sebagai karakteristik operasional (baseline pertama pasca-swap/reindex bisa lebih lambat sampai cache warm), bukan disembunyikan. `pg_stat_user_indexes.idx_scan` ≥1 untuk seluruh 8 index (fnb_transactions idx_scan=5 dari beberapa kali run verifikasi).
+
+**✅ Checkpoint 3 selesai.**

@@ -60,4 +60,45 @@ MART_AGGREGATED_INDEXES = [
     },
     # fact_revenue_gop_impact_monthly (180 rows) deliberately excluded -- too small
     # for Postgres to ever prefer an index scan over seq scan (Keputusan #2).
+
+    # --- F&B (Checkpoint 3) ---
+    # Fact tables here are keyed by outlet_id (not property_id directly -- an outlet
+    # always belongs to exactly 1 property, resolved via dim_outlet in analyst_views).
+    {
+        "table": "fact_fnb_outlet_daily",
+        "index_name": "idx_fact_fnb_outlet_daily_outlet_period",
+        "columns": ["outlet_id", "period_date"],
+    },
+    {
+        "table": "fact_fnb_category_daily",
+        "index_name": "idx_fact_fnb_category_daily_outlet_period",
+        "columns": ["outlet_id", "period_date"],
+    },
+    {
+        "table": "fact_fnb_hourly",
+        "index_name": "idx_fact_fnb_hourly_outlet_period",
+        "columns": ["outlet_id", "period_date"],
+    },
+    {
+        "table": "fact_fnb_customer_type_daily",
+        "index_name": "idx_fact_fnb_customer_type_daily_outlet_period",
+        "columns": ["outlet_id", "period_date"],
+    },
+    {
+        "table": "fact_fnb_menu_item_daily",
+        "index_name": "idx_fact_fnb_menu_item_daily_outlet_period",
+        "columns": ["outlet_id", "period_date"],
+    },
+    {
+        "table": "fact_fnb_waste_daily",
+        "index_name": "idx_fact_fnb_waste_daily_outlet_period",
+        "columns": ["outlet_id", "period_date"],
+    },
+    {
+        "table": "fact_fnb_ingredient_price_daily",
+        "index_name": "idx_fact_fnb_ingredient_price_daily_ingredient_period",
+        "columns": ["ingredient_id", "period_date"],
+    },
+    # fact_fnb_inventory_status (17 rows -- current-state snapshot) deliberately
+    # excluded, same reasoning as fact_revenue_gop_impact_monthly.
 ]
