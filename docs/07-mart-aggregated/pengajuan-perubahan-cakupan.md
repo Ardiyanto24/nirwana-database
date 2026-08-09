@@ -4,6 +4,25 @@
 
 ---
 
+### Kolom `property_id` hilang di `dim_employee`
+
+- **Tanggal:** 2026-08-09
+- **Pengaju:** Data Analyst Serving (Milestone 3.2, `04-serving-data-analyst.md`) — *bukan simulasi*: ditemukan langsung saat implementasi nyata (verifikasi `information_schema.columns` terhadap `mart_aggregated` sungguhan di serving PostgreSQL), berbeda dari pengajuan watchlist HR di atas yang disimulasikan ala persona.
+- **Kebutuhan:** `mart_aggregated.dim_employee` saat ini hanya berisi `employee_id`, `full_name`, `department_id`, `access_level_id` — **tidak ada `property_id`**, meski `employees.property_id` sudah ada di produksi (`docs/01-architecture/Metadata.md` baris 134; `P06` = kantor pusat). Akibatnya 3 fact table grain-karyawan (`fact_hr_employee_monthly`, `fact_hr_employee_performance_semester`, `fact_hr_watchlist_monthly`) tidak bisa difilter/di-join ke properti lewat `mart_aggregated` sama sekali — Milestone 3.1 (pemetaan akses) mensyaratkan filter `property_id` untuk peran HR Analyst dan Property/GM Analyst, dan Milestone 3.4 (API) kemungkinan besar butuh filter ini untuk 3 view terkait (`v_hr_employee_monthly`, `v_hr_employee_performance_semester`, `v_hr_watchlist_monthly` di `analyst_views`) begitu endpoint per-properti dibangun.
+- **Domain terdampak:** HR.
+- **Referensi:** `milestones/3.2-view-dan-query-pattern-per-domain/report.md` Known Gaps; `docs/08-serving-data-analyst/view-query-pattern-analyst.md` §HR (catatan "Known Gap ditemukan di M3.2"); `milestones/5.2-desain-struktur-tabel-mart-aggregated/decisions.md` (desain awal `dim_employee` yang tidak menyertakan `property_id`).
+- **Evaluasi:**
+  | Kriteria | Nilai | Catatan |
+  |---|---|---|
+  | Ketersediaan data | Tersedia | `employees.property_id` sudah ada penuh di produksi, tinggal dialirkan lewat `mart_cleaned.employees.property_id` (sudah tersedia di `mart_cleaned` sejak M2.1-2.3) ke `dim_employee` — tidak butuh data baru, murni kolom yang terlewat saat desain M5.2. |
+  | Dampak ke konsumen lain | Dampak rendah | Menambah 1 kolom (`property_id`) ke `dim_employee`, tidak mengubah kolom/grain yang sudah ada. Konsumen yang sudah pakai `dim_employee` (Facility/Ops — `v_housekeeping_staff_daily`, `v_maintenance_technician_daily`) tidak terpengaruh, hanya mendapat kolom tambahan opsional. |
+  | Prioritas relatif | Sedang | Tidak memblokir M3.2 (sudah diselesaikan dengan gap ini didokumentasikan), tapi berpotensi memblokir Milestone 3.4 (API) kalau endpoint per-properti untuk HR dibangun sebelum gap ini ditutup. |
+- **Keputusan:** *(menunggu evaluasi pemilik `mart_aggregated`)*
+- **Tindak lanjut:** *(menunggu keputusan)*
+- **Status:** Diajukan.
+
+---
+
 ### Threshold watchlist HR untuk early warning pra-resign
 
 - **Tanggal:** 2026-08-08

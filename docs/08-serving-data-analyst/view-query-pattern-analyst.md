@@ -90,7 +90,7 @@ Dokumen ini adalah inventaris seluruh view yang dibangun di schema `analyst_view
 
 ### Known Gap ditemukan di M3.2: `dim_employee` tidak punya `property_id`
 
-`mart_aggregated.dim_employee` hanya berisi `employee_id`, `full_name`, `department_id`, `access_level_id` — **tidak ada `property_id`**, meski `employees.property_id` ada di produksi (`docs/01-architecture/Metadata.md` baris 134, `P06` = kantor pusat). Akibatnya `v_hr_employee_monthly`, `v_hr_employee_performance_semester`, `v_hr_watchlist_monthly` tidak bisa difilter per properti. Perbaikan (menambah kolom ke `dim_employee`) di luar cakupan M3.2 — kalau dibutuhkan, harus diajukan lewat mekanisme perubahan cakupan Milestone 5.6 (`docs/07-mart-aggregated/mekanisme-pengajuan-perubahan-cakupan.md`), bukan ditambal di layer view.
+`mart_aggregated.dim_employee` hanya berisi `employee_id`, `full_name`, `department_id`, `access_level_id` — **tidak ada `property_id`**, meski `employees.property_id` ada di produksi (`docs/01-architecture/Metadata.md` baris 134, `P06` = kantor pusat). Akibatnya `v_hr_employee_monthly`, `v_hr_employee_performance_semester`, `v_hr_watchlist_monthly` tidak bisa difilter per properti. Perbaikan (menambah kolom ke `dim_employee`) di luar cakupan M3.2 — **sudah diajukan** lewat mekanisme perubahan cakupan Milestone 5.6, lihat `docs/07-mart-aggregated/pengajuan-perubahan-cakupan.md` §"Kolom `property_id` hilang di `dim_employee`" (status: Diajukan).
 
 ## Corporate/Financial (9 view)
 

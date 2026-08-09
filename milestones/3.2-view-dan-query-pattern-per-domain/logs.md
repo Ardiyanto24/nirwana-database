@@ -40,3 +40,8 @@
 - `docs/08-serving-data-analyst/view-query-pattern-analyst.md` ditulis sebagai Output resmi (inventaris 48 view).
 - KK1 dan KK2 diverifikasi ulang lintas 6 domain, `report.md` ditulis.
 - Milestone ditutup. Handoff eksplisit ke M3.3 (kolom filter view = kandidat index di tabel dasar), M3.4 (48 view = basis endpoint agregat, gap `dim_employee.property_id` perlu diselesaikan dulu kalau dibutuhkan), M3.5 (GRANT per view per peran, daftar lengkap di dokumen inventaris).
+
+## 2026-08-09 — Pengajuan perubahan cakupan `dim_employee.property_id`
+
+- Atas permintaan user, gap `dim_employee` tanpa `property_id` diajukan resmi lewat mekanisme Milestone 5.6: entri baru ditambahkan di `docs/07-mart-aggregated/pengajuan-perubahan-cakupan.md` §"Kolom `property_id` hilang di `dim_employee`", status "Diajukan" (menunggu evaluasi pemilik `mart_aggregated`). Ditandai eksplisit **bukan simulasi** — beda dari pengajuan watchlist HR M5.6 yang ditulis ala persona, ini temuan nyata dari implementasi M3.2.
+- Cross-reference diperbarui di `report.md` (Known Gaps) dan `docs/08-serving-data-analyst/view-query-pattern-analyst.md` (§HR) supaya jejak keputusan tidak terputus.
