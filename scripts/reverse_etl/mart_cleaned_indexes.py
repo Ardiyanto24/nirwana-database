@@ -15,4 +15,16 @@ ANALYZE showing Index/Bitmap Index Scan, not Seq Scan) are kept here -- Mileston
 Keputusan #2 (decisions.md): no blanket indexing of small tables.
 """
 
-MART_CLEANED_INDEXES = []
+MART_CLEANED_INDEXES = [
+    # --- Revenue (Checkpoint 2) ---
+    {
+        "table": "bookings",
+        "index_name": "idx_bookings_property_checkin",
+        "columns": ["property_id", "check_in_date"],
+    },
+    {
+        "table": "pricing_history",
+        "index_name": "idx_pricing_history_property_date",
+        "columns": ["property_id", "date"],
+    },
+]

@@ -21,4 +21,43 @@ sequential-scan regardless of indexing -- those are deliberately left out, docum
 index-baseline-analyst.md rather than indexed "for completeness."
 """
 
-MART_AGGREGATED_INDEXES = []
+MART_AGGREGATED_INDEXES = [
+    # --- Revenue (Checkpoint 2) ---
+    {
+        "table": "fact_revenue_room_type_daily",
+        "index_name": "idx_fact_revenue_room_type_daily_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_revenue_channel_daily",
+        "index_name": "idx_fact_revenue_channel_daily_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_revenue_los_daily",
+        "index_name": "idx_fact_revenue_los_daily_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_revenue_property_daily",
+        "index_name": "idx_fact_revenue_property_daily_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_revenue_pricing_deviation",
+        "index_name": "idx_fact_revenue_pricing_deviation_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_revenue_loyalty_daily",
+        "index_name": "idx_fact_revenue_loyalty_daily_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_revenue_nationality_daily",
+        "index_name": "idx_fact_revenue_nationality_daily_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    # fact_revenue_gop_impact_monthly (180 rows) deliberately excluded -- too small
+    # for Postgres to ever prefer an index scan over seq scan (Keputusan #2).
+]
