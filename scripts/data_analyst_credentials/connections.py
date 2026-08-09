@@ -68,10 +68,19 @@ def build_role_connection_string(role, password):
 
 def write_env_var(key, value):
     """Read/filter-out-old-key/append/rewrite .env -- same idiom as
-    setup_reader_role.py/setup_writer_role.py. Never prints the value."""
+    setup_reader_role.py/setup_writer_role.py. Never prints the value.
+
+    Found empirically in M3.6: if the file's last existing line has no
+    trailing newline, naively appending "key=value\n" to the line list
+    glues the new entry onto the end of that last line instead of starting
+    a fresh one (silently corrupts both entries -- only caught later via
+    grep, which still matched the substring). Fixed by ensuring the last
+    line ends with \n before appending."""
     env_path = os.path.join(REPO_ROOT, ".env")
     with open(env_path, "r", encoding="utf-8") as f:
         lines = [line for line in f if not line.startswith(f"{key}=")]
+    if lines and not lines[-1].endswith("\n"):
+        lines[-1] += "\n"
     lines.append(f"{key}={value}\n")
     with open(env_path, "w", encoding="utf-8") as f:
         f.writelines(lines)
