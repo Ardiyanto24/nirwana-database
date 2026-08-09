@@ -99,7 +99,7 @@
 **Sumber:** `mart_cleaned__staff_shifts`, `employee_performance`, `employees`.
 
 ### Dimension
-`dim_shift_type`, `dim_employee_status` (active/resigned/terminated); `dim_employee`, `dim_department` (lintas-domain).
+`dim_shift_type`, `dim_employee_status` (active/resigned/terminated); `dim_employee`, `dim_department` (lintas-domain). **`dim_employee.property_id`** (Milestone 5.7): properti tempat karyawan bertugas (`P06` = kantor pusat), langsung dari `mart_cleaned.employees.property_id` — sengaja terlewat di desain M5.2 semula, ditemukan oleh Data Analyst Serving (M3.2) dan ditutup lewat mekanisme pengajuan M5.6. Memungkinkan `fact_hr_employee_monthly`, `fact_hr_employee_performance_semester`, dan `fact_hr_watchlist_monthly` di-join ke properti lewat `dim_employee` untuk pertama kalinya.
 
 ### Fact
 - **`fact_hr_attendance_daily`**: `overtime_hours_total` = Σ MAX(0, jam kerja − 8) per shift. Shift lintas tengah malam (`clock_out < clock_in`) ditangani `+24 jam` sebelum dikurangi 8.

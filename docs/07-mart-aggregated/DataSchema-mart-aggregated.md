@@ -34,9 +34,11 @@ Seluruh kategori/referensi (channel, department, issue_type, dst) sengaja dijadi
 | Dimension Table | Kolom | Key | Sumber |
 |---|---|---|---|
 | `dim_property` | `property_id` (PK), `property_name`, `region`, `opening_date` | Natural key (`property_id` sudah stabil di produksi) | `properties` |
-| `dim_employee` | `employee_id` (PK), `full_name`, `department_id` (FK `dim_department`), `access_level_id` (FK `dim_access_level`) | Natural key | `employees` |
+| `dim_employee` | `employee_id` (PK), `property_id` (FK `dim_property`, **Milestone 5.7**), `full_name`, `department_id` (FK `dim_department`), `access_level_id` (FK `dim_access_level`) | Natural key | `employees` |
 | `dim_department` | `department_id` (PK), `department_name` | Surrogate | `employees.department` |
 | `dim_customer_type` | `customer_type_id` (PK), `customer_type_name` (inhouse/walk-in) | Surrogate | `fnb_transactions.customer_type`, `spa_bookings` (implisit inhouse/walk-in) |
+
+**Koreksi (M5.7):** `dim_employee.property_id` sengaja terlewat di desain M5.2 semula, meski KK#2 milestone yang sama mewajibkan `property_id` sebagai kolom filter wajib di seluruh skema — akibatnya `fact_hr_employee_monthly`, `fact_hr_employee_performance_semester`, dan `fact_hr_watchlist_monthly` tidak bisa difilter per properti lewat `mart_aggregated`. Ditemukan oleh Data Analyst Serving (M3.2, non-simulasi) dan diselesaikan lewat mekanisme pengajuan M5.6 — lihat `docs/07-mart-aggregated/pengajuan-perubahan-cakupan.md`.
 
 ### Revenue
 
