@@ -32,3 +32,9 @@
 - `role_config_facility.py` ditulis, GRANT target dari `whitelist_facility.py` (9 view + `maintenance_tickets`).
 - Lolos verifikasi bersih tanpa retry.
 - Verifikasi: `ALLOW` ke `v_maintenance_ticket_daily`/`maintenance_tickets` sukses, `DENY` ke `mart_aggregated.fact_maintenance_ticket_daily`/`payroll`/`bookings`/HR watchlist gagal, `WRITE` gagal. `FACILITY_ANALYST_READER_DB_URL` ditulis ke `.env`.
+
+## 2026-08-09 — Checkpoint 5: Spa & Event role
+
+- `role_config_spa_event.py` ditulis, GRANT target dari `whitelist_spa_event.py` (6 view + `event_bookings`).
+- Lolos verifikasi bersih tanpa retry.
+- Verifikasi: `ALLOW` ke `v_event_venue_daily`/`event_bookings` sukses, `DENY` ke `mart_aggregated.fact_event_venue_daily`/`payroll`/`bookings`/HR watchlist gagal, `WRITE` gagal. `SPA_EVENT_ANALYST_READER_DB_URL` ditulis ke `.env`.
