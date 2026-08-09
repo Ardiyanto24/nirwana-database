@@ -38,3 +38,9 @@
 - `role_config_spa_event.py` ditulis, GRANT target dari `whitelist_spa_event.py` (6 view + `event_bookings`).
 - Lolos verifikasi bersih tanpa retry.
 - Verifikasi: `ALLOW` ke `v_event_venue_daily`/`event_bookings` sukses, `DENY` ke `mart_aggregated.fact_event_venue_daily`/`payroll`/`bookings`/HR watchlist gagal, `WRITE` gagal. `SPA_EVENT_ANALYST_READER_DB_URL` ditulis ke `.env`.
+
+## 2026-08-09 — Checkpoint 6: HR role — business rule kritis KK1 diverifikasi
+
+- `role_config_hr.py` ditulis, GRANT target dari `whitelist_hr.py` (8 view + `staff_shifts`/`employee_performance`, tanpa payroll sama sekali).
+- **Deny-check diperkuat khusus untuk KK1 M3.5** (contoh literal dokumen sumber, "HR Analyst tidak bisa mengakses `payroll`") — 5 deny-check terkait payroll sekaligus: `mart_cleaned.payroll` langsung, `v_payroll_department_monthly`, `v_payroll_access_level_monthly`, `v_financial_service_charge_monthly`, `v_financial_labor_cost_monthly`. Semua gagal `InsufficientPrivilege` sesuai harapan.
+- Lolos verifikasi bersih tanpa retry.
