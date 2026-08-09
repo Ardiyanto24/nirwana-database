@@ -81,7 +81,29 @@ Skema kolom tabel pemetaan per peran:
 | **Business Rule Kritis Terkait** | **Basket analysis WAJIB dari `mart_cleaned.fnb_transactions` row-level, tidak pernah dari `mart_aggregated`** — grain per struk hilang total di seluruh fact table F&B (semua sudah teragregasi per outlet/periode), mencoba merekonstruksinya dari fact table akan menghasilkan hasil salah, bukan sekadar kurang detail. |
 | **Catatan Gap** | Data supplier/vendor bahan baku — tidak ada tabel ini. Waktu penyiapan/kecepatan servis — tidak ada kolom timestamp granular di `fnb_transactions` selain `transaction_datetime`. |
 
-*(4 peran lain — Facility/Ops, Spa & Event, HR, Corporate/Financial, dan Property/GM Analyst — diisi di checkpoint berikutnya, lihat `milestones/3.1-pemetaan-pola-akses-analyst/logs.md`.)*
+### 3. Facility/Ops Analyst
+
+| Field | Isi |
+|---|---|
+| **Cakupan Properti** | Semua 5 properti |
+| **Tabel `mart_aggregated` Relevan** | `fact_facility_room_status_daily`, `fact_housekeeping_room_type_daily`, `fact_housekeeping_property_daily`, `fact_housekeeping_staff_daily`, `fact_maintenance_ticket_daily`, `fact_maintenance_cost_daily`, `fact_maintenance_room_recurrence_yearly`, `fact_maintenance_property_benchmark_yearly`, `fact_maintenance_technician_daily` — dim: `dim_facility_area`, `dim_issue_type`, `dim_priority`, `dim_room`, `dim_property`, `dim_employee` |
+| **Tabel `mart_cleaned` Relevan (row-level)** | `maintenance_tickets` (investigasi lonjakan keluhan tipe kerusakan tertentu; riwayat tiket per `room_id` spesifik) |
+| **Filter Wajib** | `property_id` |
+| **Business Rule Kritis Terkait** | **SLA breach**: `fact_maintenance_ticket_daily.pending_count` (tiket `open`/`in-progress`) WAJIB dipisah dari `avg_sla_duration_hours` — tiket pending **tidak boleh** otomatis dihitung breach atau tidak-breach di view/API manapun. **Performa individu staff** (`fact_housekeeping_staff_daily`, `fact_maintenance_technician_daily`): sensitivitasnya lebih tinggi dari label domain RBAC "Rendah" pada `facility` — tetap dimasukkan sesuai keputusan sadar M5.1, tapi filtering akses granular (siapa boleh lihat performa siapa) adalah tanggung jawab Milestone 3.4 (API)/3.5 (kredensial), bukan dianggap otomatis aman di level mart. |
+| **Catatan Gap** | Jadwal preventive maintenance — tidak ada tabel ini (semua tiket reaktif). Estimasi kehilangan revenue dari kamar out-of-order — sengaja tidak dimasukkan (butuh asumsi cross-domain tidak akurat). Breakdown biaya per jenis part — `parts_replaced` teks bebas, bukan kategori terstruktur. |
+
+### 4. Spa & Event Analyst
+
+| Field | Isi |
+|---|---|
+| **Cakupan Properti** | Semua 5 properti |
+| **Tabel `mart_aggregated` Relevan** | Spa: `fact_spa_daily`, `fact_spa_customer_type_daily`, `fact_spa_service_daily`. Event: `fact_event_venue_daily`, `fact_event_property_daily`, `fact_event_type_daily` — dim: `dim_spa_service`, `dim_venue`, `dim_venue_type`, `dim_event_type` |
+| **Tabel `mart_cleaned` Relevan (row-level)** | `event_bookings` (investigasi anomali utilisasi venue tertentu; investigasi klien event tertentu via `client_name`) |
+| **Filter Wajib** | `property_id` |
+| **Business Rule Kritis Terkait** | **Repeat client event tidak boleh dibangun sebagai metrik otomatis** di `mart_aggregated`/view/API manapun — `client_name` teks bebas tanpa ID terstruktur, deteksi otomatis rapuh terhadap variasi penulisan nama. Kalau dibutuhkan, wajib row-level dengan fuzzy matching manual oleh analyst, bukan query terlayani. **Cross-sell spa×event juga tidak boleh diklaim sebagai metrik andal** — tidak ada `guest_id` penghubung konsisten antara `spa_bookings` dan `event_bookings`. |
+| **Catatan Gap** | Diskon/promo pada spa maupun event — tidak ada kolom ini di skema. Repeat client event dan cross-sell spa×event — lihat Business Rule Kritis (bukan sekadar gap data, tapi larangan eksplisit membangun metrik dari data yang tidak andal). |
+
+*(3 peran lain — HR, Corporate/Financial, dan Property/GM Analyst — diisi di checkpoint berikutnya, lihat `milestones/3.1-pemetaan-pola-akses-analyst/logs.md`.)*
 
 ---
 
