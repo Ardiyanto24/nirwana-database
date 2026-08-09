@@ -141,4 +141,36 @@ MART_AGGREGATED_INDEXES = [
     # fact_facility_room_status_daily (549 rows, current-state snapshot) and
     # fact_maintenance_property_benchmark_yearly (20 rows) deliberately excluded --
     # too small (Keputusan #2).
+
+    # --- Spa & Event (Checkpoint 5) ---
+    {
+        "table": "fact_spa_daily",
+        "index_name": "idx_fact_spa_daily_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_spa_customer_type_daily",
+        "index_name": "idx_fact_spa_customer_type_daily_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_spa_service_daily",
+        "index_name": "idx_fact_spa_service_daily_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_event_venue_daily",
+        "index_name": "idx_fact_event_venue_daily_venue_period",
+        "columns": ["venue_id", "period_date"],
+    },
+    {
+        "table": "fact_event_property_daily",
+        "index_name": "idx_fact_event_property_daily_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_event_type_daily",
+        "index_name": "idx_fact_event_type_daily_property_period",
+        "columns": ["property_id", "period_date"],
+    },
 ]

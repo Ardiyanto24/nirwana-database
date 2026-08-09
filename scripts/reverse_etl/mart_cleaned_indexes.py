@@ -39,4 +39,10 @@ MART_CLEANED_INDEXES = [
         "index_name": "idx_maintenance_tickets_property_reported",
         "columns": ["property_id", "reported_date"],
     },
+    # --- Spa & Event (Checkpoint 5) ---
+    {
+        "table": "event_bookings",
+        "index_name": "idx_event_bookings_property_eventdate",
+        "columns": ["property_id", "event_date"],
+    },
 ]

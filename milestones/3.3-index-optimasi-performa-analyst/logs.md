@@ -40,3 +40,12 @@
 - **Verifikasi setelah index**: seluruh 8 query beralih ke Index Scan, termasuk `fact_maintenance_room_recurrence_yearly` yang tadinya sudah cepat (4.2ms→2.6ms, tetap dipertahankan karena terbukti terpakai planner, bukan diasumsikan). Waktu eksekusi: housekeeping_room_type_daily 74.5ms→0.96ms, housekeeping_staff_daily 348.7ms→3.3ms, maintenance_ticket_daily 50.3ms→1.7ms, maintenance_tickets (mart_cleaned) 84.8ms→1.6ms. `pg_stat_user_indexes.idx_scan` ≥1 untuk seluruh 8 index.
 
 **✅ Checkpoint 4 selesai.**
+
+## 2026-08-09 — Checkpoint 5: Index Spa & Event
+
+- Row count live sisa tabel: `fact_spa_daily` 5.485, `fact_spa_customer_type_daily` 10.900, `fact_event_property_daily` 1.177, `fact_event_type_daily` 1.300.
+- **Baseline (sebelum index)**: `fact_spa_daily` 17.5ms; `fact_spa_customer_type_daily` 16.1ms; `fact_spa_service_daily` 115.9ms (41.718 baris); `fact_event_venue_daily` 8.1ms; `fact_event_property_daily` 3.8ms; `fact_event_type_daily` 1.5ms; `mart_cleaned.event_bookings` 14.6ms.
+- Index dipasang: 6 tabel `mart_aggregated` (`property_id`+`period_date`, kecuali `fact_event_venue_daily` pakai `venue_id`+`period_date`) + `mart_cleaned.event_bookings` → `(property_id, event_date)`.
+- **Verifikasi setelah index**: seluruh 7 query beralih ke Index Scan, termasuk 2 tabel terkecil domain ini (`fact_event_property_daily` 1.177 baris, `fact_event_type_daily` 1.300 baris) yang tetap terbukti terpakai planner — dipertahankan sesuai bukti empiris, bukan dikeluarkan berdasar ukuran semata. Waktu eksekusi: spa_service_daily 115.9ms→1.2ms, spa_daily 17.5ms→1.1ms, event_bookings 14.6ms→0.13ms. `pg_stat_user_indexes.idx_scan` ≥1 untuk seluruh 7 index.
+
+**✅ Checkpoint 5 selesai.**
