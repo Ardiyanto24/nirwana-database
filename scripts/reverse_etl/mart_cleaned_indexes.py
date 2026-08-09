@@ -33,4 +33,10 @@ MART_CLEANED_INDEXES = [
         "index_name": "idx_fnb_transactions_outlet_datetime",
         "columns": ["outlet_id", "transaction_datetime"],
     },
+    # --- Facility/Ops (Checkpoint 4) ---
+    {
+        "table": "maintenance_tickets",
+        "index_name": "idx_maintenance_tickets_property_reported",
+        "columns": ["property_id", "reported_date"],
+    },
 ]

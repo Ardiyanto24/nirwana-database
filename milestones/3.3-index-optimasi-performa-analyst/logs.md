@@ -31,3 +31,12 @@
 - **Verifikasi setelah index**: seluruh 8 query beralih ke Index/Bitmap Index Scan. Waktu eksekusi: outlet_daily 111.1ms→3.0ms, menu_item_daily 793.2ms→7.6ms, hourly 299.7ms→9.6ms. `fnb_transactions` sempat terukur 1473.5ms pada run pertama pasca-`REINDEX` (anomali cache-dingin, buffer belum warm) — diverifikasi ulang 3x run berikutnya: 64.7ms → 5.6ms → 4.9ms, stabil cepat begitu cache warm. Dicatat jujur sebagai karakteristik operasional (baseline pertama pasca-swap/reindex bisa lebih lambat sampai cache warm), bukan disembunyikan. `pg_stat_user_indexes.idx_scan` ≥1 untuk seluruh 8 index (fnb_transactions idx_scan=5 dari beberapa kali run verifikasi).
 
 **✅ Checkpoint 3 selesai.**
+
+## 2026-08-09 — Checkpoint 4: Index Facility/Ops
+
+- Row count live sisa tabel: `fact_facility_room_status_daily` 549 (dikeluarkan — snapshot state terkini), `fact_housekeeping_room_type_daily` 19.746, `fact_housekeeping_property_daily` 5.485, `fact_maintenance_cost_daily` 10.317, `fact_maintenance_room_recurrence_yearly` 2.115, `fact_maintenance_property_benchmark_yearly` 20 (dikeluarkan — terlalu kecil).
+- **Baseline (sebelum index)**: `fact_housekeeping_room_type_daily` Seq Scan 74.5ms; `fact_housekeeping_property_daily` Seq Scan 17.6ms; `fact_housekeeping_staff_daily` (164.707 baris) Parallel Seq Scan 348.7ms; `fact_maintenance_ticket_daily` Seq Scan 50.3ms; `fact_maintenance_cost_daily` Seq Scan 21.4ms; `fact_maintenance_technician_daily` Seq Scan 36.4ms; `fact_maintenance_room_recurrence_yearly` (2.115 baris) Seq Scan 4.2ms (sudah relatif cepat, tetap diuji index sesuai Keputusan #2); `mart_cleaned.maintenance_tickets` Seq Scan 84.8ms.
+- Index dipasang: 7 tabel `mart_aggregated` (`property_id`/`staff_id`/`assigned_staff_id`/`room_id` + `period_date`/`year`) + `mart_cleaned.maintenance_tickets` → `(property_id, reported_date)`.
+- **Verifikasi setelah index**: seluruh 8 query beralih ke Index Scan, termasuk `fact_maintenance_room_recurrence_yearly` yang tadinya sudah cepat (4.2ms→2.6ms, tetap dipertahankan karena terbukti terpakai planner, bukan diasumsikan). Waktu eksekusi: housekeeping_room_type_daily 74.5ms→0.96ms, housekeeping_staff_daily 348.7ms→3.3ms, maintenance_ticket_daily 50.3ms→1.7ms, maintenance_tickets (mart_cleaned) 84.8ms→1.6ms. `pg_stat_user_indexes.idx_scan` ≥1 untuk seluruh 8 index.
+
+**✅ Checkpoint 4 selesai.**

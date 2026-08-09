@@ -101,4 +101,44 @@ MART_AGGREGATED_INDEXES = [
     },
     # fact_fnb_inventory_status (17 rows -- current-state snapshot) deliberately
     # excluded, same reasoning as fact_revenue_gop_impact_monthly.
+
+    # --- Facility/Ops (Checkpoint 4) ---
+    {
+        "table": "fact_housekeeping_room_type_daily",
+        "index_name": "idx_fact_housekeeping_room_type_daily_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_housekeeping_property_daily",
+        "index_name": "idx_fact_housekeeping_property_daily_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_housekeeping_staff_daily",
+        "index_name": "idx_fact_housekeeping_staff_daily_staff_period",
+        "columns": ["staff_id", "period_date"],
+    },
+    {
+        "table": "fact_maintenance_ticket_daily",
+        "index_name": "idx_fact_maintenance_ticket_daily_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_maintenance_cost_daily",
+        "index_name": "idx_fact_maintenance_cost_daily_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_maintenance_technician_daily",
+        "index_name": "idx_fact_maintenance_technician_daily_staff_period",
+        "columns": ["assigned_staff_id", "period_date"],
+    },
+    {
+        "table": "fact_maintenance_room_recurrence_yearly",
+        "index_name": "idx_fact_maintenance_room_recurrence_yearly_room_year",
+        "columns": ["room_id", "year"],
+    },
+    # fact_facility_room_status_daily (549 rows, current-state snapshot) and
+    # fact_maintenance_property_benchmark_yearly (20 rows) deliberately excluded --
+    # too small (Keputusan #2).
 ]
