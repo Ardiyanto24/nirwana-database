@@ -20,3 +20,9 @@
 - **Verifikasi KK1**: `GET /api/revenue/aggregate/room-type-daily?property_id=P01&date_from=2024-07-01&date_to=2024-08-01` → 100 baris (limit default), data cocok pola yang sudah diverifikasi M3.2/M3.3.
 - **Verifikasi KK2** (skenario persis dokumen sumber): `GET /api/revenue/rowlevel/bookings?property_id=P01&date_from=2024-03-01&date_to=2024-04-01&status=cancelled` → mengembalikan booking granular P01, `status=cancelled`, `check_in_date` dalam rentang Maret 2024 — persis skenario "kenapa cancellation Bali Maret 2024 tinggi" dari `04-serving-data-analyst.md`.
 - Verifikasi tambahan: nama view di luar whitelist → 404 dengan pesan jelas; `limit=5` mengembalikan tepat 5 baris (paginasi berfungsi).
+
+## 2026-08-09 — Checkpoint 3: F&B API
+
+- `whitelist_fnb.py` (8 view aggregate — filter `outlet_id`/`property_id`/`date_from`/`date_to`, `hourly` tambah `hour_of_day`, `ingredient-price-daily` pakai `ingredient_id` karena tidak terikat outlet; 1 tabel row-level `fnb_transactions`, tabel terbesar project 902rb baris — filter `outlet_id`/tanggal/`customer_type`/`item_name`).
+- Server direstart (bukan `--reload`), port 8103.
+- Verifikasi HTTP: `v_fnb_outlet_daily` filter `outlet_id=OUT001` bulan Juli → 31 baris (cocok jumlah hari); `fnb_transactions` row-level dengan paginasi `limit=5` → tepat 5 baris transaksi granular.
