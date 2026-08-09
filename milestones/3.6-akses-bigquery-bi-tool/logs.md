@@ -19,3 +19,11 @@
 - `scripts/analyst_bi_access/example_query.py` ditulis (pola `example_query.py` M2.5) — beda dari M2.5, di sini query mencakup **kedua** dataset (`mart_cleaned.mart_cleaned__properties`/`mart_cleaned__bookings` row-level + `mart_aggregated.fact_revenue_room_type_daily` agregat), bukan cuma 1.
 - **Dijalankan sungguhan**: seluruh 3 query sukses — `properties` (6 baris), `bookings` sample 5 baris, agregasi `mart_aggregated` per property/room_type (18 baris) — memakai HANYA `ANALYST_READONLY_CREDENTIALS`, tidak pernah menyentuh kredensial lain.
 - `README.md` ditulis — dokumentasi koneksi BI tool generik (2 pola: upload key langsung untuk tool seperti Metabase/Redash/DBeaver; OAuth+service account impersonation untuk tool seperti Looker Studio), dengan **catatan status jujur di paling atas** bahwa koneksi BI tool sungguhan belum dijalankan (Docker Desktop tidak aktif).
+
+## 2026-08-10 — Checkpoint 3 (final) — Tutup milestone
+
+- `docs/08-serving-data-analyst/bi-tool-analyst.md` ditulis — Output resmi M3.6, termasuk tabel status KK1/KK2/KK3 dan bagian "Status Jujur" untuk KK1.
+- `docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md` diupdate — 1 baris inventaris `analyst-readonly`, bagian "Siapa Boleh Memegang" ditambah entri (dibedakan eksplisit dari 7 kredensial `*_analyst_reader` M3.5: `analyst-readonly` dipakai bersama seluruh tim, bukan per-peran).
+- **KK2 dan KK3 diverifikasi ulang** — tetap konsisten hasil Checkpoint 1.
+- `report.md` ditulis dengan **status milestone "Partially Completed"** (bukan "Completed") — KK1 ditandai Partially Met secara eksplisit dengan alasan dan rencana lanjutan, konsisten pola kejujuran M1.5.
+- Milestone ditutup. Fase Serving Data Analyst (M3.1-3.6) selesai — 5 dari 6 milestone Completed penuh, 1 (M3.6) Partially Completed dengan gap yang jelas dan mudah diselesaikan kapan saja Docker tersedia.
