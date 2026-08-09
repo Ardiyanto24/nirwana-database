@@ -23,3 +23,9 @@
 - Pemetaan Facility/Ops Analyst (§3.3) dan Spa & Event Analyst (§4.3) ditulis.
 - Business rule kritis baru: (1) `pending_count` SLA Facility wajib terpisah dari breach rate; (2) performa individu staff Facility ditandai sensitif meski label RBAC domain "Rendah" — filtering akses granular didelegasikan ke M3.4/3.5; (3) repeat client event dan cross-sell spa×event **dilarang** dibangun sebagai metrik otomatis (bukan cuma "gap data" tapi larangan eksplisit karena datanya tidak andal untuk deteksi otomatis).
 - Verifikasi: seluruh metrik §3.3 dan §4.3.1/§4.3.2 tertelusuri ke fact table yang sesuai.
+
+## 2026-08-09 — Checkpoint 4
+
+- Pemetaan HR Analyst (§5.3) dan Corporate/Financial Analyst (§6.3) ditulis.
+- Business rule kritis terpenting di seluruh dokumen dicatat di sini: filter `business_line_id IN ('Room','F&B','Spa&Event')` untuk departmental margin (exclude `Overall`), `fact_financial_overall_monthly` khusus GOP/overhead, payroll exclusive Corporate/Financial (HR dilarang akses), koherensi check adalah kebutuhan DQ bukan metrik analitik biasa, dan `undistributed_expense_total` cuma 1 kolom (tidak ada breakdown komponen).
+- Verifikasi: seluruh metrik §5.3 dan §6.3 tertelusuri ke fact table yang sesuai.

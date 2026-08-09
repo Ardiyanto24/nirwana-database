@@ -103,7 +103,29 @@ Skema kolom tabel pemetaan per peran:
 | **Business Rule Kritis Terkait** | **Repeat client event tidak boleh dibangun sebagai metrik otomatis** di `mart_aggregated`/view/API manapun — `client_name` teks bebas tanpa ID terstruktur, deteksi otomatis rapuh terhadap variasi penulisan nama. Kalau dibutuhkan, wajib row-level dengan fuzzy matching manual oleh analyst, bukan query terlayani. **Cross-sell spa×event juga tidak boleh diklaim sebagai metrik andal** — tidak ada `guest_id` penghubung konsisten antara `spa_bookings` dan `event_bookings`. |
 | **Catatan Gap** | Diskon/promo pada spa maupun event — tidak ada kolom ini di skema. Repeat client event dan cross-sell spa×event — lihat Business Rule Kritis (bukan sekadar gap data, tapi larangan eksplisit membangun metrik dari data yang tidak andal). |
 
-*(3 peran lain — HR, Corporate/Financial, dan Property/GM Analyst — diisi di checkpoint berikutnya, lihat `milestones/3.1-pemetaan-pola-akses-analyst/logs.md`.)*
+### 5. HR Analyst
+
+| Field | Isi |
+|---|---|
+| **Cakupan Properti** | Semua 5 properti |
+| **Tabel `mart_aggregated` Relevan** | `fact_hr_attendance_daily`, `fact_hr_employee_monthly`, `fact_hr_employee_performance_semester`, `fact_hr_turnover_snapshot`, `fact_hr_headcount_status_daily`, `fact_hr_performance_department_semester`, `fact_hr_performance_by_status_semester`, `fact_hr_watchlist_monthly` — dim: `dim_employee`, `dim_department`, `dim_shift_type`, `dim_employee_status`, `dim_property` |
+| **Tabel `mart_cleaned` Relevan (row-level)** | `staff_shifts` (investigasi lonjakan absensi departemen/periode tertentu), `employee_performance` (investigasi karyawan watchlist — histori shift & performance individu) |
+| **Filter Wajib** | `property_id`, `department_id` |
+| **Business Rule Kritis Terkait** | **HR Analyst TIDAK BOLEH mengakses payroll dalam bentuk apa pun** — seluruh `fact_payroll_department_monthly`, `fact_financial_service_charge_monthly`, `fact_financial_labor_cost_monthly`, `fact_payroll_access_level_monthly` (mart_aggregated) dan `mart_cleaned.payroll` (row-level) eksklusif milik Corporate/Financial Analyst (segregation of duties, ditegaskan sejak dokumen kebutuhan). **Threshold early-warning** (mis. rate absen "di luar kebiasaan" untuk watchlist) sengaja tidak ditentukan di sini — metrik dasar (`fact_hr_watchlist_monthly` kolom rasio baseline) tersedia, tapi kalibrasi threshold adalah keputusan terpisah (sudah diselesaikan sebagian untuk `in_watchlist` via Milestone 5.6, threshold lain masih terbuka per arsitektur §10 No. 3). |
+| **Catatan Gap** | Exit interview/alasan resign — tidak ada di tabel resmi. Training/sertifikasi karyawan — tidak ada tabel ini. Payroll — bukan gap, melainkan pengecualian disengaja (lihat Business Rule Kritis). |
+
+### 6. Corporate/Financial Analyst
+
+| Field | Isi |
+|---|---|
+| **Cakupan Properti** | Semua 5 properti (grup) — satu-satunya peran dengan `access_scope=all_properties` di `role_permissions` |
+| **Tabel `mart_aggregated` Relevan** | `fact_financial_business_line_monthly`, `fact_financial_overall_monthly`, `fact_financial_revenue_runrate_daily`, `fact_payroll_department_monthly`, `fact_financial_service_charge_monthly`, `fact_financial_labor_cost_monthly`, `fact_payroll_access_level_monthly`, `fact_financial_business_line_group_monthly`, `fact_financial_property_benchmark_monthly` — dim: `dim_business_line`, `dim_access_level`, `dim_department`, `dim_property` |
+| **Tabel `mart_cleaned` Relevan (row-level)** | `financial_summary` (drill penurunan margin lini bisnis per bulan/departemen), `payroll` (audit alokasi service charge per karyawan) |
+| **Filter Wajib** | `business_line_id` — lihat Business Rule Kritis (aturan filter berbeda per metrik, bukan filter tunggal). `fact_financial_business_line_group_monthly` tidak punya `property_id` (grain grup) — tidak difilter per properti by design. |
+| **Business Rule Kritis Terkait** | **Aturan filter `business_line_id` paling kritis di seluruh dokumen ini**: (1) metrik "departmental margin" WAJIB filter `business_line_id IN ('Room','F&B','Spa&Event')` dari `fact_financial_business_line_monthly` — **jangan pernah** sertakan `Overall`/`Corporate Overhead` (risiko double counting, ditegaskan sejak M5.1); (2) GOP dan overhead ratio WAJIB dari `fact_financial_overall_monthly` (setara baris `Overall`/`Corporate Overhead`), bukan dari `fact_financial_business_line_monthly`. **Koherensi check** (revenue Room `financial_summary` vs total transaksi booking) adalah kebutuhan validasi/Data Quality Gate (Bagian 9 arsitektur), bukan endpoint metrik analisis biasa — jangan dicampur ke API analitik Milestone 3.4. **`undistributed_expense_total` hanya 1 kolom agregat** — tidak ada breakdown per komponen (Admin&General/Sales&Marketing/dst) di skema manapun (ditemukan saat implementasi M5.3), jangan asumsikan breakdown itu ada saat mendesain view/API. |
+| **Catatan Gap** | GOP granularitas mingguan/harian — sumber `financial_summary`/`payroll` hanya bulanan. Cost of capital, depresiasi, komponen finansial non-operasional (below GOP line) — tidak ada di skema. |
+
+*(1 peran lagi — Property/GM Analyst sebagai union — diisi di checkpoint final bersama daftar business rule konsolidasi, lihat `milestones/3.1-pemetaan-pola-akses-analyst/logs.md`.)*
 
 ---
 
