@@ -56,3 +56,11 @@
 - `role_config_property_gm.py` ditulis — **jalur berbeda** dari 6 role domain: tidak ada `grant_targets`, cuma `member_of` (5 role domain non-financial). `setup_analyst_roles.py` ditambah `apply_membership()`: `GRANT revenue_analyst_reader, fnb_analyst_reader, facility_analyst_reader, spa_event_analyst_reader, hr_analyst_reader TO property_gm_analyst_reader` — 1 statement, bukan re-grant 39 objek.
 - Verifikasi: `ALLOW` ke 1 view/tabel representatif tiap 5 domain (revenue, fnb, facility, spa-event, hr) semua sukses lewat privilege warisan — membuktikan `INHERIT` default Postgres bekerja tanpa perlu `SET ROLE` eksplisit. `DENY`: tabel dasar bypass, **`v_financial_departmental_margin`, `v_financial_business_line_group_monthly`** (business rule #3 M3.1 — larangan eksplisit akses tabel level-grup), `payroll`, `financial_summary` — semua gagal `InsufficientPrivilege`. `WRITE` gagal. Lolos bersih tanpa retry.
 - Role union Property/GM Analyst selesai tanpa perlu artefak GRANT baru — konsisten pola "tidak butuh artefak terpisah" yang sudah berlaku sejak M3.2/M3.3/M3.4.
+
+## 2026-08-09 — Checkpoint 9 (final) — Tutup milestone
+
+- `docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md` diupdate: 7 baris inventaris baru, bagian "Siapa Boleh Memegang" ditambah entri analyst, referensi verifier Postgres generik baru (menggantikan pola inline lama untuk kredensial analyst spesifik).
+- `docs/08-serving-data-analyst/kredensial-analyst.md` ditulis — Output resmi #2 M3.5.
+- **Verifikasi akhir menyeluruh**: `pg_roles` dikonfirmasi seluruh 7 role `rolcanlogin=true, rolsuper=false, rolcreatedb=false, rolcreaterole=false`. Sempat ditemukan `information_schema.role_table_grants` tidak menampilkan grant lengkap untuk tabel yang di-grant oleh `reverse_etl_writer` (bukan admin) — dikonfirmasi ini keterbatasan visibility `information_schema` untuk non-superuser, bukan grant yang hilang; `pg_class.relacl` dipakai sebagai sumber kebenaran dan menunjukkan jumlah grant persis cocok dengan log tiap checkpoint (revenue=10, fnb=9, facility=10, spa_event=7, hr=10, corporate_financial=11, property_gm=0 langsung/mewarisi).
+- `report.md` ditulis, mendokumentasikan 2 temuan operasional signifikan (ownership routing, pooler warm-up) sebagai deviations eksplisit.
+- Milestone ditutup. Fase Data Analyst Serving (M3.1-3.5) selesai penuh.
