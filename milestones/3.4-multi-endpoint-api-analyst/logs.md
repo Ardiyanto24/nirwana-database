@@ -32,3 +32,9 @@
 - `whitelist_facility.py` (9 view aggregate; 1 tabel row-level `maintenance_tickets` — filter `property_id`/`room_id`/tanggal/`status`/`priority`).
 - Server direstart, port 8104.
 - Verifikasi HTTP: `v_maintenance_ticket_daily` lewat endpoint tetap mengembalikan `pending_count` dan `avg_exceeds_sla_threshold` sebagai kolom terpisah apa adanya (business rule M3.1/M3.2 tidak disederhanakan di layer API); `maintenance_tickets` row-level mengembalikan tiket granular sesuai filter.
+
+## 2026-08-09 — Checkpoint 5: Spa & Event API
+
+- `whitelist_spa_event.py` (6 view aggregate; 1 tabel row-level `event_bookings` — filter `property_id`/`venue_id`/tanggal/`event_type`/`status`; sengaja tidak ada endpoint repeat-client/cross-sell, konsisten larangan M3.1/M3.2).
+- Server direstart, port 8105.
+- Verifikasi HTTP: `v_event_venue_daily` filter `venue_id` mengembalikan data venue yang benar; `event_bookings` row-level mengembalikan event granular termasuk `client_name` untuk investigasi ad-hoc.
