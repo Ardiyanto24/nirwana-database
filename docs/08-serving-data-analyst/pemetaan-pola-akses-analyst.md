@@ -125,7 +125,37 @@ Skema kolom tabel pemetaan per peran:
 | **Business Rule Kritis Terkait** | **Aturan filter `business_line_id` paling kritis di seluruh dokumen ini**: (1) metrik "departmental margin" WAJIB filter `business_line_id IN ('Room','F&B','Spa&Event')` dari `fact_financial_business_line_monthly` — **jangan pernah** sertakan `Overall`/`Corporate Overhead` (risiko double counting, ditegaskan sejak M5.1); (2) GOP dan overhead ratio WAJIB dari `fact_financial_overall_monthly` (setara baris `Overall`/`Corporate Overhead`), bukan dari `fact_financial_business_line_monthly`. **Koherensi check** (revenue Room `financial_summary` vs total transaksi booking) adalah kebutuhan validasi/Data Quality Gate (Bagian 9 arsitektur), bukan endpoint metrik analisis biasa — jangan dicampur ke API analitik Milestone 3.4. **`undistributed_expense_total` hanya 1 kolom agregat** — tidak ada breakdown per komponen (Admin&General/Sales&Marketing/dst) di skema manapun (ditemukan saat implementasi M5.3), jangan asumsikan breakdown itu ada saat mendesain view/API. |
 | **Catatan Gap** | GOP granularitas mingguan/harian — sumber `financial_summary`/`payroll` hanya bulanan. Cost of capital, depresiasi, komponen finansial non-operasional (below GOP line) — tidak ada di skema. |
 
-*(1 peran lagi — Property/GM Analyst sebagai union — diisi di checkpoint final bersama daftar business rule konsolidasi, lihat `milestones/3.1-pemetaan-pola-akses-analyst/logs.md`.)*
+### 7. Property/GM Analyst (union peran #1–5)
+
+Bukan pola domain terpisah — kebutuhannya adalah **union dari peran #1–5** (Revenue, F&B, Facility/Ops, Spa & Event, HR), **tidak termasuk Corporate/Financial** (payroll dan `financial_summary` tingkat grup tetap eksklusif Corporate/Financial Analyst).
+
+| Field | Isi |
+|---|---|
+| **Cakupan Properti** | **1 properti saja** (P01–P05, 5 orang berbeda — berlawanan dengan peran #1–6 yang lintas 5 properti) |
+| **Tabel `mart_aggregated` Relevan** | Union seluruh tabel di baris #1 (Revenue), #2 (F&B), #3 (Facility/Ops), #4 (Spa & Event), #5 (HR) di atas — **kecuali** `fact_financial_business_line_group_monthly` dan seluruh tabel Corporate/Financial lain (#6), yang tetap di luar cakupan peran ini. |
+| **Tabel `mart_cleaned` Relevan (row-level)** | Union seluruh tabel row-level di baris #1–5 (`bookings`, `pricing_history`, `fnb_transactions`, `maintenance_tickets`, `event_bookings`, `staff_shifts`, `employee_performance`) — **bukan** `financial_summary`/`payroll`. |
+| **Filter Wajib** | **`property_id = <properti GM tersebut>` — wajib, tanpa pengecualian, di setiap query/view/endpoint.** Berbeda dari peran #1–5 yang defaultnya lintas 5 properti, peran ini justru harus dikunci ke 1 properti. |
+| **Business Rule Kritis Terkait** | **Tanpa akses `financial_summary` tingkat grup** — larangan eksplisit dari dokumen kebutuhan (bukan sekadar tidak relevan). Seluruh business rule kritis dari baris #1–5 (pace booking, basket analysis row-level, SLA pending_count, repeat-client-event/cross-sell dilarang) tetap berlaku identik untuk peran ini karena sumber datanya sama, hanya ditambah filter `property_id` wajib. |
+| **Catatan Gap** | Sama seperti gap masing-masing domain #1–5 (lihat baris terkait) — tidak ada gap tambahan spesifik untuk union ini. |
+
+---
+
+## Daftar Business Rule Kritis (Konsolidasi)
+
+Daftar ini merangkum seluruh business rule yang WAJIB diterapkan di level view/query (Milestone 3.2), bukan diserahkan ke konsumen endpoint untuk diingat sendiri — sesuai prinsip "filter sudah tertanam di view" dari Kriteria Keberhasilan Milestone 3.2.
+
+1. **Filter `business_line_id` — Corporate/Financial & Property/GM.** `fact_financial_business_line_monthly` untuk metrik "departmental margin" WAJIB `business_line_id IN ('Room','F&B','Spa&Event')`, tidak pernah menyertakan `Overall`/`Corporate Overhead` (risiko double counting). GOP/overhead ratio WAJIB dari `fact_financial_overall_monthly`, bukan tabel di atas.
+2. **Payroll exclusive Corporate/Financial.** HR Analyst dan Property/GM Analyst **tidak boleh** mendapat akses ke `fact_payroll_department_monthly`, `fact_financial_service_charge_monthly`, `fact_financial_labor_cost_monthly`, `fact_payroll_access_level_monthly`, maupun `mart_cleaned.payroll` — segregation of duties.
+3. **`financial_summary` tingkat grup di luar Property/GM Analyst.** Property/GM Analyst tidak boleh akses `fact_financial_business_line_group_monthly` maupun tabel Corporate/Financial lain.
+4. **`property_id` wajib untuk Property/GM Analyst** di setiap query — tanpa pengecualian, berbeda dari 6 peran lain yang defaultnya lintas 5 properti.
+5. **SLA breach vs pending.** `fact_maintenance_ticket_daily.pending_count` (tiket `open`/`in-progress`) tidak boleh otomatis dihitung breach atau tidak-breach — kategori terpisah.
+6. **Basket analysis F&B** hanya dari `mart_cleaned.fnb_transactions` row-level — tidak bisa direkonstruksi dari fact table manapun (grain struk hilang total di agregat).
+7. **Repeat-client-event dan cross-sell spa×event dilarang jadi metrik otomatis** — `client_name` teks bebas tanpa ID terstruktur (repeat client), tidak ada `guest_id` penghubung (cross-sell). Kalau dibutuhkan, wajib row-level manual dengan fuzzy matching, bukan endpoint terlayani.
+8. **Koherensi check `financial_summary` vs booking** adalah kebutuhan Data Quality Gate (Bagian 9 arsitektur induk), bukan metrik analitik biasa — jangan dimasukkan sebagai endpoint API analitik di Milestone 3.4.
+9. **`undistributed_expense_total`** hanya 1 kolom agregat — tidak ada breakdown per komponen (Admin&General/Sales&Marketing/Utilities/Property Maintenance/IT) di skema manapun; jangan desain view/API yang mengasumsikan breakdown itu ada.
+10. **`fact_revenue_pace_booking_snapshot`** append-only, snapshot "as of hari ini" — jangan digabung ke agregasi historis reguler (`fact_revenue_property_daily`); status implementasi vs constraint BigQuery Sandbox (DML diblokir) perlu dicek ulang statusnya sebelum dipakai di Milestone 3.2.
+11. **Performa individu staff Facility** (`fact_housekeeping_staff_daily`, `fact_maintenance_technician_daily`) sensitivitasnya lebih tinggi dari label domain RBAC "Rendah" — filtering akses granular adalah tanggung jawab Milestone 3.4/3.5, tidak otomatis aman hanya karena tabelnya ada di `mart_aggregated`.
+12. **`fact_ml_occupancy_forecast_property_room_type`** belum sync ke serving PostgreSQL (M5.5 sengaja tidak mencantumkannya) — tidak tersedia untuk peran manapun di lapisan yang jadi cakupan Milestone 3.1–3.5.
 
 ---
 

@@ -29,3 +29,10 @@
 - Pemetaan HR Analyst (§5.3) dan Corporate/Financial Analyst (§6.3) ditulis.
 - Business rule kritis terpenting di seluruh dokumen dicatat di sini: filter `business_line_id IN ('Room','F&B','Spa&Event')` untuk departmental margin (exclude `Overall`), `fact_financial_overall_monthly` khusus GOP/overhead, payroll exclusive Corporate/Financial (HR dilarang akses), koherensi check adalah kebutuhan DQ bukan metrik analitik biasa, dan `undistributed_expense_total` cuma 1 kolom (tidak ada breakdown komponen).
 - Verifikasi: seluruh metrik §5.3 dan §6.3 tertelusuri ke fact table yang sesuai.
+
+## 2026-08-09 — Checkpoint 5 (final) — Tutup milestone
+
+- Pemetaan Property/GM Analyst (union peran #1-5, tanpa Corporate/Financial, filter `property_id` wajib tanpa pengecualian) ditulis.
+- Daftar 12 business rule kritis dikonsolidasikan dari seluruh 7 baris pemetaan ke satu section akhir dokumen.
+- Kriteria Keberhasilan tunggal Milestone 3.1 diverifikasi terpenuhi — lihat `report.md`.
+- Milestone ditutup. Handoff eksplisit ke M3.2 (pakai dokumen ini langsung sebagai acuan view), M3.3 (kolom filter wajib = kandidat index), M3.5 (business rule payroll/financial_summary grup = kandidat desain kredensial).
