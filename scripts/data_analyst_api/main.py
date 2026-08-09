@@ -81,3 +81,7 @@ def register_domain_routes(domain, aggregate_whitelist, rowlevel_whitelist):
 
 
 # Domain routes registered below, one block added per M3.4 checkpoint.
+
+from whitelist_revenue import AGGREGATE_WHITELIST as REVENUE_AGGREGATE, ROWLEVEL_WHITELIST as REVENUE_ROWLEVEL
+
+register_domain_routes("revenue", REVENUE_AGGREGATE, REVENUE_ROWLEVEL)

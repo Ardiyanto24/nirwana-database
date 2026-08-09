@@ -11,3 +11,12 @@
 - `scripts/data_analyst_api/{connections.py,main.py}` dibuat. `connections.py` copy pola `get_serving_connection` dari `scripts/data_analyst_views/connections.py`, ditambah `query()` helper `RealDictCursor` persis pola `api/app/db.py` (M1.6). `main.py` berisi app FastAPI, `/health`, helper generik `_run_whitelisted_query` (filter kolom/operator dari whitelist entry, value selalu psycopg2 parameter) dan `register_domain_routes(domain, aggregate_whitelist, rowlevel_whitelist)` untuk dipanggil tiap checkpoint domain berikutnya.
 - `requirements.txt` root ditambah blok baru `fastapi==0.115.6`, `uvicorn[standard]==0.34.0`.
 - Verifikasi: `python -m uvicorn main:app --reload` dijalankan sungguhan di `127.0.0.1:8101`, `curl`/HTTP call langsung ke `/health` → `{"status":"ok"}` (200), `/docs` (Swagger auto-docs) → 200.
+- **Catatan operasional**: `--reload` (WatchFiles) tidak konsisten memuat ulang modul baru di lingkungan ini (perubahan terdeteksi tapi server lama tetap melayani request, 404 palsu) — checkpoint berikutnya pakai kill+restart server biasa (tanpa `--reload`) tiap kali `main.py`/whitelist berubah, bukan mengandalkan auto-reload.
+
+## 2026-08-09 — Checkpoint 2: Revenue API
+
+- `whitelist_revenue.py` (8 view aggregate `_PROPERTY_PERIOD_FILTERS` seragam `property_id`+`date_from`/`date_to`→`period_date`; 2 tabel row-level `bookings` — `property_id`/`date_from`/`date_to`→`check_in_date`/`status`, `pricing_history` — `property_id`/`date_from`/`date_to`→`date`). 2 route didaftarkan di `main.py` via `register_domain_routes("revenue", ...)`.
+- Server dijalankan ulang (bukan `--reload`, lihat catatan di atas), port 8102.
+- **Verifikasi KK1**: `GET /api/revenue/aggregate/room-type-daily?property_id=P01&date_from=2024-07-01&date_to=2024-08-01` → 100 baris (limit default), data cocok pola yang sudah diverifikasi M3.2/M3.3.
+- **Verifikasi KK2** (skenario persis dokumen sumber): `GET /api/revenue/rowlevel/bookings?property_id=P01&date_from=2024-03-01&date_to=2024-04-01&status=cancelled` → mengembalikan booking granular P01, `status=cancelled`, `check_in_date` dalam rentang Maret 2024 — persis skenario "kenapa cancellation Bali Maret 2024 tinggi" dari `04-serving-data-analyst.md`.
+- Verifikasi tambahan: nama view di luar whitelist → 404 dengan pesan jelas; `limit=5` mengembalikan tepat 5 baris (paginasi berfungsi).
