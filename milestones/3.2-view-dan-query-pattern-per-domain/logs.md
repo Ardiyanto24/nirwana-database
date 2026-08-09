@@ -45,3 +45,10 @@
 
 - Atas permintaan user, gap `dim_employee` tanpa `property_id` diajukan resmi lewat mekanisme Milestone 5.6: entri baru ditambahkan di `docs/07-mart-aggregated/pengajuan-perubahan-cakupan.md` §"Kolom `property_id` hilang di `dim_employee`", status "Diajukan" (menunggu evaluasi pemilik `mart_aggregated`). Ditandai eksplisit **bukan simulasi** — beda dari pengajuan watchlist HR M5.6 yang ditulis ala persona, ini temuan nyata dari implementasi M3.2.
 - Cross-reference diperbarui di `report.md` (Known Gaps) dan `docs/08-serving-data-analyst/view-query-pattern-analyst.md` (§HR) supaya jejak keputusan tidak terputus.
+
+## 2026-08-09 — Follow-up: `dim_employee.property_id` live, 3 view HR diupdate
+
+- Pemilik `mart_aggregated` menindaklanjuti pengajuan lewat Milestone 5.7 (`milestones/5.7-perubahan-cakupan-dim-employee-property-id/`) — diverifikasi independen di sesi ini langsung ke serving PostgreSQL: `dim_employee.property_id` ada, 755/755 baris terisi, distribusi P01=165/P02=270/P03=115/P04=100/P05=85/P06=20 cocok persis klaim `report.md` M5.7. Tidak ada tabel `__old` orphan tersisa; 48 view `analyst_views` tetap utuh pasca-swap.
+- Follow-up M3.2 diselesaikan: `views_hr.sql` diupdate — `v_hr_employee_monthly`, `v_hr_employee_performance_semester`, `v_hr_watchlist_monthly` kini men-`LEFT JOIN dim_property` lewat `dim_employee.property_id` dan mengekspos `property_id`/`property_name`. Kolom ditambahkan di **akhir** daftar SELECT (bukan disisipkan) karena `CREATE OR REPLACE VIEW` PostgreSQL menolak reorder kolom existing (`cannot change name of view column ... to ...`) — diperbaiki dan di-apply ulang sukses.
+- Verifikasi: ketiga view 100% terisi (`v_hr_employee_monthly` 24.036/24.036, `v_hr_employee_performance_semester` 3.748/3.748, `v_hr_watchlist_monthly` 24.036/24.036 non-null `property_id`); distribusi per properti di `v_hr_watchlist_monthly` cocok persis `dim_employee`.
+- Dokumen diperbarui: `report.md` Known Gaps ditandai Resolved, `view-query-pattern-analyst.md` §HR diupdate (tabel view + catatan Known Gap → Resolved).

@@ -78,19 +78,21 @@ Dokumen ini adalah inventaris seluruh view yang dibangun di schema `analyst_view
 | View | Fact Table Sumber | Dimension Di-join | Business Rule Tertanam |
 |---|---|---|---|
 | `v_hr_attendance_daily` | `fact_hr_attendance_daily` | `dim_property`, `dim_department` | — |
-| `v_hr_employee_monthly` | `fact_hr_employee_monthly` | `dim_employee`→`dim_department` | **Tidak ada `property_id`** — lihat Known Gap di bawah |
-| `v_hr_employee_performance_semester` | `fact_hr_employee_performance_semester` | `dim_employee`→`dim_department` | Sama — tidak ada `property_id` |
+| `v_hr_employee_monthly` | `fact_hr_employee_monthly` | `dim_employee`→`dim_department`, `dim_employee`→`dim_property` | `property_id`/`property_name` ditambahkan 2026-08-09 setelah M5.7 (lihat Known Gap di bawah, status Resolved) |
+| `v_hr_employee_performance_semester` | `fact_hr_employee_performance_semester` | `dim_employee`→`dim_department`, `dim_employee`→`dim_property` | Sama — `property_id` kini tersedia |
 | `v_hr_turnover_snapshot` | `fact_hr_turnover_snapshot` | `dim_property`, `dim_department` | — |
 | `v_hr_headcount_status_daily` | `fact_hr_headcount_status_daily` | `dim_property`, `dim_department`, `dim_employee_status` | — |
 | `v_hr_performance_department_semester` | `fact_hr_performance_department_semester` | `dim_property`, `dim_department` | — |
 | `v_hr_performance_by_status_semester` | `fact_hr_performance_by_status_semester` | `dim_property`, `dim_employee_status` | — |
-| `v_hr_watchlist_monthly` | `fact_hr_watchlist_monthly` | `dim_employee`→`dim_department` | **Tidak ada `property_id`**; `in_watchlist` (M5.6) diteruskan apa adanya |
+| `v_hr_watchlist_monthly` | `fact_hr_watchlist_monthly` | `dim_employee`→`dim_department`, `dim_employee`→`dim_property` | `property_id`/`property_name` kini tersedia; `in_watchlist` (M5.6) diteruskan apa adanya |
 
 **Tidak ada view payroll di sini** — business rule kritis M3.1: eksklusif Corporate/Financial Analyst.
 
-### Known Gap ditemukan di M3.2: `dim_employee` tidak punya `property_id`
+### Known Gap ditemukan di M3.2: `dim_employee` tidak punya `property_id` — **Resolved (2026-08-09)**
 
-`mart_aggregated.dim_employee` hanya berisi `employee_id`, `full_name`, `department_id`, `access_level_id` — **tidak ada `property_id`**, meski `employees.property_id` ada di produksi (`docs/01-architecture/Metadata.md` baris 134, `P06` = kantor pusat). Akibatnya `v_hr_employee_monthly`, `v_hr_employee_performance_semester`, `v_hr_watchlist_monthly` tidak bisa difilter per properti. Perbaikan (menambah kolom ke `dim_employee`) di luar cakupan M3.2 — **sudah diajukan** lewat mekanisme perubahan cakupan Milestone 5.6, lihat `docs/07-mart-aggregated/pengajuan-perubahan-cakupan.md` §"Kolom `property_id` hilang di `dim_employee`" (status: Diajukan).
+`mart_aggregated.dim_employee` awalnya hanya berisi `employee_id`, `full_name`, `department_id`, `access_level_id` — tidak ada `property_id`, meski `employees.property_id` ada di produksi (`docs/01-architecture/Metadata.md` baris 134, `P06` = kantor pusat). Diajukan lewat mekanisme perubahan cakupan Milestone 5.6 (`docs/07-mart-aggregated/pengajuan-perubahan-cakupan.md` §"Kolom `property_id` hilang di `dim_employee`") dan **diimplementasikan pemilik `mart_aggregated` lewat Milestone 5.7** (`milestones/5.7-perubahan-cakupan-dim-employee-property-id/`) — `dim_employee.property_id` kini live di BigQuery dan serving PostgreSQL (755/755 baris terisi, distribusi P01=165/P02=270/P03=115/P04=100/P05=85/P06=20).
+
+Sebagai follow-up M3.2 (ditandai eksplisit di `report.md` M5.7), `v_hr_employee_monthly`, `v_hr_employee_performance_semester`, dan `v_hr_watchlist_monthly` diupdate untuk menambahkan `property_id`/`property_name` (kolom ditambahkan di akhir daftar SELECT masing-masing view, bukan disisipkan — `CREATE OR REPLACE VIEW` PostgreSQL tidak mengizinkan reorder kolom existing). Diverifikasi langsung: ketiga view 100% terisi (`v_hr_employee_monthly` 24.036/24.036, `v_hr_employee_performance_semester` 3.748/3.748, `v_hr_watchlist_monthly` 24.036/24.036), distribusi per properti cocok persis `dim_employee`.
 
 ## Corporate/Financial (9 view)
 
