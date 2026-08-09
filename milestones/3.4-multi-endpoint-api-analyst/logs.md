@@ -38,3 +38,9 @@
 - `whitelist_spa_event.py` (6 view aggregate; 1 tabel row-level `event_bookings` — filter `property_id`/`venue_id`/tanggal/`event_type`/`status`; sengaja tidak ada endpoint repeat-client/cross-sell, konsisten larangan M3.1/M3.2).
 - Server direstart, port 8105.
 - Verifikasi HTTP: `v_event_venue_daily` filter `venue_id` mengembalikan data venue yang benar; `event_bookings` row-level mengembalikan event granular termasuk `client_name` untuk investigasi ad-hoc.
+
+## 2026-08-09 — Checkpoint 6: HR API
+
+- `whitelist_hr.py` (8 view aggregate — `attendance-daily`/`turnover-snapshot`/`headcount-status-daily` pakai `property_id`+`department_name` sekaligus, 2 filter wajib per M3.1; `employee-monthly`/`watchlist-monthly` pakai `employee_id`+`property_id` (kolom trailing hasil follow-up M5.7); 2 tabel row-level `staff_shifts`/`employee_performance` — **tanpa payroll**, business rule M3.1).
+- Server direstart, port 8106.
+- **Verifikasi eksplisit business rule kritis**: `GET /api/hr/rowlevel/payroll` → 404 (bukan sekadar tidak dibuat — dikonfirmasi lewat panggilan HTTP nyata bahwa endpoint itu memang tidak ada di whitelist HR). `v_hr_watchlist_monthly` mengembalikan `property_id`/`property_name` (hasil follow-up M5.7/M3.2) dengan benar.
