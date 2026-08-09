@@ -2,8 +2,12 @@ name: Reverse ETL Mart Cleaned to Serving PostgreSQL
 
 # Milestone 2.4 -- pushes all 23 mart_cleaned tables from BigQuery to the
 # serving PostgreSQL project via scripts/reverse_etl/sync.py (full refresh +
-# RENAME swap, row-count-parity gate before swap).
+# RENAME swap, row-count-parity gate before swap), then reindex_analyze.py
+# (Milestone 3.3 -- REINDEX/ANALYZE pasca-swap, sama alasan dengan
+# reverse-etl-mart-aggregated.yml: staging table hasil swap tidak mewarisi
+# index sama sekali, bukan cuma statistik basi).
 # Rujukan: milestones/2.4-reverse-etl-postgresql/decisions.md,
+# milestones/3.3-index-optimasi-performa-analyst/decisions.md,
 # docs/05-orchestrator/konvensi-job-dependency.md (naming: reverse-etl-*.yml).
 #
 # Chains via workflow_run off transform-mart-cleaned.yml -- a REAL data
@@ -48,3 +52,7 @@ jobs:
       - name: Milestone 2.4 -- sync seluruh 23 tabel mart_cleaned ke serving PostgreSQL
         working-directory: scripts/reverse_etl
         run: python sync.py --all
+
+      - name: Milestone 3.3 -- REINDEX/ANALYZE pasca-swap (23 tabel + index desain)
+        working-directory: scripts/reverse_etl
+        run: python reindex_analyze.py --all

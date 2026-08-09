@@ -9,8 +9,9 @@ name means the "new" live table has ZERO indexes, not just stale statistics.
 Plain REINDEX (which only rebuilds indexes that already exist) can't recover
 an index that was never created on the new table object. The correct
 sequence, per table:
-  1. CREATE INDEX IF NOT EXISTS for every index declared in example_indexes.py
-     that targets this table -- recreates whatever the swap just dropped.
+  1. CREATE INDEX IF NOT EXISTS for every index declared in
+     mart_aggregated_indexes.py that targets this table -- recreates
+     whatever the swap just dropped.
   2. REINDEX TABLE -- de-bloat/rebuild, safe no-op if the index above is
      already fresh (harmless either way, kept for general hygiene).
   3. ANALYZE -- refresh planner statistics.
@@ -18,8 +19,10 @@ sequence, per table:
 Safe to run on any table, including ones with zero configured indexes (steps
 1 and 2 are then no-ops, step 3 always has value).
 
-The indexes in example_indexes.py are explicitly PROVISIONAL/example, not
-Milestone 3.3's real index design -- see that file's docstring.
+The indexes in mart_aggregated_indexes.py are Milestone 3.3's real index
+design (empirically verified via EXPLAIN ANALYZE per
+docs/08-serving-data-analyst/index-baseline-analyst.md) -- this file replaces
+M5.5's provisional example_indexes.py.
 
 Usage:
   python scripts/reverse_etl_mart_aggregated/reindex_analyze.py --table fact_revenue_property_daily
@@ -28,14 +31,14 @@ Usage:
 import argparse
 
 from connections import get_serving_writer_connection
-from example_indexes import EXAMPLE_INDEXES
+from mart_aggregated_indexes import MART_AGGREGATED_INDEXES
 from mart_aggregated_tables import MART_AGGREGATED_TABLES
 
 PG_SCHEMA = "mart_aggregated"
 
 
 def reindex_analyze_table(pg_conn, table):
-    indexes_for_table = [ix for ix in EXAMPLE_INDEXES if ix["table"] == table]
+    indexes_for_table = [ix for ix in MART_AGGREGATED_INDEXES if ix["table"] == table]
 
     with pg_conn.cursor() as cur:
         for ix in indexes_for_table:
