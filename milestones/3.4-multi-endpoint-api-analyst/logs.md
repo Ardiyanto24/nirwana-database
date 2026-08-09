@@ -51,3 +51,10 @@
 - Server direstart, port 8107.
 - **Verifikasi business rule kritis end-to-end (DB → view → API)**: `GET /api/corporate-financial/aggregate/departmental-margin?property_id=P01&limit=500` TANPA filter `business_line_name` apa pun tetap hanya mengembalikan `['F&B','Room','Spa&Event']` — `Overall`/`Corporate Overhead` terbukti tidak pernah muncul lewat panggilan HTTP nyata, konsisten hasil verifikasi M3.2/M3.3 di level database.
 - `v_financial_gop_overhead` dan `mart_cleaned.payroll` row-level (lewat endpoint `corporate-financial`, bukan `hr`) berfungsi benar.
+
+## 2026-08-09 — Checkpoint 8 (final) — Tutup milestone
+
+- **Validasi Property/GM Analyst**: 5 domain (Revenue, F&B, Facility, Spa&Event, HR — bukan Corporate/Financial) dipanggil via HTTP dengan `property_id=P02`, seluruhnya mengembalikan data yang benar-benar terbatas ke P02. Tidak ada endpoint baru dibuat untuk peran ini, konsisten pola M3.2/M3.3.
+- `docs/08-serving-data-analyst/api-analyst.md` ditulis — dokumentasi 12 route lengkap dengan filter, contoh `curl`, dan catatan business rule per domain.
+- KK1 dan KK2 diverifikasi ulang lintas 6 domain, `report.md` ditulis.
+- Milestone ditutup. Handoff eksplisit ke M3.5: struktur URL per-domain dirancang supaya gerbang akses nanti bisa mengunci per-prefix.
