@@ -26,3 +26,9 @@
 - `role_config_fnb.py` ditulis, GRANT target dari `whitelist_fnb.py` (8 view + `fnb_transactions`).
 - Dengan kedua fix Checkpoint 2 (routing ownership + warmup-retry) sudah di tempat, role ini berhasil lolos verifikasi **tanpa retry sama sekali** — mengonfirmasi kedua fix itu genuinely menyelesaikan akar masalah, bukan kebetulan.
 - Verifikasi: `ALLOW` ke `v_fnb_outlet_daily`/`fnb_transactions` sukses, `DENY` ke `mart_aggregated.fact_fnb_outlet_daily`/`payroll`/`bookings`/HR watchlist gagal `InsufficientPrivilege`, `WRITE` gagal. `FNB_ANALYST_READER_DB_URL` ditulis ke `.env`.
+
+## 2026-08-09 — Checkpoint 4: Facility/Ops role
+
+- `role_config_facility.py` ditulis, GRANT target dari `whitelist_facility.py` (9 view + `maintenance_tickets`).
+- Lolos verifikasi bersih tanpa retry.
+- Verifikasi: `ALLOW` ke `v_maintenance_ticket_daily`/`maintenance_tickets` sukses, `DENY` ke `mart_aggregated.fact_maintenance_ticket_daily`/`payroll`/`bookings`/HR watchlist gagal, `WRITE` gagal. `FACILITY_ANALYST_READER_DB_URL` ditulis ke `.env`.
