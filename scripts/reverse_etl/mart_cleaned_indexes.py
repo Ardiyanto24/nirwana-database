@@ -56,4 +56,15 @@ MART_CLEANED_INDEXES = [
         "index_name": "idx_employee_performance_employee_period",
         "columns": ["employee_id", "review_period"],
     },
+    # --- Corporate/Financial (Checkpoint 7) ---
+    {
+        "table": "financial_summary",
+        "index_name": "idx_financial_summary_property_period",
+        "columns": ["property_id", "period"],
+    },
+    {
+        "table": "payroll",
+        "index_name": "idx_payroll_employee_period",
+        "columns": ["employee_id", "period"],
+    },
 ]

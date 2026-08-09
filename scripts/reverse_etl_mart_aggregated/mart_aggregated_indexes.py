@@ -210,4 +210,56 @@ MART_AGGREGATED_INDEXES = [
     # fact_hr_performance_department_semester (258), fact_hr_performance_by_status_semester
     # (90) deliberately excluded -- snapshot/semester-grain tables in the hundreds of rows,
     # far below any table that has empirically benefited from an index so far (Keputusan #2).
+
+    # --- Corporate/Financial (Checkpoint 7) ---
+    # Most tables here are small (216-1548 rows, monthly grain x 5 properties) --
+    # tested empirically per Keputusan #2 rather than pre-judged. See
+    # index-baseline-analyst.md for which of these the planner actually uses; entries
+    # confirmed NOT used by EXPLAIN ANALYZE are removed from this list, not kept
+    # "for completeness."
+    {
+        "table": "fact_financial_business_line_monthly",
+        "index_name": "idx_fact_financial_business_line_monthly_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_financial_revenue_runrate_daily",
+        "index_name": "idx_fact_financial_revenue_runrate_daily_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_payroll_department_monthly",
+        "index_name": "idx_fact_payroll_department_monthly_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_financial_overall_monthly",
+        "index_name": "idx_fact_financial_overall_monthly_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_financial_service_charge_monthly",
+        "index_name": "idx_fact_financial_service_charge_monthly_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_financial_labor_cost_monthly",
+        "index_name": "idx_fact_financial_labor_cost_monthly_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_payroll_access_level_monthly",
+        "index_name": "idx_fact_payroll_access_level_monthly_property_period",
+        "columns": ["property_id", "period_date"],
+    },
+    {
+        "table": "fact_financial_business_line_group_monthly",
+        "index_name": "idx_fact_financial_business_line_group_monthly_line_period",
+        "columns": ["business_line_id", "period_date"],
+    },
+    {
+        "table": "fact_financial_property_benchmark_monthly",
+        "index_name": "idx_fact_financial_property_benchmark_monthly_property_period",
+        "columns": ["property_id", "period_date"],
+    },
 ]
