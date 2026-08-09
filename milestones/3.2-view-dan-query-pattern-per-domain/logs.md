@@ -32,3 +32,11 @@
 - `v_financial_departmental_margin` mengimplementasikan business rule kritis #1 M3.1: `WHERE bl.line_name NOT IN ('Overall','Corporate Overhead')` ditanam permanen di definisi view.
 - Verifikasi HR: `v_hr_watchlist_monthly` row count identik (24.036), `in_watchlist=true` count identik (1.122) — cocok persis dengan angka yang didokumentasikan Milestone 5.6.
 - **Verifikasi KK1+KK2 Corporate/Financial (domain paling berisiko)**: KK2 — `SELECT DISTINCT business_line_name FROM v_financial_departmental_margin` menghasilkan tepat 3 nilai (`F&B`, `Room`, `Spa&Event`), `Overall`/`Corporate Overhead` terbukti tidak pernah muncul tanpa filter eksplisit apa pun; row count (540) cocok persis dengan filter manual yang sama diterapkan langsung ke fact table. KK1 — sampel `margin_pct` (0.72), `gop`/`gop_margin_pct`/`undistributed_expense_total` di `v_financial_gop_overhead` cocok persis hitung manual dan fact table sumber.
+
+## 2026-08-09 — Checkpoint 5 (final) — Tutup milestone
+
+- Verifikasi jumlah view: `information_schema.views` schema `analyst_views` = 48 (Revenue 8 + F&B 8 + Facility 9 + Spa&Event 6 + HR 8 + Corporate/Financial 9), cocok dengan target.
+- Property/GM Analyst dikonfirmasi terlayani dari 39 view domain #1-5 tanpa view baru — didokumentasikan di `docs/08-serving-data-analyst/view-query-pattern-analyst.md`, termasuk larangan eksplisit akses 9 view Corporate/Financial (penegakan teknis GRANT menyusul M3.5).
+- `docs/08-serving-data-analyst/view-query-pattern-analyst.md` ditulis sebagai Output resmi (inventaris 48 view).
+- KK1 dan KK2 diverifikasi ulang lintas 6 domain, `report.md` ditulis.
+- Milestone ditutup. Handoff eksplisit ke M3.3 (kolom filter view = kandidat index di tabel dasar), M3.4 (48 view = basis endpoint agregat, gap `dim_employee.property_id` perlu diselesaikan dulu kalau dibutuhkan), M3.5 (GRANT per view per peran, daftar lengkap di dokumen inventaris).
