@@ -13,3 +13,9 @@
 - `ANALYST_READONLY_CREDENTIALS` ditambahkan ke `.env` dan `.env.example`.
 - **Verifikasi KK2**: `verify_dataset_isolation.py --allow mart_cleaned.mart_cleaned__properties --allow mart_aggregated.dim_property --deny raw_production.properties --deny ml_output.predictions` → 4/4 OK.
 - **Verifikasi KK3**: percobaan `CREATE TABLE mart_cleaned.__test_write_denied_analyst_readonly` memakai kredensial `analyst-readonly` → `403 Forbidden` (pola sama M2.5, uji terpisah dari CLI karena `verify_dataset_isolation.py` tidak punya flag write-check bawaan).
+
+## 2026-08-10 — Checkpoint 2: bukti akses terprogram + dokumentasi BI tool
+
+- `scripts/analyst_bi_access/example_query.py` ditulis (pola `example_query.py` M2.5) — beda dari M2.5, di sini query mencakup **kedua** dataset (`mart_cleaned.mart_cleaned__properties`/`mart_cleaned__bookings` row-level + `mart_aggregated.fact_revenue_room_type_daily` agregat), bukan cuma 1.
+- **Dijalankan sungguhan**: seluruh 3 query sukses — `properties` (6 baris), `bookings` sample 5 baris, agregasi `mart_aggregated` per property/room_type (18 baris) — memakai HANYA `ANALYST_READONLY_CREDENTIALS`, tidak pernah menyentuh kredensial lain.
+- `README.md` ditulis — dokumentasi koneksi BI tool generik (2 pola: upload key langsung untuk tool seperti Metabase/Redash/DBeaver; OAuth+service account impersonation untuk tool seperti Looker Studio), dengan **catatan status jujur di paling atas** bahwa koneksi BI tool sungguhan belum dijalankan (Docker Desktop tidak aktif).
