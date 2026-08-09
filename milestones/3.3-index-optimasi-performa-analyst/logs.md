@@ -69,3 +69,10 @@
 - **Validasi business rule kritis M3.1/M3.2**: `SELECT DISTINCT business_line_name FROM v_financial_departmental_margin` tetap tepat 3 nilai (`F&B`, `Room`, `Spa&Event`) setelah index dipasang — `EXPLAIN ANALYZE` view mengonfirmasi index baru (`idx_fact_financial_business_line_monthly_property_period`) terpakai DAN filter `line_name <> ALL ('{Overall,"Corporate Overhead"}')` tetap diterapkan di `dim_business_line` — index cuma memengaruhi kecepatan, tidak mengubah hasil filter.
 
 **✅ Checkpoint 7 selesai.**
+
+## 2026-08-09 — Checkpoint 8 (final) — Tutup milestone
+
+- Verifikasi total: `pg_indexes` mengonfirmasi 41 index `idx_*` di `mart_aggregated` + 9 di `mart_cleaned` = 50 index. `pg_stat_user_indexes` dicek untuk seluruh index milik project (bukan sistem Supabase `auth`/`storage`) — tidak ada satu pun dengan `idx_scan=0`.
+- `docs/08-serving-data-analyst/index-baseline-analyst.md` ditulis — baseline lengkap per tabel, ringkasan verifikasi KK1/KK2, dan koreksi asumsi Keputusan #2 (selektivitas filter > ukuran tabel mentah).
+- `report.md` ditulis, mendokumentasikan koreksi Keputusan #2 sebagai deviation eksplisit dan Known Gap (tabel kecil domain awal belum diuji ulang dengan pemahaman baru).
+- Milestone ditutup. Handoff eksplisit: mekanisme reindex sudah otomatis (tidak perlu intervensi manual), baseline query jadi basis M3.4, dan pengingat index perlu direvisit kalau skema `mart_aggregated`/`mart_cleaned` berubah lewat M5.6.
