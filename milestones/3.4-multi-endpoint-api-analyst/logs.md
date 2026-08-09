@@ -44,3 +44,10 @@
 - `whitelist_hr.py` (8 view aggregate — `attendance-daily`/`turnover-snapshot`/`headcount-status-daily` pakai `property_id`+`department_name` sekaligus, 2 filter wajib per M3.1; `employee-monthly`/`watchlist-monthly` pakai `employee_id`+`property_id` (kolom trailing hasil follow-up M5.7); 2 tabel row-level `staff_shifts`/`employee_performance` — **tanpa payroll**, business rule M3.1).
 - Server direstart, port 8106.
 - **Verifikasi eksplisit business rule kritis**: `GET /api/hr/rowlevel/payroll` → 404 (bukan sekadar tidak dibuat — dikonfirmasi lewat panggilan HTTP nyata bahwa endpoint itu memang tidak ada di whitelist HR). `v_hr_watchlist_monthly` mengembalikan `property_id`/`property_name` (hasil follow-up M5.7/M3.2) dengan benar.
+
+## 2026-08-09 — Checkpoint 7: Corporate/Financial API
+
+- `whitelist_corporate_financial.py` (9 view aggregate; 2 tabel row-level `financial_summary`/`payroll` — eksklusif domain ini, tidak muncul di whitelist domain manapun lain).
+- Server direstart, port 8107.
+- **Verifikasi business rule kritis end-to-end (DB → view → API)**: `GET /api/corporate-financial/aggregate/departmental-margin?property_id=P01&limit=500` TANPA filter `business_line_name` apa pun tetap hanya mengembalikan `['F&B','Room','Spa&Event']` — `Overall`/`Corporate Overhead` terbukti tidak pernah muncul lewat panggilan HTTP nyata, konsisten hasil verifikasi M3.2/M3.3 di level database.
+- `v_financial_gop_overhead` dan `mart_cleaned.payroll` row-level (lewat endpoint `corporate-financial`, bukan `hr`) berfungsi benar.

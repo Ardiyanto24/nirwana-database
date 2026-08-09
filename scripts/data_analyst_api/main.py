@@ -87,9 +87,11 @@ from whitelist_fnb import AGGREGATE_WHITELIST as FNB_AGGREGATE, ROWLEVEL_WHITELI
 from whitelist_facility import AGGREGATE_WHITELIST as FACILITY_AGGREGATE, ROWLEVEL_WHITELIST as FACILITY_ROWLEVEL
 from whitelist_spa_event import AGGREGATE_WHITELIST as SPA_EVENT_AGGREGATE, ROWLEVEL_WHITELIST as SPA_EVENT_ROWLEVEL
 from whitelist_hr import AGGREGATE_WHITELIST as HR_AGGREGATE, ROWLEVEL_WHITELIST as HR_ROWLEVEL
+from whitelist_corporate_financial import AGGREGATE_WHITELIST as CORP_FIN_AGGREGATE, ROWLEVEL_WHITELIST as CORP_FIN_ROWLEVEL
 
 register_domain_routes("revenue", REVENUE_AGGREGATE, REVENUE_ROWLEVEL)
 register_domain_routes("fnb", FNB_AGGREGATE, FNB_ROWLEVEL)
 register_domain_routes("facility", FACILITY_AGGREGATE, FACILITY_ROWLEVEL)
 register_domain_routes("spa-event", SPA_EVENT_AGGREGATE, SPA_EVENT_ROWLEVEL)
 register_domain_routes("hr", HR_AGGREGATE, HR_ROWLEVEL)
+register_domain_routes("corporate-financial", CORP_FIN_AGGREGATE, CORP_FIN_ROWLEVEL)
