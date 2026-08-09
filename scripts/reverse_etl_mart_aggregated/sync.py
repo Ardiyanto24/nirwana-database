@@ -151,12 +151,38 @@ def sync_table(bq_client, pg_conn, table):
         cur.execute(f'ALTER TABLE {PG_SCHEMA}."{staging_table}" RENAME TO "{table}"')
     pg_conn.commit()
 
+    # --- cleanup: drop the renamed-away old table, best-effort ---
+    # Milestone 5.7 finding: Postgres views bind to the underlying table by
+    # OID, not name -- once analyst_views (M3.2) exist on top of mart_aggregated
+    # tables, a RENAME-based swap leaves them still pointing at "<table>__old"
+    # (stale data) until those views are explicitly reapplied
+    # (scripts/data_analyst_views/apply_views.py, a separate M3.2-owned script
+    # using a different, non-scoped credential -- this writer is deliberately
+    # confined to the mart_aggregated schema and has no business touching
+    # analyst_views). DROP TABLE then fails with DependentObjectsStillExist.
+    # The live table under "<table>" is already correct at this point --
+    # dropping "__old" is pure cleanup, not correctness-critical -- so a
+    # dependency conflict here is downgraded to a warning instead of crashing
+    # the whole sync run. See docs/keputusan-tertunda.md for the open question
+    # of whether to wire an automated view-reapply step into the GitHub
+    # Actions chain.
+    old_table_status = "n/a"
     if live_exists:
-        with pg_conn.cursor() as cur:
-            cur.execute(f'DROP TABLE {PG_SCHEMA}."{table}__old"')
-        pg_conn.commit()
+        try:
+            with pg_conn.cursor() as cur:
+                cur.execute(f'DROP TABLE {PG_SCHEMA}."{table}__old"')
+            pg_conn.commit()
+            old_table_status = "dropped"
+        except psycopg2.errors.DependentObjectsStillExist:
+            pg_conn.rollback()
+            old_table_status = "kept (analyst_views dependency -- reapply views, then rerun sync to clean up)"
+            print(
+                f"  WARNING: {table}__old kept -- analyst_views still depend on it. "
+                "Run scripts/data_analyst_views/apply_views.py --all, then rerun sync "
+                "to drop the orphaned table."
+            )
 
-    return {"table": table, "bq_count": bq_count, "pg_count": pg_count, "status": "synced"}
+    return {"table": table, "bq_count": bq_count, "pg_count": pg_count, "status": "synced", "old_table": old_table_status}
 
 
 def log_sync_result(prod_conn, result):
