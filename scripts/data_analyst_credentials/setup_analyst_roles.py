@@ -31,6 +31,7 @@ from role_config_facility import ROLE_CONFIG as FACILITY_CONFIG
 from role_config_spa_event import ROLE_CONFIG as SPA_EVENT_CONFIG
 from role_config_hr import ROLE_CONFIG as HR_CONFIG
 from role_config_corporate_financial import ROLE_CONFIG as CORPORATE_FINANCIAL_CONFIG
+from role_config_property_gm import ROLE_CONFIG as PROPERTY_GM_CONFIG
 
 ROLE_CONFIGS = [
     REVENUE_CONFIG,
@@ -39,6 +40,7 @@ ROLE_CONFIGS = [
     SPA_EVENT_CONFIG,
     HR_CONFIG,
     CORPORATE_FINANCIAL_CONFIG,
+    PROPERTY_GM_CONFIG,
 ]
 # Populated by importing role_config_<domain> modules as they're added,
 # one per M3.5 checkpoint -- see decisions.md task breakdown.
@@ -114,13 +116,28 @@ def apply_grants(admin_conn, role, grant_targets):
     print(f"  {len(grant_targets)} object(s) granted across schema(s): {sorted(schemas_granted)}")
 
 
+def apply_membership(admin_conn, role, member_of):
+    """Property/GM role path (Keputusan #3): GRANT <5 domain roles> TO role,
+    so it inherits their privileges instead of re-listing 39 object grants.
+    Postgres role membership requires the granting session to itself hold
+    those roles' privileges WITH ADMIN OPTION, which admin_conn (the role
+    that created every domain role via CREATE ROLE) has implicitly."""
+    with admin_conn.cursor() as cur:
+        member_list = ", ".join(member_of)
+        cur.execute(f"GRANT {member_list} TO {role}")
+    print(f"  Inherits privileges from: {member_of}")
+
+
 def setup_role(admin_conn, config):
     role = config["role"]
     print(f"--- {role} ---")
     password = secrets.token_urlsafe(24)
 
     create_or_rotate_role(admin_conn, role, password)
-    apply_grants(admin_conn, role, config["grant_targets"])
+    if "member_of" in config:
+        apply_membership(admin_conn, role, config["member_of"])
+    else:
+        apply_grants(admin_conn, role, config["grant_targets"])
 
     ok = verify_role_isolation(
         role,
