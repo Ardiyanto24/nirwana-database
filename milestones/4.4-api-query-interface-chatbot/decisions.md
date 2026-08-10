@@ -2,7 +2,7 @@
 
 **Sumber:** `docs/03-implementation-plans/05-serving-ai-chatbot.md`, Milestone 4.4 (baris 106-124).
 **Prasyarat:** Milestone 4.1 (pemetaan RBAC, Completed), 4.2 (67 view `chatbot_views`, Completed), 4.3 (10 kredensial domain read-only, Completed).
-**Status:** In Progress
+**Status:** Completed
 **Date started:** 2026-08-10
 
 ## Lingkup Sumber / Contract
@@ -106,7 +106,7 @@ Setelah lolos otorisasi #3, API connect pakai kredensial domain yang sesuai (`RE
 **✅ Checkpoint 5** — commit + log.
 
 ### Fase 6 — Finalisasi
-11. Sampel lintas 3 tingkat (minimal 1 Staff/Manager/Korporat) verifikasi KK1.
-12. Tulis `docs/09-serving-ai-chatbot/api-chatbot.md` (endpoint, parameter, penanda stabil vs berpotensi berubah). Update `kebijakan-akses-kredensial-scoped.md` (+1 baris `chatbot_authz_reader`). Verifikasi ulang KK1-KK3, tulis `report.md`. — M
+11. Sampel lintas 3 tingkat (minimal 1 Staff/Manager/Korporat) verifikasi KK1. — **Selesai**
+12. Tulis `docs/09-serving-ai-chatbot/api-chatbot.md` (endpoint, parameter, penanda stabil vs berpotensi berubah). Update `kebijakan-akses-kredensial-scoped.md` (+1 baris `chatbot_authz_reader`). Verifikasi ulang KK1-KK3, tulis `report.md`. — M — **Selesai**
 
 **✅ Checkpoint 6 (final)** — commit; tanya user sebelum push.
