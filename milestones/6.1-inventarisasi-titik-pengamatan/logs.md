@@ -55,3 +55,7 @@ Result: worked. Commit `7b17973`. Folder baru `docs/10-monitoring-warehouse-serv
 ## 2026-08-10 — Checkpoint 4: logs.md ini + status milestone
 Did: Tulis `logs.md` ini (jurnal retroaktif, sesi kerja tunggal panjang). `report.md` **belum ditulis** sesuai Keputusan #4 `decisions.md` — menunggu user membaca `docs/10-monitoring-warehouse-serving/pemetaan-titik-pengamatan-pipeline.md` dan mengonfirmasi akurat sebelum milestone dinyatakan Completed.
 Result: in progress — menunggu review user.
+
+## 2026-08-10 — Milestone ditutup
+Did: User mengonfirmasi setuju dengan isi dokumen peta, meminta `report.md` ditulis. Kedua Kriteria Keberhasilan sumber dicocokkan satu-satu terhadap `docs/10-monitoring-warehouse-serving/pemetaan-titik-pengamatan-pipeline.md`, keduanya terpenuhi. `decisions.md` diupdate status jadi Done, seluruh item Task Breakdown ditandai selesai.
+Result: worked. Milestone 6.1 **Completed**. `report.md` ditulis lengkap dengan Handoff Notes untuk Milestone 6.2-6.7.

@@ -1,7 +1,7 @@
 # Milestone 6.1: Inventarisasi Titik Pengamatan dan Baseline Pipeline — Decisions
 
 **Source:** `docs/03-implementation-plans/06-monitoring-warehouse-serving-fase2.md`, baris 50-64.
-**Status:** In Progress
+**Status:** Done
 **Date started:** 2026-08-10
 
 ## Contract (from source doc)
@@ -39,10 +39,11 @@ Dua temuan muncul dari sintesis 7 layer, didiskusikan penuh dengan user sebelum 
 
 - [x] Eksplorasi 7 layer (di atas) — Acceptance: seluruh `report.md` 1.1-5.7 + 9 dokumen substantif dibaca — Verify: ringkasan tiap layer dikonfirmasi user di chat sebelum lanjut — M
 - [x] Sintesis peta 10 titik + 2 temuan risiko, didiskusikan dampaknya terhadap M6.2-6.7 dengan user — Verify: user mengonfirmasi klasifikasi dampak (temuan 1 = risiko berdiri sendiri, temuan 2 = prasyarat M6.3) — S
-- [ ] Tulis `decisions.md` (dokumen ini) — Acceptance: kontrak + 7 keputusan + 2 temuan tercatat sebelum file lain ditulis — S
-- [ ] Tulis 2 entri baru `docs/keputusan-tertunda.md` — Acceptance: format konsisten entri existing — S
-- [ ] Tulis `docs/10-monitoring-warehouse-serving/pemetaan-titik-pengamatan-pipeline.md` — Acceptance: 10/10 titik terisi Sumber Sinyal atau Gap eksplisit, dependency merujuk file YAML nyata — M
-- [ ] Tulis `logs.md` + verifikasi akhir + commit — M
+- [x] Tulis `decisions.md` (dokumen ini) — Acceptance: kontrak + 7 keputusan + 2 temuan tercatat sebelum file lain ditulis — S
+- [x] Tulis 2 entri baru `docs/keputusan-tertunda.md` — Acceptance: format konsisten entri existing — S
+- [x] Tulis `docs/10-monitoring-warehouse-serving/pemetaan-titik-pengamatan-pipeline.md` — Acceptance: 10/10 titik terisi Sumber Sinyal atau Gap eksplisit, dependency merujuk file YAML nyata — M
+- [x] Tulis `logs.md` + verifikasi akhir + commit — M
+- [x] User review + `report.md` — Milestone ditutup Completed — S
 
 ## Technical Decisions
 
