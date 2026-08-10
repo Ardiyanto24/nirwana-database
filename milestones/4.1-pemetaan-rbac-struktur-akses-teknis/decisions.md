@@ -2,7 +2,7 @@
 
 **Sumber:** `docs/03-implementation-plans/05-serving-ai-chatbot.md`, Milestone 4.1 (baris 49-65).
 **Prasyarat:** `mart_aggregated` (M5.1-5.7, selesai), `mart_cleaned` (M2.1-2.4, selesai), RBAC final `corporate_master.role_permissions` di production (77 baris, 20 role, 10 domain — diverifikasi Task 0 di bawah).
-**Status:** In Progress
+**Status:** Completed
 **Date started:** 2026-08-10
 
 ## Lingkup Sumber / Contract
@@ -84,6 +84,6 @@ Ditegaskan eksplisit di setiap tabel pemetaan Task 2: tidak ada baris yang menga
 **✅ Checkpoint 1** — commit + log.
 
 ### Fase 2 — Verifikasi & tutup
-5. Verifikasi akhir: tiap 10 domain di `role_permissions` production ditelusuri ke baris tabel Task 2 tanpa menerka ulang (Kriteria Keberhasilan sumber). Tulis `report.md`. — S
+5. Verifikasi akhir: tiap 10 domain di `role_permissions` production ditelusuri ke baris tabel Task 2 tanpa menerka ulang (Kriteria Keberhasilan sumber). Tulis `report.md`. — S — **Selesai**
 
 **✅ Checkpoint 2 (final)** — commit; tanya user sebelum push.
