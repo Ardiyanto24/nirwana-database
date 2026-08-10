@@ -2,7 +2,7 @@
 
 **Sumber:** `docs/03-implementation-plans/05-serving-ai-chatbot.md`, Milestone 4.2 (baris 68-84).
 **Prasyarat:** Milestone 4.1 (`docs/09-serving-ai-chatbot/pemetaan-akses-teknis-chatbot.md`, Completed) — pemetaan 10 `data_domain` → tabel `mart_aggregated`/`mart_cleaned`, mekanisme filter, kontrak 2 view PII sudah tersedia sebagai acuan langsung.
-**Status:** In Progress
+**Status:** Completed
 **Date started:** 2026-08-10
 
 ## Lingkup Sumber / Contract
@@ -86,6 +86,6 @@ Sama alasan M3.2 — murni authoring/apply DDL sekali jalan, bukan operasi haria
 **✅ Checkpoint 4** — commit + log.
 
 ### Fase 5 — Finalisasi
-10. Uji KK3: `SELECT property_id, count(*) FROM <view> WHERE property_id IN ('P01','P02') GROUP BY property_id` pada beberapa view representatif, buktikan hasil berbeda benar per properti. Tulis `docs/09-serving-ai-chatbot/view-query-pattern-chatbot.md` (inventaris seluruh view, pola sama `view-query-pattern-analyst.md`). Verifikasi ulang KK1-KK3, tulis `report.md`. — M
+10. Uji KK3: `SELECT property_id, count(*) FROM <view> WHERE property_id IN ('P01','P02') GROUP BY property_id` pada beberapa view representatif, buktikan hasil berbeda benar per properti. Tulis `docs/09-serving-ai-chatbot/view-query-pattern-chatbot.md` (inventaris seluruh view, pola sama `view-query-pattern-analyst.md`). Verifikasi ulang KK1-KK3, tulis `report.md`. — M — **Selesai**
 
 **✅ Checkpoint 5 (final)** — commit; tanya user sebelum push.
