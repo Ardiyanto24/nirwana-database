@@ -24,3 +24,7 @@ Cause: Saat M4.2 menulis kedua view (pola langsung reuse dari analyst_views M3.2
 Fix: Tambah `e.property_id` di akhir SELECT `views_facility.sql` (pola sama "append di akhir" M4.2/M3.2), re-apply. Diverifikasi 0 baris NULL property_id di kedua view.
 Did: `whitelist_facility.py` (12 entry) + `whitelist_spa_event.py` (9 entry), register route. Tes HTTP: Housekeeping Staff (E0002, P01) -- `housekeeping-staff-daily` dengan `property_id=P05` diklaim -- hasil tetap P01 (fix terbukti bekerja); `rooms` lookup sukses; coba domain `spa_event` -- 403. Spa & Event Staff (E0157, P01) -- `spa-bookings` sukses; coba domain `facility` -- 403.
 Result: worked setelah fix. Seluruh 6 skenario uji sesuai ekspektasi, termasuk pembuktian langsung fix property_id.
+
+## 2026-08-10 -- Fase 3: hr + financial
+Did: `whitelist_hr.py` (10 entry, tanpa payroll) + `whitelist_financial.py` (11 entry). Tes HTTP: HR Staff (E0084, P01) -- staff-shifts lookup sukses, coba domain financial -- 403 (segregasi payroll tertegakkan juga di layer API, bukan cuma DB M4.3). Finance Manager (E0452, P03) -- departmental-margin dengan property_id=P01 diklaim -- hasil 100% P03 (override bekerja lintas Fase, bukan cuma P01 seperti tes sebelumnya), business_line_name cuma berisi F&B/Room/Spa&Event (Overall/Corporate Overhead ter-exclude, business rule M3.1 #1 terbukti sampai lapisan API); payroll lookup sukses.
+Result: worked. Seluruh skenario sesuai ekspektasi.

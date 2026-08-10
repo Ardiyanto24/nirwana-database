@@ -116,3 +116,9 @@ from whitelist_spa_event import WHITELIST as SPA_EVENT_WHITELIST
 
 register_domain_routes("facility", FACILITY_WHITELIST)
 register_domain_routes("spa_event", SPA_EVENT_WHITELIST)
+
+from whitelist_hr import WHITELIST as HR_WHITELIST
+from whitelist_financial import WHITELIST as FINANCIAL_WHITELIST
+
+register_domain_routes("hr", HR_WHITELIST)
+register_domain_routes("financial", FINANCIAL_WHITELIST)

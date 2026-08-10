@@ -89,8 +89,8 @@ Setelah lolos otorisasi #3, API connect pakai kredensial domain yang sesuai (`RE
 **✅ Checkpoint 2** — commit + log.
 
 ### Fase 3 — HR + Financial
-6. `whitelist_hr.py` (10 entry, tanpa payroll) + tes: role HR mencoba domain `financial` → 403. — M
-7. `whitelist_financial.py` (11 entry) + tes. — M
+6. `whitelist_hr.py` (10 entry, tanpa payroll) + tes: role HR mencoba domain `financial` → 403. — M — **Selesai**
+7. `whitelist_financial.py` (11 entry) + tes. — M — **Selesai**
 
 **✅ Checkpoint 3** — commit + log.
 
