@@ -77,9 +77,9 @@ Ditegaskan eksplisit di setiap tabel pemetaan Task 2: tidak ada baris yang menga
 **✅ Checkpoint 0** — commit + log.
 
 ### Fase 1 — Pemetaan struktur teknis
-2. Tulis tabel "10 data_domain → struktur teknis" (kolom: domain, sensitivitas, tabel `mart_aggregated`, tabel `mart_cleaned` row-level, catatan filter properti) di `docs/08-serving-ai-chatbot/pemetaan-akses-teknis-chatbot.md`. — M
-3. Definisikan mekanisme `own_property`/`all_properties` sebagai kontrak eksplisit untuk M4.2-4.4 (Keputusan #5, didokumentasikan lengkap dengan contoh). — S
-4. Definisikan 2 view `guests_pii`/`guests_profile` (kolom eksak) di atas `mart_cleaned.guests` sebagai kontrak M4.2. — S
+2. Tulis tabel "10 data_domain → struktur teknis" (kolom: domain, sensitivitas, tabel `mart_aggregated`, tabel `mart_cleaned` row-level, catatan filter properti) di `docs/09-serving-ai-chatbot/pemetaan-akses-teknis-chatbot.md`. — M — **Selesai**
+3. Definisikan mekanisme `own_property`/`all_properties` sebagai kontrak eksplisit untuk M4.2-4.4 (Keputusan #5, didokumentasikan lengkap dengan contoh). — S — **Selesai**
+4. Definisikan 2 view `guests_pii`/`guests_profile` (kolom eksak) di atas `mart_cleaned.guests` sebagai kontrak M4.2. — S — **Selesai**
 
 **✅ Checkpoint 1** — commit + log.
 
