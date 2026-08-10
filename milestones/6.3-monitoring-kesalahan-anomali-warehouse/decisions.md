@@ -33,7 +33,7 @@ Milestone terbesar di keluarga 6.x sejauh ini, dan pertama yang menyentuh file t
 - [x] **Checkpoint 1** — `decisions.md` + kredensial `warehouse-monitor-reader` + extend `schema.sql` — Acceptance: kredensial isolasi terbukti, schema live — Verify: `verify_dataset_isolation.py` 5/5 OK, `information_schema` — M
 - [x] **Checkpoint 2** — Output 1 (KK1): `capture_dbt_test_results.py` + step baru 2 workflow YAML + fault-injection nyata — Verified: run 31436680183, 1/37 fail tertangkap tepat sesuai injeksi — S/M
 - [x] **Checkpoint 3** — Output 2 (KK2): `snapshot_warehouse_volume.py` + `detect_volume_anomaly.py` + uji coba terkontrol 2 tabel — Verified: 123 tabel di-snapshot (23+23+77), 2 alert critical benar (mart_cleaned & mart_aggregated, masing-masing tabel teridentifikasi tepat), data sintetis dibersihkan — M
-- [ ] **Checkpoint 4** — Output 3 (KK3): `detect_parity_mismatch.py` + uji coba terkontrol — S
+- [x] **Checkpoint 4** — Output 3 (KK3): `detect_parity_mismatch.py` + uji coba terkontrol — Verified: 1 mismatch sintetis terdeteksi tepat, run non-simulasi tetap 0 (isolasi terbukti) — S
 - [ ] **Checkpoint 5** — Output 4 (KK4): `snapshot_ml_output_freshness.py` + `detect_ml_output_issues.py` + uji coba terkontrol — M
 - [ ] **Checkpoint 6** — Workflow terjadwal + `simulate_test.py` + dokumentasi + `report.md` — M
 
@@ -69,6 +69,8 @@ Milestone terbesar di keluarga 6.x sejauh ini, dan pertama yang menyentuh file t
 ### 7. Row-count parity: murni konsolidasi, 0 mekanisme baru, `sync.py` TIDAK disentuh
 
 View `monitoring.warehouse_parity_status` di atas `reverse_etl_sync_log` existing — **diverifikasi langsung terhadap data real** (query live menunjukkan baris `mart_aggregated` sungguhan, `status='synced'`, `bq_row_count=pg_row_count` cocok).
+
+**Revisi saat implementasi** (Checkpoint 4 Task 11): view ini hardcode `WHERE is_simulated = FALSE` (supaya aman dikonsumsi dashboard/M6.7 tanpa filter tambahan) — tapi ini berarti `detect_parity_mismatch.py` **tidak bisa** memakai view yang sama untuk uji coba terkontrol KK3 (baris mismatch sintetis `is_simulated=TRUE` tidak akan pernah terlihat lewat view). Diperbaiki: detector query LANGSUNG ke `reverse_etl_sync_log` dengan parameter `is_simulated` eksplisit (bukan lewat view) — view tetap jadi cara konsumsi yang benar untuk pemakaian normal, detector butuh akses lebih fleksibel untuk kebutuhan testing.
 
 ### 8. `reverse_etl_sync_log` dapat kolom baru `is_simulated`
 
