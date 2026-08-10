@@ -90,8 +90,8 @@ Update `docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md` (10 baris
 **✅ Checkpoint 3** — commit + log.
 
 ### Fase 4 — 4 Domain Granular
-8. `role_config_properties_ref.py`/`role_config_employees_directory.py` (1 `GRANT_TARGETS` masing-masing), 2 role — S
-9. `role_config_guests_pii.py`/`role_config_guests_profile.py` (1 `GRANT_TARGETS` masing-masing: `guests_contact_view`/`guests_profile_view`), 2 role, **deny-test krusial**: role `guests_pii_chatbot_reader` tidak bisa baca `guests_profile_view` (dan sebaliknya) — M
+8. `role_config_properties_ref.py`/`role_config_employees_directory.py` (1 `GRANT_TARGETS` masing-masing), 2 role — S — **Selesai**
+9. `role_config_guests_pii.py`/`role_config_guests_profile.py` (1 `GRANT_TARGETS` masing-masing: `guests_contact_view`/`guests_profile_view`), 2 role, **deny-test krusial**: role `guests_pii_chatbot_reader` tidak bisa baca `guests_profile_view` (dan sebaliknya) — M — **Selesai**
 
 **✅ Checkpoint 4** — commit + log.
 

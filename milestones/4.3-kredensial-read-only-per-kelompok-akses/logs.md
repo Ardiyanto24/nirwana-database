@@ -19,3 +19,7 @@ Result: worked. Kedua role: 9/9 check OK masing-masing.
 ## 2026-08-10 -- Fase 3: hr + financial roles
 Did: `role_config_hr.py` (10 GRANT_TARGETS, 6 deny-check payroll-adjacent eksplisit: mart_cleaned.payroll, v_lookup_payroll, v_payroll_department_monthly, v_payroll_access_level_monthly, v_financial_service_charge_monthly, v_financial_labor_cost_monthly). `role_config_financial.py` (11 GRANT_TARGETS, deny-check bypass fact_financial_business_line_monthly -- business rule Overall exclusion paling kritis).
 Result: worked. hr: 12/12 check OK (2 allow, 9 deny, 1 write). financial: 8/8 check OK.
+
+## 2026-08-10 -- Fase 4: 4 domain granular roles
+Did: `role_config_properties_ref.py`/`role_config_employees_directory.py` (1 GRANT_TARGETS masing-masing). `role_config_guests_pii.py`/`role_config_guests_profile.py` (1 GRANT_TARGETS masing-masing: guests_contact_view/guests_profile_view), dengan deny-check krusial di kedua arah: role guests_pii tidak boleh baca guests_profile_view, role guests_profile tidak boleh baca guests_contact_view -- membuktikan pemisahan kolom PII vs profile M4.2 benar-benar tertegakkan di level kredensial, bukan cuma di level view.
+Result: worked. Keempat role lolos seluruh check, termasuk kedua uji silang guests_pii<->guests_profile.
