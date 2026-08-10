@@ -21,10 +21,17 @@ domain-scoped M4.3 credential (connections.query_as_domain) -- never admin.
 own_property access_scope always resolves property_id server-side from
 employee_id (connections.resolve_property_id); a client-claimed property_id
 is only ever used as an optional narrowing filter under all_properties.
+
+Milestone 4.5 -- every outcome (200/403/404/400) is logged to
+monitoring.chatbot_query_log via audit.log_query, scheduled through FastAPI
+BackgroundTasks so the log write never adds latency to the response
+(decisions.md M4.5 Keputusan #3/#4).
 """
-from fastapi import FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from starlette.requests import Request
 
+from audit import log_query
 from authz import authorize
 from connections import query_as_domain, resolve_property_id
 
@@ -49,7 +56,12 @@ def _run_whitelisted_query(domain, entry, query_params, employee_id, access_scop
     Section 3). Only filters declared in the whitelist entry are ever
     applied; column names/operators come from the entry (never user input),
     values are always passed as %s parameters (mirrors M3.4's
-    _run_whitelisted_query)."""
+    _run_whitelisted_query).
+
+    Returns (rows, resolved_property_id) -- the latter is None under
+    all_properties, and is surfaced to the caller purely for M4.5's audit log
+    (decisions.md M4.5 Keputusan #5: the log records the value actually
+    enforced, not just the caller's claim)."""
     own_property_column = entry.get("own_property_column", "property_id")
     where_clauses = []
     values = []
@@ -62,6 +74,7 @@ def _run_whitelisted_query(domain, entry, query_params, employee_id, access_scop
             where_clauses.append(f'{f["column"]} {f["op"]} %s')
             values.append(val)
 
+    resolved_property_id = None
     if access_scope == "own_property":
         if not employee_id:
             raise HTTPException(status_code=400, detail="employee_id is required for own_property access")
@@ -81,7 +94,8 @@ def _run_whitelisted_query(domain, entry, query_params, employee_id, access_scop
     sql += " ORDER BY 1 LIMIT %s OFFSET %s"
     values += [limit, offset]
 
-    return query_as_domain(domain, sql, values)
+    rows = query_as_domain(domain, sql, values)
+    return rows, resolved_property_id
 
 
 def register_domain_routes(domain, whitelist):
@@ -89,23 +103,70 @@ def register_domain_routes(domain, whitelist):
     that domain's whitelist dict. role_title is authorized against
     role_permissions BEFORE the whitelist lookup even happens for the data
     query -- an unknown/unauthorized role never reaches the database at all
-    (KK2 M4.4)."""
+    (KK2 M4.4).
+
+    Milestone 4.5: the entire body is wrapped so every outcome -- success,
+    or any of the three HTTPException cases (403 authorize, 404 whitelist
+    miss, 400 own_property/employee_id) -- gets exactly one audit log row,
+    scheduled via background_tasks so it never delays the response
+    (decisions.md M4.5 Keputusan #4).
+
+    Denial cases are returned as a JSONResponse (background= attached
+    directly) instead of `raise HTTPException` -- a real FastAPI gotcha found
+    during Checkpoint 1 testing: background tasks added to the injected
+    BackgroundTasks object are silently dropped when the handler raises
+    rather than returns, because FastAPI's own exception handler builds an
+    unrelated response that never carries the tasks forward. Status code and
+    body are identical to what `raise HTTPException` would have produced --
+    only the delivery mechanism changes."""
 
     def handler(
         request: Request,
+        background_tasks: BackgroundTasks,
         view_name: str,
         role_title: str,
         employee_id: str = None,
         limit: int = DEFAULT_LIMIT,
         offset: int = 0,
     ):
-        access_scope = authorize(role_title, domain)
+        try:
+            access_scope = authorize(role_title, domain)
 
-        entry = whitelist.get(view_name)
-        if entry is None:
-            raise HTTPException(status_code=404, detail=f"'{view_name}' is not in the {domain} whitelist")
+            entry = whitelist.get(view_name)
+            if entry is None:
+                raise HTTPException(status_code=404, detail=f"'{view_name}' is not in the {domain} whitelist")
 
-        return _run_whitelisted_query(domain, entry, request.query_params, employee_id, access_scope, limit, offset)
+            rows, resolved_property_id = _run_whitelisted_query(
+                domain, entry, request.query_params, employee_id, access_scope, limit, offset
+            )
+        except HTTPException as exc:
+            background_tasks.add_task(
+                log_query,
+                role_title=role_title,
+                domain=domain,
+                view_name=view_name,
+                employee_id=employee_id,
+                status="denied",
+                denial_reason=str(exc.detail),
+            )
+            return JSONResponse(
+                status_code=exc.status_code,
+                content={"detail": exc.detail},
+                background=background_tasks,
+            )
+
+        background_tasks.add_task(
+            log_query,
+            role_title=role_title,
+            domain=domain,
+            view_name=view_name,
+            employee_id=employee_id,
+            access_scope=access_scope,
+            resolved_property_id=resolved_property_id,
+            status="success",
+            row_count=len(rows),
+        )
+        return rows
 
     app.add_api_route(f"/chatbot/{domain}/{{view_name}}", handler, methods=["GET"])
 
