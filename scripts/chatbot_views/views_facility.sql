@@ -151,6 +151,9 @@ SELECT
 FROM mart_cleaned.rooms r;
 
 -- Untuk kebutuhan Housekeeping Staff/Manager: durasi pembersihan, status delayed.
+-- property_id di-join dari rooms (housekeeping_log sendiri tidak punya kolom
+-- ini) -- wajib ada untuk filter own_property di API (M4.1 Keputusan #5).
+-- Kolom ditaruh di AKHIR daftar SELECT (pola sama M3.2/v_lookup_fnb_inventory).
 CREATE OR REPLACE VIEW chatbot_views.v_lookup_housekeeping_log AS
 SELECT
     h.log_id,
@@ -159,8 +162,10 @@ SELECT
     h.cleaning_start_time,
     h.cleaning_end_time,
     h.staff_id,
-    h.status
-FROM mart_cleaned.housekeeping_log h;
+    h.status,
+    r.property_id
+FROM mart_cleaned.housekeeping_log h
+LEFT JOIN mart_cleaned.rooms r ON r.room_id = h.room_id;
 
 -- Untuk kebutuhan Maintenance Staff/Manager: detail 1 tiket, riwayat per room_id.
 CREATE OR REPLACE VIEW chatbot_views.v_lookup_maintenance_tickets AS

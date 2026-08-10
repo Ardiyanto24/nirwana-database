@@ -74,8 +74,8 @@ Sama alasan M3.2 — murni authoring/apply DDL sekali jalan, bukan operasi haria
 **✅ Checkpoint 2** — commit + log.
 
 ### Fase 3 — HR + Financial
-6. `views_hr.sql` (8 view agregat, tanpa payroll + `v_lookup_staff_shifts`, `v_lookup_employee_performance`) + apply + verifikasi larangan payroll — M
-7. `views_financial.sql` (9 view agregat + `v_lookup_financial_summary`, `v_lookup_payroll`) + apply + verifikasi business rule `business_line_id` (`v_financial_departmental_margin` exclude `Overall`/`Corporate Overhead`) — M
+6. `views_hr.sql` (8 view agregat, tanpa payroll + `v_lookup_staff_shifts`, `v_lookup_employee_performance`) + apply + verifikasi larangan payroll — M — **Selesai**
+7. `views_financial.sql` (9 view agregat + `v_lookup_financial_summary`, `v_lookup_payroll`) + apply + verifikasi business rule `business_line_id` (`v_financial_departmental_margin` exclude `Overall`/`Corporate Overhead`) — M — **Selesai**. Fix tambahan: `property_id` yang terlewat di 3 lookup view Fase 1-2 (`v_lookup_fnb_inventory`, `v_lookup_fnb_transactions`, `v_lookup_housekeeping_log`) ditambahkan via join ke `fnb_outlets`/`rooms`.
 
 **✅ Checkpoint 3** — commit + log.
 

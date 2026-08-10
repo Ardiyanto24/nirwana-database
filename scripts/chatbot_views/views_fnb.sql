@@ -126,6 +126,10 @@ FROM mart_aggregated.fact_fnb_ingredient_price_daily f;
 -- tidak join ke guests.
 
 -- Untuk kebutuhan F&B Staff: ketersediaan bahan baku real-time per outlet.
+-- property_id di-join dari fnb_outlets (fnb_inventory sendiri tidak punya
+-- kolom ini) -- wajib ada untuk filter own_property di API (M4.1 Keputusan #5).
+-- Kolom ditaruh di AKHIR daftar SELECT, bukan disisipkan -- CREATE OR REPLACE
+-- VIEW PostgreSQL tidak mengizinkan reorder/sisip kolom existing (pola sama M3.2).
 CREATE OR REPLACE VIEW chatbot_views.v_lookup_fnb_inventory AS
 SELECT
     i.outlet_id,
@@ -134,11 +138,14 @@ SELECT
     i.unit,
     i.stock_current,
     i.stock_min_threshold,
-    i.unit_cost
-FROM mart_cleaned.fnb_inventory i;
+    i.unit_cost,
+    o.property_id
+FROM mart_cleaned.fnb_inventory i
+LEFT JOIN mart_cleaned.fnb_outlets o ON o.outlet_id = i.outlet_id;
 
 -- Untuk kebutuhan F&B Staff: menu terlaris/total penjualan hari berjalan
 -- (granularitas harian di mart_aggregated bisa telat untuk "hari ini").
+-- property_id sama, di-join dari fnb_outlets, ditaruh di akhir.
 CREATE OR REPLACE VIEW chatbot_views.v_lookup_fnb_transactions AS
 SELECT
     t.transaction_id,
@@ -150,8 +157,10 @@ SELECT
     t.category,
     t.quantity,
     t.unit_price,
-    t.total_price
-FROM mart_cleaned.fnb_transactions t;
+    t.total_price,
+    o.property_id
+FROM mart_cleaned.fnb_transactions t
+LEFT JOIN mart_cleaned.fnb_outlets o ON o.outlet_id = t.outlet_id;
 
 -- Untuk kebutuhan F&B Staff: komposisi bahan per menu (info alergi ke tamu).
 CREATE OR REPLACE VIEW chatbot_views.v_lookup_recipe_bom AS
