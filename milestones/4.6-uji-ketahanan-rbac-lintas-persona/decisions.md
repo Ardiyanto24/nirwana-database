@@ -45,7 +45,9 @@
 **✅ Checkpoint 1** — mekanika tooling tervalidasi, siap full run Layer A.
 
 ### Checkpoint 2 — Layer A: Matriks Akses Penuh (KK1)
-4. Full run 200 kombinasi terhadap `uvicorn` live. Investigasi + perbaiki mismatch (kalau ada).
+4. Full run 200 kombinasi terhadap `uvicorn` live. Investigasi + perbaiki mismatch (kalau ada). — **Selesai**. **200/200 cocok, 0 mismatch** — tidak perlu perbaikan. Hasil lengkap di `hasil-layer-a-matriks-akses.txt`.
+
+**✅ Checkpoint 2** — KK1 (lapisan keputusan akses) terpenuhi penuh untuk seluruh 20 persona.
 
 ### Checkpoint 3 — Layer B + C (KK1 kedalaman + KK2)
 5. `run_property_override_sample.py` — 15×2 kombinasi.

@@ -1,0 +1,206 @@
+Ground truth: 77 role_permissions rows loaded. Test employee_id (P01): E0001
+
+role                            domain                expected          status  result
+--------------------------------------------------------------------------------------
+CEO                             reservation           all_properties    200     OK
+CEO                             fnb                   all_properties    200     OK
+CEO                             facility              all_properties    200     OK
+CEO                             spa_event             all_properties    200     OK
+CEO                             hr                    all_properties    200     OK
+CEO                             financial             all_properties    200     OK
+CEO                             properties_ref        all_properties    200     OK
+CEO                             employees_directory   all_properties    200     OK
+CEO                             guests_pii            all_properties    200     OK
+CEO                             guests_profile        all_properties    200     OK
+Corporate Finance Director      reservation           all_properties    200     OK
+Corporate Finance Director      fnb                   DENY              403     OK
+Corporate Finance Director      facility              DENY              403     OK
+Corporate Finance Director      spa_event             DENY              403     OK
+Corporate Finance Director      hr                    DENY              403     OK
+Corporate Finance Director      financial             all_properties    200     OK
+Corporate Finance Director      properties_ref        all_properties    200     OK
+Corporate Finance Director      employees_directory   all_properties    200     OK
+Corporate Finance Director      guests_pii            DENY              403     OK
+Corporate Finance Director      guests_profile        DENY              403     OK
+Corporate HR Director           reservation           DENY              403     OK
+Corporate HR Director           fnb                   DENY              403     OK
+Corporate HR Director           facility              DENY              403     OK
+Corporate HR Director           spa_event             DENY              403     OK
+Corporate HR Director           hr                    all_properties    200     OK
+Corporate HR Director           financial             DENY              403     OK
+Corporate HR Director           properties_ref        all_properties    200     OK
+Corporate HR Director           employees_directory   all_properties    200     OK
+Corporate HR Director           guests_pii            DENY              403     OK
+Corporate HR Director           guests_profile        DENY              403     OK
+Corporate Operations Director   reservation           all_properties    200     OK
+Corporate Operations Director   fnb                   all_properties    200     OK
+Corporate Operations Director   facility              all_properties    200     OK
+Corporate Operations Director   spa_event             all_properties    200     OK
+Corporate Operations Director   hr                    DENY              403     OK
+Corporate Operations Director   financial             DENY              403     OK
+Corporate Operations Director   properties_ref        all_properties    200     OK
+Corporate Operations Director   employees_directory   all_properties    200     OK
+Corporate Operations Director   guests_pii            all_properties    200     OK
+Corporate Operations Director   guests_profile        DENY              403     OK
+Corporate Revenue Director      reservation           all_properties    200     OK
+Corporate Revenue Director      fnb                   DENY              403     OK
+Corporate Revenue Director      facility              DENY              403     OK
+Corporate Revenue Director      spa_event             DENY              403     OK
+Corporate Revenue Director      hr                    DENY              403     OK
+Corporate Revenue Director      financial             all_properties    200     OK
+Corporate Revenue Director      properties_ref        all_properties    200     OK
+Corporate Revenue Director      employees_directory   DENY              403     OK
+Corporate Revenue Director      guests_pii            all_properties    200     OK
+Corporate Revenue Director      guests_profile        all_properties    200     OK
+General Manager                 reservation           own_property      200     OK
+General Manager                 fnb                   own_property      200     OK
+General Manager                 facility              own_property      200     OK
+General Manager                 spa_event             own_property      200     OK
+General Manager                 hr                    own_property      200     OK
+General Manager                 financial             own_property      200     OK
+General Manager                 properties_ref        own_property      200     OK
+General Manager                 employees_directory   own_property      200     OK
+General Manager                 guests_pii            own_property      200     OK
+General Manager                 guests_profile        own_property      200     OK
+Revenue Manager                 reservation           own_property      200     OK
+Revenue Manager                 fnb                   DENY              403     OK
+Revenue Manager                 facility              DENY              403     OK
+Revenue Manager                 spa_event             DENY              403     OK
+Revenue Manager                 hr                    DENY              403     OK
+Revenue Manager                 financial             DENY              403     OK
+Revenue Manager                 properties_ref        own_property      200     OK
+Revenue Manager                 employees_directory   DENY              403     OK
+Revenue Manager                 guests_pii            own_property      200     OK
+Revenue Manager                 guests_profile        own_property      200     OK
+F&B Manager                     reservation           own_property      200     OK
+F&B Manager                     fnb                   own_property      200     OK
+F&B Manager                     facility              DENY              403     OK
+F&B Manager                     spa_event             DENY              403     OK
+F&B Manager                     hr                    DENY              403     OK
+F&B Manager                     financial             DENY              403     OK
+F&B Manager                     properties_ref        own_property      200     OK
+F&B Manager                     employees_directory   own_property      200     OK
+F&B Manager                     guests_pii            DENY              403     OK
+F&B Manager                     guests_profile        DENY              403     OK
+Finance Manager                 reservation           own_property      200     OK
+Finance Manager                 fnb                   DENY              403     OK
+Finance Manager                 facility              DENY              403     OK
+Finance Manager                 spa_event             DENY              403     OK
+Finance Manager                 hr                    DENY              403     OK
+Finance Manager                 financial             own_property      200     OK
+Finance Manager                 properties_ref        own_property      200     OK
+Finance Manager                 employees_directory   own_property      200     OK
+Finance Manager                 guests_pii            DENY              403     OK
+Finance Manager                 guests_profile        DENY              403     OK
+Housekeeping Manager            reservation           own_property      200     OK
+Housekeeping Manager            fnb                   DENY              403     OK
+Housekeeping Manager            facility              own_property      200     OK
+Housekeeping Manager            spa_event             DENY              403     OK
+Housekeeping Manager            hr                    DENY              403     OK
+Housekeeping Manager            financial             DENY              403     OK
+Housekeeping Manager            properties_ref        own_property      200     OK
+Housekeeping Manager            employees_directory   own_property      200     OK
+Housekeeping Manager            guests_pii            DENY              403     OK
+Housekeeping Manager            guests_profile        DENY              403     OK
+HR Manager                      reservation           DENY              403     OK
+HR Manager                      fnb                   DENY              403     OK
+HR Manager                      facility              DENY              403     OK
+HR Manager                      spa_event             DENY              403     OK
+HR Manager                      hr                    own_property      200     OK
+HR Manager                      financial             DENY              403     OK
+HR Manager                      properties_ref        own_property      200     OK
+HR Manager                      employees_directory   own_property      200     OK
+HR Manager                      guests_pii            DENY              403     OK
+HR Manager                      guests_profile        DENY              403     OK
+Maintenance Manager             reservation           DENY              403     OK
+Maintenance Manager             fnb                   DENY              403     OK
+Maintenance Manager             facility              own_property      200     OK
+Maintenance Manager             spa_event             DENY              403     OK
+Maintenance Manager             hr                    DENY              403     OK
+Maintenance Manager             financial             DENY              403     OK
+Maintenance Manager             properties_ref        own_property      200     OK
+Maintenance Manager             employees_directory   own_property      200     OK
+Maintenance Manager             guests_pii            DENY              403     OK
+Maintenance Manager             guests_profile        DENY              403     OK
+Spa & Event Manager             reservation           DENY              403     OK
+Spa & Event Manager             fnb                   DENY              403     OK
+Spa & Event Manager             facility              DENY              403     OK
+Spa & Event Manager             spa_event             own_property      200     OK
+Spa & Event Manager             hr                    DENY              403     OK
+Spa & Event Manager             financial             DENY              403     OK
+Spa & Event Manager             properties_ref        own_property      200     OK
+Spa & Event Manager             employees_directory   own_property      200     OK
+Spa & Event Manager             guests_pii            own_property      200     OK
+Spa & Event Manager             guests_profile        DENY              403     OK
+Front Office Staff              reservation           own_property      200     OK
+Front Office Staff              fnb                   DENY              403     OK
+Front Office Staff              facility              DENY              403     OK
+Front Office Staff              spa_event             DENY              403     OK
+Front Office Staff              hr                    DENY              403     OK
+Front Office Staff              financial             DENY              403     OK
+Front Office Staff              properties_ref        own_property      200     OK
+Front Office Staff              employees_directory   DENY              403     OK
+Front Office Staff              guests_pii            own_property      200     OK
+Front Office Staff              guests_profile        DENY              403     OK
+F&B Staff                       reservation           DENY              403     OK
+F&B Staff                       fnb                   own_property      200     OK
+F&B Staff                       facility              DENY              403     OK
+F&B Staff                       spa_event             DENY              403     OK
+F&B Staff                       hr                    DENY              403     OK
+F&B Staff                       financial             DENY              403     OK
+F&B Staff                       properties_ref        DENY              403     OK
+F&B Staff                       employees_directory   DENY              403     OK
+F&B Staff                       guests_pii            DENY              403     OK
+F&B Staff                       guests_profile        DENY              403     OK
+Finance Staff                   reservation           DENY              403     OK
+Finance Staff                   fnb                   DENY              403     OK
+Finance Staff                   facility              DENY              403     OK
+Finance Staff                   spa_event             DENY              403     OK
+Finance Staff                   hr                    DENY              403     OK
+Finance Staff                   financial             own_property      200     OK
+Finance Staff                   properties_ref        DENY              403     OK
+Finance Staff                   employees_directory   own_property      200     OK
+Finance Staff                   guests_pii            DENY              403     OK
+Finance Staff                   guests_profile        DENY              403     OK
+Housekeeping Staff              reservation           DENY              403     OK
+Housekeeping Staff              fnb                   DENY              403     OK
+Housekeeping Staff              facility              own_property      200     OK
+Housekeeping Staff              spa_event             DENY              403     OK
+Housekeeping Staff              hr                    DENY              403     OK
+Housekeeping Staff              financial             DENY              403     OK
+Housekeeping Staff              properties_ref        DENY              403     OK
+Housekeeping Staff              employees_directory   DENY              403     OK
+Housekeeping Staff              guests_pii            DENY              403     OK
+Housekeeping Staff              guests_profile        DENY              403     OK
+HR Staff                        reservation           DENY              403     OK
+HR Staff                        fnb                   DENY              403     OK
+HR Staff                        facility              DENY              403     OK
+HR Staff                        spa_event             DENY              403     OK
+HR Staff                        hr                    own_property      200     OK
+HR Staff                        financial             DENY              403     OK
+HR Staff                        properties_ref        DENY              403     OK
+HR Staff                        employees_directory   own_property      200     OK
+HR Staff                        guests_pii            DENY              403     OK
+HR Staff                        guests_profile        DENY              403     OK
+Maintenance Staff               reservation           DENY              403     OK
+Maintenance Staff               fnb                   DENY              403     OK
+Maintenance Staff               facility              own_property      200     OK
+Maintenance Staff               spa_event             DENY              403     OK
+Maintenance Staff               hr                    DENY              403     OK
+Maintenance Staff               financial             DENY              403     OK
+Maintenance Staff               properties_ref        DENY              403     OK
+Maintenance Staff               employees_directory   DENY              403     OK
+Maintenance Staff               guests_pii            DENY              403     OK
+Maintenance Staff               guests_profile        DENY              403     OK
+Spa & Event Staff               reservation           DENY              403     OK
+Spa & Event Staff               fnb                   DENY              403     OK
+Spa & Event Staff               facility              DENY              403     OK
+Spa & Event Staff               spa_event             own_property      200     OK
+Spa & Event Staff               hr                    DENY              403     OK
+Spa & Event Staff               financial             DENY              403     OK
+Spa & Event Staff               properties_ref        DENY              403     OK
+Spa & Event Staff               employees_directory   DENY              403     OK
+Spa & Event Staff               guests_pii            own_property      200     OK
+Spa & Event Staff               guests_profile        DENY              403     OK
+
+200/200 cells matched expectation.
