@@ -11,6 +11,12 @@ name: Monitoring Warehouse - DQ and Anomaly Detection
 # lihat decisions.md Keputusan #1), bukan job terpisah.
 # Rujukan: milestones/6.3-monitoring-kesalahan-anomali-warehouse/decisions.md
 #
+# Milestone 6.4 -- 3 step tambahan di akhir job yang sama (extend, bukan
+# workflow baru -- Keputusan F): model staleness (KK1, informational-only),
+# completeness validation ml_output (KK2), drift data availability canary
+# (KK3). Sama kredensial warehouse-monitor-reader yang sudah ditulis di atas.
+# Rujukan: milestones/6.4-monitoring-drift-feedback-loop-ml/decisions.md
+#
 # workflow_run listener ke "Reverse ETL Mart Aggregated to Serving PostgreSQL"
 # (titik 8, paling akhir dari 10 titik peta M6.1) -- memastikan seluruh data
 # hari itu sudah settle (extract -> transform x2 -> reverse ETL x2) sebelum
@@ -68,3 +74,15 @@ jobs:
       - name: Milestone 6.3 -- deteksi freshness delay + sensor duration anomaly (KK4)
         working-directory: scripts/monitoring_warehouse
         run: python detect_ml_output_issues.py
+
+      - name: Milestone 6.4 -- snapshot model staleness (KK1, informational-only)
+        working-directory: scripts/monitoring_warehouse
+        run: python snapshot_ml_model_version.py
+
+      - name: Milestone 6.4 -- cek kelengkapan ml_output vs populasi entity (KK2)
+        working-directory: scripts/monitoring_warehouse
+        run: python check_ml_output_completeness.py
+
+      - name: Milestone 6.4 -- canary ketersediaan data drift (KK3)
+        working-directory: scripts/monitoring_warehouse
+        run: python check_drift_data_availability.py
