@@ -34,7 +34,7 @@ Milestone terbesar di keluarga 6.x sejauh ini, dan pertama yang menyentuh file t
 - [x] **Checkpoint 2** — Output 1 (KK1): `capture_dbt_test_results.py` + step baru 2 workflow YAML + fault-injection nyata — Verified: run 31436680183, 1/37 fail tertangkap tepat sesuai injeksi — S/M
 - [x] **Checkpoint 3** — Output 2 (KK2): `snapshot_warehouse_volume.py` + `detect_volume_anomaly.py` + uji coba terkontrol 2 tabel — Verified: 123 tabel di-snapshot (23+23+77), 2 alert critical benar (mart_cleaned & mart_aggregated, masing-masing tabel teridentifikasi tepat), data sintetis dibersihkan — M
 - [x] **Checkpoint 4** — Output 3 (KK3): `detect_parity_mismatch.py` + uji coba terkontrol — Verified: 1 mismatch sintetis terdeteksi tepat, run non-simulasi tetap 0 (isolasi terbukti) — S
-- [ ] **Checkpoint 5** — Output 4 (KK4): `snapshot_ml_output_freshness.py` + `detect_ml_output_issues.py` + uji coba terkontrol — M
+- [x] **Checkpoint 5** — Output 4 (KK4): `snapshot_ml_output_freshness.py` + `detect_ml_output_issues.py` + uji coba terkontrol — Verified: freshness delay (lag=150h) dan sensor duration anomaly (z=63) keduanya terdeteksi tepat dengan detail eksplisit (bukan "sensor gagal" generik) — M
 - [ ] **Checkpoint 6** — Workflow terjadwal + `simulate_test.py` + dokumentasi + `report.md` — M
 
 ## Technical Decisions
@@ -82,7 +82,11 @@ View `monitoring.warehouse_parity_status` di atas `reverse_etl_sync_log` existin
 
 ### 10. Sensor duration anomaly: REUSE `pipeline_run_log`, 0 instrumentasi baru ke `wait_for_ml_output.py`
 
-Titik 5 (M6.2) sudah punya `duration_seconds` per run — rolling baseline (algoritma #6) dijalankan langsung terhadap data itu.
+Titik 5 (M6.2) sudah punya `duration_seconds` per run — rolling baseline dijalankan langsung terhadap data itu.
+
+**Revisi saat implementasi** (Checkpoint 5): algoritma **TIDAK** persis Keputusan #6 — filter same-day-of-week DIHAPUS untuk metrik ini. Durasi sensor tidak punya pola mingguan yang berarti (beda dari volume bisnis yang punya pola weekday/weekend nyata) — mempertahankan filter itu cuma memperlambat kapan baseline terbentuk (butuh 3+ minggu data hari-yang-sama) tanpa manfaat. Baseline dihitung dari N run terakhir apa pun harinya (`SENSOR_WINDOW_RUNS=8`), konstanta lain (`MIN_HISTORY_POINTS=3`, sigma 2/3) tetap sama.
+
+**Bug ditemukan & diperbaiki**: `detect_ml_output_issues.py` awalnya pakai `datetime.date.today()` (local/naive) sementara `snapshot_ml_output_freshness.py` menulis `snapshot_date` berbasis UTC eksplisit — mismatch nyata terdeteksi saat testing lokal (timezone WIB/UTC+7): detector tidak pernah menemukan snapshot "hari ini" selama jendela ~7 jam tiap hari sebelum UTC berganti tanggal. Diperbaiki: detector diubah pakai UTC eksplisit juga, konsisten dengan writer. Tidak akan bermanifestasi di produksi (GitHub Actions runner sudah UTC) tapi tetap bug nyata untuk siapa pun yang testing lokal dari timezone non-UTC — diperbaiki supaya benar di kedua konteks, bukan cuma "kebetulan benar di GitHub Actions".
 
 ### 11. Alerts: extend `monitoring.alerts` existing
 
