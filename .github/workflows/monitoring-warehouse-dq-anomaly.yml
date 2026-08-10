@@ -1,0 +1,70 @@
+name: Monitoring Warehouse - DQ and Anomaly Detection
+
+# Milestone 6.3 -- menjalankan 3 mekanisme deteksi terjadwal harian:
+# (1) snapshot + deteksi anomali volume BigQuery (Output 2, KK2)
+# (2) deteksi row-count parity mismatch (Output 3, KK3, murni konsolidasi
+#     monitoring.reverse_etl_sync_log yang sudah ditulis sync.py)
+# (3) snapshot + deteksi freshness ml_output + sensor duration anomaly
+#     (Output 4, KK4)
+# Output 1 (KK1, capture hasil dbt test) TIDAK di sini -- itu built into
+# transform-mart-cleaned.yml/transform-mart-aggregated.yml sendiri (step baru,
+# lihat decisions.md Keputusan #1), bukan job terpisah.
+# Rujukan: milestones/6.3-monitoring-kesalahan-anomali-warehouse/decisions.md
+#
+# workflow_run listener ke "Reverse ETL Mart Aggregated to Serving PostgreSQL"
+# (titik 8, paling akhir dari 10 titik peta M6.1) -- memastikan seluruh data
+# hari itu sudah settle (extract -> transform x2 -> reverse ETL x2) sebelum
+# snapshot volume/parity/freshness dihitung. Murni observasional -- sync.py,
+# promote.py, wait_for_ml_output.py, mock_score.py TIDAK disentuh sama sekali.
+
+on:
+  workflow_run:
+    workflows: ["Reverse ETL Mart Aggregated to Serving PostgreSQL"]
+    types: [completed]
+  workflow_dispatch: {}
+
+jobs:
+  run-monitoring-warehouse-dq-anomaly:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write GCP service account key (warehouse-monitor-reader, dari GitHub Secret, tidak pernah disimpan permanen)
+        env:
+          GCP_KEY_JSON: ${{ secrets.GCP_WAREHOUSE_MONITOR_READER_KEY_JSON }}
+        run: printf '%s' "$GCP_KEY_JSON" > scripts/extract/gcp-warehouse-monitor-reader-key.json
+
+      - name: Write .env
+        run: |
+          echo "WAREHOUSE_MONITOR_READER_CREDENTIALS=scripts/extract/gcp-warehouse-monitor-reader-key.json" >> .env
+          echo "SUPABASE_DB_URL=${{ secrets.SUPABASE_DB_URL }}" >> .env
+
+      - name: Milestone 6.3 -- snapshot volume BigQuery (raw_production, mart_cleaned, mart_aggregated)
+        working-directory: scripts/monitoring_warehouse
+        run: python snapshot_warehouse_volume.py
+
+      - name: Milestone 6.3 -- deteksi anomali volume (KK2)
+        working-directory: scripts/monitoring_warehouse
+        run: python detect_volume_anomaly.py
+
+      - name: Milestone 6.3 -- deteksi row-count parity mismatch (KK3)
+        working-directory: scripts/monitoring_warehouse
+        run: python detect_parity_mismatch.py
+
+      - name: Milestone 6.3 -- snapshot freshness ml_output
+        working-directory: scripts/monitoring_warehouse
+        run: python snapshot_ml_output_freshness.py
+
+      - name: Milestone 6.3 -- deteksi freshness delay + sensor duration anomaly (KK4)
+        working-directory: scripts/monitoring_warehouse
+        run: python detect_ml_output_issues.py
