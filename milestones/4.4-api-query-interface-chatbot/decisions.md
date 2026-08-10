@@ -101,7 +101,7 @@ Setelah lolos otorisasi #3, API connect pakai kredensial domain yang sesuai (`RE
 **✅ Checkpoint 4** — commit + log.
 
 ### Fase 5 — `own_property` end-to-end
-10. Tes eksplisit: role `own_property` (Front Office Staff) dengan `employee_id` sungguhan → hasil difilter ke `property_id` karyawan itu; percobaan menyisipkan `property_id` lain di request diabaikan/di-override. Role `all_properties` (Corporate Revenue Director) → bebas filter properti apa pun. — M
+10. Tes eksplisit: role `own_property` (Front Office Staff) dengan `employee_id` sungguhan → hasil difilter ke `property_id` karyawan itu; percobaan menyisipkan `property_id` lain di request diabaikan/di-override. Role `all_properties` (Corporate Revenue Director) → bebas filter properti apa pun. — M — **Selesai**
 
 **✅ Checkpoint 5** — commit + log.
 
