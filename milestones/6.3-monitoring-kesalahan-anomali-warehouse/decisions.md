@@ -2,7 +2,7 @@
 
 **Source:** `docs/03-implementation-plans/06-monitoring-warehouse-serving-fase2.md`, baris 86-105.
 **Prasyarat:** Milestone 6.1 (Completed, peta 10 titik) dan 6.2 (Completed, `monitoring.pipeline_run_log`/`pipeline_run_status`).
-**Status:** In Progress
+**Status:** Done
 **Date started:** 2026-08-11
 
 ## Contract (from source doc)
@@ -35,7 +35,7 @@ Milestone terbesar di keluarga 6.x sejauh ini, dan pertama yang menyentuh file t
 - [x] **Checkpoint 3** — Output 2 (KK2): `snapshot_warehouse_volume.py` + `detect_volume_anomaly.py` + uji coba terkontrol 2 tabel — Verified: 123 tabel di-snapshot (23+23+77), 2 alert critical benar (mart_cleaned & mart_aggregated, masing-masing tabel teridentifikasi tepat), data sintetis dibersihkan — M
 - [x] **Checkpoint 4** — Output 3 (KK3): `detect_parity_mismatch.py` + uji coba terkontrol — Verified: 1 mismatch sintetis terdeteksi tepat, run non-simulasi tetap 0 (isolasi terbukti) — S
 - [x] **Checkpoint 5** — Output 4 (KK4): `snapshot_ml_output_freshness.py` + `detect_ml_output_issues.py` + uji coba terkontrol — Verified: freshness delay (lag=150h) dan sensor duration anomaly (z=63) keduanya terdeteksi tepat dengan detail eksplisit (bukan "sensor gagal" generik) — M
-- [ ] **Checkpoint 6** — Workflow terjadwal + `simulate_test.py` + dokumentasi + `report.md` — M
+- [x] **Checkpoint 6** — Workflow terjadwal + `simulate_test.py` + dokumentasi + `report.md` — Verified: workflow baru terpicu otomatis nyata (skip benar saat upstream gagal, jalan penuh saat dispatch manual), simulate_test.py 5/5 PASS, peta M6.1 + keputusan-tertunda.md diperbarui — M
 
 ## Technical Decisions
 
