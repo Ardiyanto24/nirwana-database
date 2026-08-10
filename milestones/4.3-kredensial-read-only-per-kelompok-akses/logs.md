@@ -23,3 +23,7 @@ Result: worked. hr: 12/12 check OK (2 allow, 9 deny, 1 write). financial: 8/8 ch
 ## 2026-08-10 -- Fase 4: 4 domain granular roles
 Did: `role_config_properties_ref.py`/`role_config_employees_directory.py` (1 GRANT_TARGETS masing-masing). `role_config_guests_pii.py`/`role_config_guests_profile.py` (1 GRANT_TARGETS masing-masing: guests_contact_view/guests_profile_view), dengan deny-check krusial di kedua arah: role guests_pii tidak boleh baca guests_profile_view, role guests_profile tidak boleh baca guests_contact_view -- membuktikan pemisahan kolom PII vs profile M4.2 benar-benar tertegakkan di level kredensial, bukan cuma di level view.
 Result: worked. Keempat role lolos seluruh check, termasuk kedua uji silang guests_pii<->guests_profile.
+
+## 2026-08-10 -- Fase 5: finalisasi
+Did: `python setup_chatbot_roles.py --all` -- re-run end-to-end seluruh 10 role sekaligus (password ikut dirotasi, idempoten). 2 dari 10 role (reservation, spa_event) sempat butuh 1x retry warm-up pooler (temuan sama M3.5), sisanya langsung sukses. Tulis `docs/09-serving-ai-chatbot/kredensial-chatbot.md` (10 role, bukti isolasi, temuan operasional). Update `docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md` (10 baris inventaris + bagian Siapa Boleh Memegang). Verifikasi ulang KK1-KK2, tulis `report.md`.
+Result: worked. 10/10 role set up and verified successfully (output akhir setup_chatbot_roles.py --all). Kedua Kriteria Keberhasilan sumber terpenuhi dengan bukti eksplisit per role.

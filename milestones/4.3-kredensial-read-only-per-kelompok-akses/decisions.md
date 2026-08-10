@@ -2,7 +2,7 @@
 
 **Sumber:** `docs/03-implementation-plans/05-serving-ai-chatbot.md`, Milestone 4.3 (baris 89-103).
 **Prasyarat:** Milestone 4.1 (pemetaan RBAC, Completed), Milestone 4.2 (67 view `chatbot_views`, Completed).
-**Status:** In Progress
+**Status:** Completed
 **Date started:** 2026-08-10
 
 ## Lingkup Sumber / Contract
@@ -96,7 +96,7 @@ Update `docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md` (10 baris
 **✅ Checkpoint 4** — commit + log.
 
 ### Fase 5 — Finalisasi
-10. `setup_chatbot_roles.py --all` dijalankan end-to-end, verifikasi ulang 10 role sekaligus.
-11. Update `kebijakan-akses-kredensial-scoped.md`, tulis `docs/09-serving-ai-chatbot/kredensial-chatbot.md`, verifikasi ulang KK1-KK2, tulis `report.md` — M
+10. `setup_chatbot_roles.py --all` dijalankan end-to-end, verifikasi ulang 10 role sekaligus. — **Selesai**
+11. Update `kebijakan-akses-kredensial-scoped.md`, tulis `docs/09-serving-ai-chatbot/kredensial-chatbot.md`, verifikasi ulang KK1-KK2, tulis `report.md` — M — **Selesai**
 
 **✅ Checkpoint 5 (final)** — commit; tanya user sebelum push.
