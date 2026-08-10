@@ -68,8 +68,8 @@ Sama alasan M3.2 — murni authoring/apply DDL sekali jalan, bukan operasi haria
 **✅ Checkpoint 1** — commit + log.
 
 ### Fase 2 — Facility + Spa & Event
-4. `views_facility.sql` (9 view agregat, termasuk `sla_status` reuse logic M3.2 + `v_lookup_rooms`, `v_lookup_housekeeping_log`, `v_lookup_maintenance_tickets`) + apply + verifikasi — M
-5. `views_spa_event.sql` (6 view agregat + `v_lookup_spa_bookings`, `v_lookup_event_bookings`, `v_lookup_venues`) + apply + verifikasi — M
+4. `views_facility.sql` (9 view agregat, termasuk `sla_status` reuse logic M3.2 + `v_lookup_rooms`, `v_lookup_housekeeping_log`, `v_lookup_maintenance_tickets`) + apply + verifikasi — M — **Selesai**
+5. `views_spa_event.sql` (6 view agregat + `v_lookup_spa_bookings`, `v_lookup_event_bookings`, `v_lookup_venues`) + apply + verifikasi — M — **Selesai**
 
 **✅ Checkpoint 2** — commit + log.
 
