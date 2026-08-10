@@ -126,5 +126,82 @@ ALTER TABLE monitoring.alerts DROP CONSTRAINT IF EXISTS alerts_alert_type_check;
 ALTER TABLE monitoring.alerts ADD CONSTRAINT alerts_alert_type_check
     CHECK (alert_type IN (
         'volume_anomaly', 'freshness_delay', 'dq_test_failure', 'dirty_proportion_drift', 'value_anomaly',
-        'dbt_test_failure', 'warehouse_volume_anomaly', 'reverse_etl_mismatch', 'ml_output_freshness_delay'
+        'dbt_test_failure', 'warehouse_volume_anomaly', 'reverse_etl_mismatch', 'ml_output_freshness_delay',
+        'ml_output_incomplete_scoring'
     ));
+
+-- Milestone 6.4 — Monitoring Data Drift Feedback Loop ML
+-- Perluasan lanjutan schema monitoring bersama, additive only.
+-- Rujukan: milestones/6.4-monitoring-drift-feedback-loop-ml/decisions.md
+
+-- Output 1 (KK1): model staleness -- INFORMATIONAL ONLY, TIDAK ada alert
+-- (Keputusan: model_version cuma 1 nilai statis di data mock, tidak ada
+-- cadence retrain sungguhan untuk dikalibrasi jadi threshold defensible).
+-- Snapshot per (model_name, model_version): kapan pertama & terakhir muncul,
+-- berapa baris total -- diulang tiap hari job jalan (idempotent per hari).
+CREATE TABLE IF NOT EXISTS monitoring.ml_model_version_snapshot (
+    id                BIGSERIAL PRIMARY KEY,
+    model_name        TEXT NOT NULL,
+    model_version     TEXT NOT NULL,
+    snapshot_date     DATE NOT NULL,
+    first_scored_at   TIMESTAMPTZ NOT NULL,
+    last_scored_at    TIMESTAMPTZ NOT NULL,
+    row_count_total   INTEGER NOT NULL,
+    captured_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (model_name, model_version, snapshot_date)
+);
+
+CREATE OR REPLACE VIEW monitoring.ml_model_staleness_status AS
+SELECT DISTINCT ON (model_name, model_version)
+    model_name,
+    model_version,
+    snapshot_date,
+    first_scored_at,
+    last_scored_at,
+    row_count_total,
+    EXTRACT(DAY FROM (now() - first_scored_at))::INTEGER AS days_since_first_scored,
+    (last_scored_at = MAX(last_scored_at) OVER (PARTITION BY model_name)) AS is_most_recently_active
+FROM monitoring.ml_model_version_snapshot
+ORDER BY model_name, model_version, snapshot_date DESC;
+
+-- Output 2 (KK2): validasi kelengkapan ml_output vs populasi entity
+-- mart_aggregated.fact_revenue_room_type_daily (BUKAN mart_cleaned langsung
+-- -- lihat decisions.md, entity_id ml_output cuma cocok dengan room_type_id
+-- surrogate key mart_aggregated). Satu-satunya dari 3 mekanisme M6.4 yang
+-- push ke monitoring.alerts -- "ada entity hilang" adalah temuan biner
+-- berbasis evidence, bukan threshold tebakan.
+CREATE TABLE IF NOT EXISTS monitoring.ml_output_completeness_snapshot (
+    id                     BIGSERIAL PRIMARY KEY,
+    snapshot_date          DATE NOT NULL,
+    feature_snapshot_at    TIMESTAMPTZ NOT NULL,
+    expected_entity_count  INTEGER NOT NULL,
+    scored_entity_count    INTEGER NOT NULL,
+    missing_entity_count   INTEGER NOT NULL,
+    captured_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (snapshot_date, feature_snapshot_at)
+);
+
+CREATE TABLE IF NOT EXISTS monitoring.ml_output_missing_entity (
+    id                   BIGSERIAL PRIMARY KEY,
+    feature_snapshot_at  TIMESTAMPTZ NOT NULL,
+    property_id          TEXT NOT NULL,
+    room_type_id         INTEGER NOT NULL,
+    detected_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (feature_snapshot_at, property_id, room_type_id)
+);
+
+-- Output 3 (KK3): canary drift -- deteksi EKSISTENSI dataset drift, nol
+-- asumsi skema kolom (Keputusan: tidak ada data drift apa pun tersedia,
+-- menebak skema berisiko salah total). Murni informational, tidak push ke
+-- monitoring.alerts (severity CHECK cuma warning/critical, tidak ada level
+-- info -- lihat decisions.md).
+CREATE TABLE IF NOT EXISTS monitoring.ml_drift_data_availability_check (
+    id             BIGSERIAL PRIMARY KEY,
+    checked_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    dataset_found  BOOLEAN NOT NULL,
+    dataset_name   TEXT,
+    project_id     TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ml_drift_check_lookup
+    ON monitoring.ml_drift_data_availability_check (checked_at DESC);
