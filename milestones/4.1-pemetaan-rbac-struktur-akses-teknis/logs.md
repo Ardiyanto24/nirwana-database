@@ -1,0 +1,17 @@
+# Milestone 4.1 — Execution Log
+
+## 2026-08-10 -- Mulai, riset & verifikasi sumber RBAC
+Did: Baca `docs/03-implementation-plans/05-serving-ai-chatbot.md` (Milestone 4.1-4.6), `rancangan-rbac-ai-chatbot.md`, ketiga dokumen persona (`pemetaan-kebutuhan-chatbot-layer-staff/manager/korporat.md`), `DataSchema-mart-aggregated.md`, `pemetaan-pola-akses-analyst.md` (M3.1, referensi pola). Query langsung `corporate_master.role_permissions` di production (`scripts/monitoring/db.py`) untuk verifikasi apakah sudah sinkron dengan Bagian 2 `rancangan-rbac-ai-chatbot.md`.
+Result: worked. 77 baris, 20 `role_title` (CEO s.d. HR Staff), 10 `data_domain` (`employees_directory` 13, `facility` 7, `financial` 6, `fnb` 5, `guests_pii` 8, `guests_profile` 4, `hr` 5, `properties_ref` 14, `reservation` 10, `spa_event` 5) — persis cocok rancangan. Kolom tabel: `role_title`, `data_domain`, `access_scope`, `permission_type`.
+
+## 2026-08-10 -- Ditemukan 2 gap material, dibahas dengan user
+Did: Audit silang dokumen persona vs `DataSchema-mart-aggregated.md` menemukan (1) `guests_pii`/`guests_profile` tidak ada datanya sama sekali di `mart_aggregated` (audit PII M5.2: 0 kolom PII individual di 46 fact + 27 dim table), dan (2) gap lebih besar — mayoritas kebutuhan layer Staff (7/20 persona) adalah lookup row-level yang secara struktural tidak pernah ada di `mart_aggregated` (star schema teragregasi by design), hanya ada di `mart_cleaned`, yang tadinya di luar boundary Lapis 2. Kedua gap diajukan ke user via `AskUserQuestion`.
+Result: User memutuskan perluas boundary Lapis 2 ke tabel `mart_cleaned` terpilih (bukan seluruh `mart_cleaned`) — keputusan ini otomatis menyelesaikan gap #1 juga. Lihat `decisions.md` Keputusan #1-2.
+
+## 2026-08-10 -- Koreksi proses (2x), sebelum eksekusi
+Did: Draft awal sempat mengusulkan (a) memutuskan revisi arsitektur sebagai task rutin tanpa proses formal, lalu (b) ADR bernomor `docs/decisions/0001-...`. User mengoreksi keduanya: perubahan platform-wide harus lewat pertimbangan eksplisit dulu (bukan langsung ditambal), TAPI project ini juga tidak punya konvensi ADR bernomor terpisah — dicek ulang ke `milestones/3.6-.../decisions.md` (milestone terakhir sebelum ini), polanya konsisten: keputusan besar dicatat langsung di `decisions.md` milestone yang menemukannya, dokumen lain diupdate dengan catatan inline yang merujuk balik (pola sama "Koreksi M5.7" di `DataSchema-mart-aggregated.md`).
+Result: Plan direvisi mengikuti gaya `decisions.md` M3.6 (Sumber/Prasyarat/Status -> Lingkup Sumber/Contract -> Temuan Eksplorasi -> Keputusan via AskUserQuestion -> Keputusan Teknis -> Task Breakdown per Fase+Checkpoint). Disetujui user, plan mode exited.
+
+## 2026-08-10 -- Fase 0: update dokumen arsitektur terdampak
+Did: Update `docs/01-architecture/rancangan-arsitektur-data-platform-elt.md` §8.1 (tabel Peta Akses Final) dan §8.2 (tabel Lapis 1/Lapis 2) dengan catatan blockquote "Revisi Milestone 4.1" yang menjelaskan boundary baru dan merujuk balik ke `decisions.md` ini. Update `docs/03-implementation-plans/05-serving-ai-chatbot.md` di 4 titik: tabel Lapis 1/Lapis 2 (Batas Tanggung Jawab), Milestone 4.3 Lingkup/Output/Kriteria Keberhasilan, Milestone 4.4 Kriteria Keberhasilan — seluruhnya konsisten menyebut "mart_aggregated + tabel mart_cleaned yang dipetakan Milestone 4.1", bukan lagi "mart_aggregated SAJA".
+Result: worked. Kedua file terverifikasi tidak ada sisa kalimat lama yang kontradiktif (dicek ulang dengan grep `mart_cleaned` di `05-serving-ai-chatbot.md`).

@@ -28,11 +28,13 @@ Sistem RBAC AI Chatbot terdiri dari dua lapis dengan pemilik berbeda:
 | Lapis | Lokasi | Fungsi | Pemilik |
 |---|---|---|---|
 | **Lapis 1** | Application layer (sistem chatbot) | Validasi intent/prompt terhadap role pengguna sebelum query dieksekusi | **Di luar cakupan pekerjaan ini** — domain sistem AI Chatbot |
-| **Lapis 2** | Database/infrastructure layer | Kredensial chatbot secara teknis hanya memiliki privilese `SELECT` ke `mart_aggregated` — tidak ada jalur ke `mart_cleaned`, `raw_production`, atau production | **Cakupan pekerjaan ini** |
+| **Lapis 2** | Database/infrastructure layer | Kredensial chatbot secara teknis hanya memiliki privilese `SELECT` ke `mart_aggregated` **dan tabel `mart_cleaned` terpilih** (lihat catatan revisi di bawah) — tidak ada jalur ke tabel `mart_cleaned` di luar yang dipetakan eksplisit, ke `raw_production`, atau ke production | **Cakupan pekerjaan ini** |
+
+> **Revisi Milestone 4.1** (`milestones/4.1-pemetaan-rbac-struktur-akses-teknis/decisions.md`): boundary Lapis 2 di atas awalnya hanya `mart_aggregated`. Saat memetakan kebutuhan 20 persona (Milestone 4.1), ditemukan mayoritas kebutuhan layer Staff (7 dari 20 persona) — mis. "detail satu booking spesifik", "status kamar tertentu saat ini", "kontak tamu untuk konfirmasi booking" — adalah lookup row-level yang secara struktural tidak pernah ada di `mart_aggregated` (star schema teragregasi by design, dikonfirmasi `DataSchema-mart-aggregated.md` §Audit PII: 0 kolom PII individual di seluruh 46 fact + 27 dimension table). Data itu hanya ada di `mart_cleaned`. Boundary direvisi: kredensial chatbot menjangkau `mart_aggregated` (agregat/tren) **dan** sejumlah tabel `mart_cleaned` yang dipetakan eksplisit di Milestone 4.1 (bukan seluruh `mart_cleaned`) — tetap read-only, tetap tidak pernah menyentuh `raw_production`. Ini juga membuat kebutuhan `guests_pii`/`guests_profile` (lihat Bagian "Konteks: Skala RBAC" di bawah) terpenuhi langsung dari `mart_cleaned.guests` row-level, tanpa perlu skema baru di `mart_aggregated`. Lihat juga `docs/01-architecture/rancangan-arsitektur-data-platform-elt.md` §8.1-8.2 untuk revisi yang sama di dokumen arsitektur induk.
 
 Prinsip *defense in depth* yang mendasari pembagian ini: jika Lapis 1 gagal (bug logika validasi, upaya prompt injection, dsb), Lapis 2 tetap berfungsi sebagai pengaman akhir yang murni teknis dan tidak bergantung pada benar-tidaknya application logic pihak chatbot. Karena itu, **pekerjaan ini tidak boleh mengasumsikan Lapis 1 selalu benar** — setiap desain akses di sini perlu tetap aman meskipun Lapis 1 diasumsikan bisa saja gagal.
 
-Konsekuensi arsitektural yang menguntungkan: karena chatbot terhubung ke PostgreSQL (bukan BigQuery) dan `mart_aggregated` adalah satu-satunya data yang bisa dijangkau, chatbot **tidak akan pernah** bisa "nyasar" ke BigQuery atau ke `mart_cleaned` — secara arsitektural jalur itu memang tidak pernah ada, bukan sekadar diblokir oleh permission.
+Konsekuensi arsitektural: karena chatbot terhubung ke PostgreSQL (bukan BigQuery), chatbot **tidak akan pernah** bisa "nyasar" ke BigQuery — secara arsitektural jalur itu memang tidak pernah ada, bukan sekadar diblokir oleh permission. Isolasi ke `raw_production` juga tetap mutlak (kredensial chatbot tidak pernah dibuat dengan akses ke sana). Isolasi ke `mart_cleaned` sekarang bersifat parsial (tabel terpilih, bukan seluruh dataset) mengikuti revisi Milestone 4.1 di atas — bukan lagi isolasi total seperti rancangan semula.
 
 ---
 
@@ -87,18 +89,18 @@ Ini implementasi inti dari RBAC lapis kedua — dipisah dari Milestone 4.1 (desa
 ## Milestone 4.3 — Kredensial Read-Only Per Kelompok Akses
 
 ### Lingkup
-Mengonfigurasi kredensial database read-only untuk chatbot, dengan privilese `SELECT` yang **secara teknis terbatas hanya ke `mart_aggregated`** — tidak ada jalur apa pun ke `mart_cleaned`, `raw_production`, atau production database asli. Ini adalah implementasi konkret dari Lapis 2 RBAC yang menjadi tanggung jawab pekerjaan ini.
+Mengonfigurasi kredensial database read-only untuk chatbot, dengan privilese `SELECT` yang **secara teknis terbatas hanya ke `mart_aggregated` dan tabel `mart_cleaned` yang dipetakan eksplisit di Milestone 4.1** (lihat catatan revisi boundary Lapis 2 di Bagian "Batas Tanggung Jawab" di atas) — tidak ada jalur ke tabel `mart_cleaned` di luar pemetaan itu, ke `raw_production`, atau ke production database asli. Ini adalah implementasi konkret dari Lapis 2 RBAC yang menjadi tanggung jawab pekerjaan ini, mengikuti pola kredensial yang sudah dibangun mandiri oleh milestone konsumen lain (`data-scientist-reader` M2.5, 7 role Data Analyst M3.5) — tidak melibatkan pemilik `mart_cleaned`/`mart_aggregated`, karena struktur/isi kedua mart tidak berubah, hanya bertambah 1 pemegang akses baca baru.
 
 ### Kenapa Ini Jadi Milestone Terpisah
 Ini titik paling kritis dari seluruh pekerjaan — kegagalan di sini berarti kegagalan seluruh prinsip *defense in depth* yang mendasari desain RBAC dua lapis. Layak berdiri sebagai unit kerja tersendiri yang divalidasi secara eksplisit dan ketat, terpisah dari pembangunan view (Milestone 4.2).
 
 ### Output
-- Kredensial/service account `chatbot-readonly` (atau setara) dengan privilese `SELECT` yang terbukti terbatas hanya ke `mart_aggregated`.
+- Kredensial/service account `chatbot-readonly` (atau setara, kemungkinan 1 kelompok akses per `data_domain` per hasil Milestone 4.1) dengan privilese `SELECT` yang terbukti terbatas hanya ke `mart_aggregated` dan tabel `mart_cleaned` yang dipetakan Milestone 4.1.
 - Dokumentasi eksplisit batasan kredensial ini sebagai referensi audit keamanan.
 
 ### Kriteria Keberhasilan
-- Kredensial chatbot terbukti **tidak bisa** mengakses `mart_cleaned`, `raw_production`, atau sistem production sama sekali saat diuji coba langsung (bukan diasumsikan aman).
-- Kredensial terbukti hanya bisa membaca (`SELECT`), tidak bisa menulis/mengubah data di `mart_aggregated`.
+- Kredensial chatbot terbukti **tidak bisa** mengakses tabel `mart_cleaned` di luar yang dipetakan Milestone 4.1, `raw_production`, atau sistem production sama sekali saat diuji coba langsung (bukan diasumsikan aman).
+- Kredensial terbukti hanya bisa membaca (`SELECT`), tidak bisa menulis/mengubah data di `mart_aggregated` maupun tabel `mart_cleaned` yang dijangkau.
 - Kredensial terbukti tidak bisa mengakses tabel `role_permissions_chatbot_v2` itu sendiri.
 
 ---
@@ -119,7 +121,7 @@ Ini titik integrasi dengan sistem eksternal (chatbot) yang berada di luar kendal
 ### Kriteria Keberhasilan
 - Untuk sampel beberapa persona dari masing-masing tingkat (Staff, Manager, Korporat), permintaan API menghasilkan data yang sesuai dengan cakupan akses role tersebut menurut `role_permissions_chatbot_v2`.
 - Permintaan yang mencoba mengakses domain di luar cakupan role (uji coba terkontrol) ditolak oleh API, bukan diteruskan ke database.
-- API terbukti tidak bisa dipakai untuk menjangkau `role_permissions_chatbot_v2`, `mart_cleaned`, maupun raw data dalam skenario apa pun.
+- API terbukti tidak bisa dipakai untuk menjangkau `role_permissions_chatbot_v2`, tabel `mart_cleaned` di luar yang dipetakan Milestone 4.1 (lihat revisi boundary Lapis 2), maupun raw data dalam skenario apa pun.
 
 ---
 

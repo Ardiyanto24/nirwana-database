@@ -317,7 +317,9 @@ Data Scientist tidak mengakses PostgreSQL sama sekali untuk kebutuhan training. 
 |---|---|---|
 | **Data Scientist** | BigQuery `mart_cleaned` (full history) | Butuh data granular dan kapasitas pemindaian data besar untuk training model |
 | **Data Analyst** | PostgreSQL `mart_cleaned` dan `mart_aggregated` (keduanya full history, cepat) + BigQuery langsung (via BI tool, untuk kebutuhan analitis lanjutan yang tidak tersedia di serving layer) | Butuh detail row-level penuh untuk analisis kuartalan/semesteran/tahunan, dengan performa akses yang cepat |
-| **AI Chatbot** | PostgreSQL `mart_aggregated` **SAJA** | Latensi rendah untuk percakapan; terisolasi total dari data granular/raw demi keamanan |
+| **AI Chatbot** | PostgreSQL `mart_aggregated` + sejumlah tabel `mart_cleaned` terpilih (lihat catatan revisi di bawah) | Latensi rendah untuk percakapan; terisolasi dari data granular/raw yang tidak relevan demi keamanan |
+
+> **Revisi Milestone 4.1** (`milestones/4.1-pemetaan-rbac-struktur-akses-teknis/decisions.md`): Baris "AI Chatbot" di atas awalnya menyatakan `mart_aggregated` **SAJA**. Pemetaan kebutuhan 20 persona menemukan mayoritas kebutuhan layer Staff (7 dari 20 persona) adalah lookup row-level (mis. detail satu booking, status satu kamar, kontak tamu untuk konfirmasi booking) yang secara struktural tidak pernah ada di `mart_aggregated` — data itu hanya ada di `mart_cleaned` (row-level by design, lihat §5.2/§7.2 dokumen ini dan `DataSchema-mart-aggregated.md` §Audit PII). Boundary direvisi: kredensial chatbot menjangkau `mart_aggregated` (agregat/tren) **dan** tabel `mart_cleaned` yang dipetakan eksplisit di Milestone 4.1 (bukan seluruh `mart_cleaned`) — tetap read-only, tetap tidak pernah menyentuh `raw_production`. Prinsip defense in depth di §8.2 tidak berubah, hanya cakupan tabel yang diizinkan Lapis 2 yang diperluas.
 
 ### 8.2 RBAC Dua Lapis untuk AI Chatbot
 
@@ -328,7 +330,7 @@ Mekanisme ini efektif sebagai lapis pertama, namun tidak dirancang untuk menjadi
 | Lapis | Lokasi | Fungsi |
 |---|---|---|
 | **Lapis 1** | Application layer (chatbot) | Validasi intent/prompt terhadap role pengguna sebelum query dieksekusi |
-| **Lapis 2** | Database/infrastructure layer | Service account chatbot secara teknis hanya memiliki privilese `SELECT` ke `mart_aggregated` di PostgreSQL — tidak ada jalur apa pun menuju `mart_cleaned`, `raw_production`, atau production database asli |
+| **Lapis 2** | Database/infrastructure layer | Service account chatbot secara teknis hanya memiliki privilese `SELECT` ke `mart_aggregated` **dan tabel `mart_cleaned` terpilih** (direvisi Milestone 4.1, lihat catatan di §8.1) di PostgreSQL — tidak ada jalur apa pun menuju `mart_cleaned` di luar tabel yang dipetakan eksplisit, `raw_production`, atau production database asli |
 
 > **Mengapa dua lapis:** Jika lapis pertama gagal — misalnya karena bug pada logika validasi atau upaya prompt injection — lapis kedua tetap berfungsi sebagai pengaman akhir yang murni bersifat teknis dan tidak bergantung pada benar-tidaknya application logic.
 
