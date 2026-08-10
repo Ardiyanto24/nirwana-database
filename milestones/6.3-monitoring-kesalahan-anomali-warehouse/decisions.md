@@ -31,7 +31,7 @@ Milestone terbesar di keluarga 6.x sejauh ini, dan pertama yang menyentuh file t
 6 checkpoint, commit tiap checkpoint.
 
 - [x] **Checkpoint 1** — `decisions.md` + kredensial `warehouse-monitor-reader` + extend `schema.sql` — Acceptance: kredensial isolasi terbukti, schema live — Verify: `verify_dataset_isolation.py` 5/5 OK, `information_schema` — M
-- [ ] **Checkpoint 2** — Output 1 (KK1): `capture_dbt_test_results.py` + step baru 2 workflow YAML + fault-injection nyata — S/M
+- [x] **Checkpoint 2** — Output 1 (KK1): `capture_dbt_test_results.py` + step baru 2 workflow YAML + fault-injection nyata — Verified: run 31436680183, 1/37 fail tertangkap tepat sesuai injeksi — S/M
 - [ ] **Checkpoint 3** — Output 2 (KK2): `snapshot_warehouse_volume.py` + `detect_volume_anomaly.py` + uji coba terkontrol 2 tabel — M
 - [ ] **Checkpoint 4** — Output 3 (KK3): `detect_parity_mismatch.py` + uji coba terkontrol — S
 - [ ] **Checkpoint 5** — Output 4 (KK4): `snapshot_ml_output_freshness.py` + `detect_ml_output_issues.py` + uji coba terkontrol — M
