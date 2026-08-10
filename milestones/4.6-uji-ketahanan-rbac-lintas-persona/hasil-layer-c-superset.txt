@@ -1,0 +1,46 @@
+--- Staff -> Manager (7 pasang) ---
+  [OK] F&B Staff {'fnb'} subset-of F&B Manager {'fnb', 'reservation', 'employees_directory', 'properties_ref'}
+  [OK] Finance Staff {'employees_directory', 'financial'} subset-of Finance Manager {'employees_directory', 'reservation', 'financial', 'properties_ref'}
+  [OK] Housekeeping Staff {'facility'} subset-of Housekeeping Manager {'employees_directory', 'reservation', 'facility', 'properties_ref'}
+  [OK] HR Staff {'employees_directory', 'hr'} subset-of HR Manager {'employees_directory', 'hr', 'properties_ref'}
+  [OK] Maintenance Staff {'facility'} subset-of Maintenance Manager {'employees_directory', 'facility', 'properties_ref'}
+  [OK] Spa & Event Staff {'guests_pii', 'spa_event'} subset-of Spa & Event Manager {'employees_directory', 'guests_pii', 'spa_event', 'properties_ref'}
+  [OK] Front Office Staff {'reservation', 'guests_pii', 'properties_ref'} subset-of Revenue Manager {'guests_profile', 'reservation', 'guests_pii', 'properties_ref'}
+--- Manager -> Corporate Director (7 pasang) ---
+  [OK] F&B Manager {'fnb', 'reservation', 'employees_directory', 'properties_ref'} subset-of Corporate Operations Director {'reservation', 'facility', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Housekeeping Manager {'employees_directory', 'reservation', 'facility', 'properties_ref'} subset-of Corporate Operations Director {'reservation', 'facility', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Maintenance Manager {'employees_directory', 'facility', 'properties_ref'} subset-of Corporate Operations Director {'reservation', 'facility', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Spa & Event Manager {'employees_directory', 'guests_pii', 'spa_event', 'properties_ref'} subset-of Corporate Operations Director {'reservation', 'facility', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Finance Manager {'employees_directory', 'reservation', 'financial', 'properties_ref'} subset-of Corporate Finance Director {'employees_directory', 'reservation', 'financial', 'properties_ref'}
+  [OK] HR Manager {'employees_directory', 'hr', 'properties_ref'} subset-of Corporate HR Director {'employees_directory', 'hr', 'properties_ref'}
+  [OK] Revenue Manager {'guests_profile', 'reservation', 'guests_pii', 'properties_ref'} subset-of Corporate Revenue Director {'guests_profile', 'reservation', 'financial', 'guests_pii', 'properties_ref'}
+--- Manager -> General Manager (7 pasang) ---
+  [OK] F&B Manager {'fnb', 'reservation', 'employees_directory', 'properties_ref'} subset-of General Manager {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Finance Manager {'employees_directory', 'reservation', 'financial', 'properties_ref'} subset-of General Manager {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Housekeeping Manager {'employees_directory', 'reservation', 'facility', 'properties_ref'} subset-of General Manager {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] HR Manager {'employees_directory', 'hr', 'properties_ref'} subset-of General Manager {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Maintenance Manager {'employees_directory', 'facility', 'properties_ref'} subset-of General Manager {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Revenue Manager {'guests_profile', 'reservation', 'guests_pii', 'properties_ref'} subset-of General Manager {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Spa & Event Manager {'employees_directory', 'guests_pii', 'spa_event', 'properties_ref'} subset-of General Manager {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+--- Seluruh peran -> CEO (19 pasang) ---
+  [OK] Corporate Finance Director {'employees_directory', 'reservation', 'financial', 'properties_ref'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Corporate HR Director {'employees_directory', 'hr', 'properties_ref'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Corporate Operations Director {'reservation', 'facility', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Corporate Revenue Director {'guests_profile', 'reservation', 'financial', 'guests_pii', 'properties_ref'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] General Manager {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Revenue Manager {'guests_profile', 'reservation', 'guests_pii', 'properties_ref'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] F&B Manager {'fnb', 'reservation', 'employees_directory', 'properties_ref'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Finance Manager {'employees_directory', 'reservation', 'financial', 'properties_ref'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Housekeeping Manager {'employees_directory', 'reservation', 'facility', 'properties_ref'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] HR Manager {'employees_directory', 'hr', 'properties_ref'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Maintenance Manager {'employees_directory', 'facility', 'properties_ref'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Spa & Event Manager {'employees_directory', 'guests_pii', 'spa_event', 'properties_ref'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Front Office Staff {'reservation', 'guests_pii', 'properties_ref'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] F&B Staff {'fnb'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Finance Staff {'employees_directory', 'financial'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Housekeeping Staff {'facility'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] HR Staff {'employees_directory', 'hr'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Maintenance Staff {'facility'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+  [OK] Spa & Event Staff {'guests_pii', 'spa_event'} subset-of CEO {'guests_profile', 'reservation', 'facility', 'financial', 'hr', 'spa_event', 'guests_pii', 'properties_ref', 'fnb', 'employees_directory'}
+
+40/40 pasang superset valid.

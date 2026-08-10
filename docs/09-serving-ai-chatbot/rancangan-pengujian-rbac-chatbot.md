@@ -125,11 +125,11 @@ Dihitung sebagai **set-containment** murni atas domain yang benar-benar ALLOW pe
 2. `scripts/chatbot_rbac_test/run_access_matrix.py` — loop 200 kombinasi (Layer A), request via view representatif per domain (tabel di atas), `employee_id` A dipakai otomatis untuk setiap sel `OP` yang diharapkan. Bandingkan HTTP status aktual (200/403) terhadap tabel ekspektasi. Cetak + simpan hasil lengkap.
 3. Kalau ada mismatch: investigasi akar penyebab (bug RBAC nyata vs kesalahan skrip uji itu sendiri), perbaiki, jalankan ulang sampai 200/200 cocok.
 4. `scripts/chatbot_rbac_test/run_property_override_sample.py` — Layer B, 15×2 = 30 panggilan.
-5. Analisis Layer C dari hasil Layer A tersimpan (tanpa panggilan baru) — assert 1+7+7+19 = 34 pasang set-containment.
+5. Analisis Layer C dari hasil Layer A tersimpan (tanpa panggilan baru) — assert 7+7+7+19 = 40 pasang set-containment.
 6. Seluruh hasil dicatat di `milestones/4.6-uji-ketahanan-rbac-lintas-persona/logs.md`, diringkas di `report.md`.
 
 ## Kriteria Lulus
 
 - Layer A: 200/200 sel cocok ekspektasi (0 kebocoran, 0 akses hilang) — atau seluruh mismatch yang ditemukan sudah diperbaiki dan diverifikasi ulang sebelum milestone ditutup.
 - Layer B: 15/15 kombinasi menunjukkan override konsisten (P02 diabaikan saat `employee_id` A, P02 muncul benar saat `employee_id` B).
-- Layer C: 34/34 pasang set-containment valid.
+- Layer C: 40/40 pasang set-containment valid.

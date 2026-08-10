@@ -27,7 +27,7 @@
 2. **Ground truth: query langsung `mart_cleaned.role_permissions`** via `scripts/chatbot_credentials/connections.py::get_serving_connection` (admin, read-only) — bukan lewat `chatbot_authz_reader` (kredensial itu murni untuk API produksi, M4.5 menegaskan "tidak pernah diteruskan sebagai response endpoint apa pun"; tooling uji eksternal beda konteks, boleh baca langsung).
 3. **`employee_id` tetap per property untuk seluruh uji `own_property`** — lihat Temuan Eksplorasi di atas.
 4. **Layer B spot-check (~15), bukan exhaustive 48** — mekanisme override domain-agnostic, sudah terbukti berulang M4.4/M4.5.
-5. **Layer C dihitung dari hasil Layer A nyata, tanpa panggilan tambahan** — 4 rantai, 34 pasang set-containment total.
+5. **Layer C dihitung dari hasil Layer A nyata, tanpa panggilan tambahan** — 4 rantai, 40 pasang set-containment total (7+7+7+19, dikoreksi dari draft awal "34" — salah hitung, lihat Temuan Implementasi Checkpoint 3).
 6. **Dokumen rancangan pengujian terpisah, ditulis sebelum eksekusi** — `docs/09-serving-ai-chatbot/rancangan-pengujian-rbac-chatbot.md` (diminta eksplisit user), memuat matriks 200 sel lengkap, pemetaan view, data uji, definisi superset, prosedur, kriteria lulus.
 7. **Temuan ditangani seperti pola M4.4** — mismatch nyata = bug RBAC, diperbaiki sebelum ditutup. Independensi `role_title`/`employee_id` didokumentasikan sebagai fakta desain (bukan gap), mengikuti pola investigasi M4.4 (`guests_pii`/`guests_profile`).
 
@@ -50,8 +50,14 @@
 **✅ Checkpoint 2** — KK1 (lapisan keputusan akses) terpenuhi penuh untuk seluruh 20 persona.
 
 ### Checkpoint 3 — Layer B + C (KK1 kedalaman + KK2)
-5. `run_property_override_sample.py` — 15×2 kombinasi.
-6. Analisis superset 34 pasang dari hasil Layer A.
+5. `run_property_override_sample.py` — 15×2 kombinasi. — **Selesai**, 15/15 OK (0 inconclusive).
+6. Analisis superset 40 pasang dari hasil Layer A. — **Selesai**, 40/40 valid.
+
+**✅ Checkpoint 3** — KK1 (kedalaman mekanisme) dan KK2 (superset) sama-sama terpenuhi.
+
+## Temuan Implementasi (Checkpoint 3)
+
+- **Salah hitung jumlah pasang Layer C di draft rancangan** (`decisions.md`/`rancangan-pengujian-rbac-chatbot.md` versi Checkpoint 0): ditulis "1+7+7+19 = 34 pasang", padahal rantai #1 (Staff→Manager) sendiri berisi 7 pasang, bukan 1 — total sebenarnya 7+7+7+19 = **40**. Ditemukan saat `analyze_superset.py` mencetak "40/40 pasang superset valid" (tidak cocok ekspektasi tertulis 34) — bukan bug logic, murni typo aritmatika saat menulis rancangan. Kedua dokumen dikoreksi ke 40.
 
 ### Checkpoint 4 (final) — Temuan + Penutupan
 7. Dokumentasikan temuan independensi `role_title`/`employee_id`.
