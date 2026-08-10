@@ -92,6 +92,14 @@ jobs:
       - name: Milestone 5.3/5.4 -- build->test->swap gate, 76 tabel existing (WAJIB, tag ml_feedback_loop dikecualikan)
         run: python scripts/mart_aggregated/promote.py --select mart_aggregated --exclude tag:ml_feedback_loop
 
+      - name: Milestone 6.3 -- capture hasil dbt test 76 tabel existing ke monitoring.dbt_test_result
+        if: always()
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          echo "SUPABASE_DB_URL=$SUPABASE_DB_URL" >> .env
+          python scripts/monitoring_warehouse/capture_dbt_test_results.py --layer mart_aggregated
+
       - name: Milestone 5.4 -- sensor, tunggu ml_output.predictions (30x/120 detik, ~60 menit)
         id: sensor
         continue-on-error: true
@@ -102,9 +110,18 @@ jobs:
           --interval-seconds "${{ github.event.inputs.sensor_interval_seconds || '120' }}"
 
       - name: Milestone 5.4 -- build->test->swap gate, 1 tabel ML (best-effort, cuma kalau sensor sukses)
+        id: promote_ml
         if: steps.sensor.outcome == 'success'
         continue-on-error: true
         run: python scripts/mart_aggregated/promote.py --select tag:ml_feedback_loop
+
+      - name: Milestone 6.3 -- capture hasil dbt test tag:ml_feedback_loop ke monitoring.dbt_test_result
+        if: steps.sensor.outcome == 'success'
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          echo "SUPABASE_DB_URL=$SUPABASE_DB_URL" >> .env
+          python scripts/monitoring_warehouse/capture_dbt_test_results.py --layer mart_aggregated
 
       - name: Milestone 5.4 -- log skip kalau sensor timeout (mart_aggregated tetap sukses tanpa ML, KK3)
         if: steps.sensor.outcome != 'success'

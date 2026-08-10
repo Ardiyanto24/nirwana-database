@@ -73,5 +73,13 @@ jobs:
       - name: Milestone 2.3 -- build->test->swap gate ke mart_cleaned (scripts/mart_cleaned/promote.py)
         run: python scripts/mart_cleaned/promote.py --select mart_cleaned
 
+      - name: Milestone 6.3 -- capture hasil dbt test mart_cleaned ke monitoring.dbt_test_result
+        if: always()
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          echo "SUPABASE_DB_URL=$SUPABASE_DB_URL" >> .env
+          python scripts/monitoring_warehouse/capture_dbt_test_results.py --layer mart_cleaned
+
       - name: Milestone 2.3 -- renew table/view expiration (Sandbox mode mitigation, no billing yet)
         run: python scripts/extract/renew_expiration.py staging mart_cleaned mart_cleaned_staging
