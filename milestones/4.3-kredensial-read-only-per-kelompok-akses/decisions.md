@@ -72,8 +72,8 @@ Update `docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md` (10 baris
 **✅ Checkpoint 0** — commit + log.
 
 ### Fase 1 — Reservation + F&B roles
-2. `role_config_reservation.py` (10 `GRANT_TARGETS`), role `reservation_chatbot_reader`, grant, verifikasi isolasi (allow view sendiri, deny bypass `mart_aggregated`+`mart_cleaned` langsung, deny cross-domain, deny write) — M
-3. `role_config_fnb.py` (11 `GRANT_TARGETS`), role `fnb_chatbot_reader` — M
+2. `role_config_reservation.py` (10 `GRANT_TARGETS`), role `reservation_chatbot_reader`, grant, verifikasi isolasi (allow view sendiri, deny bypass `mart_aggregated`+`mart_cleaned` langsung, deny cross-domain, deny write) — M — **Selesai**
+3. `role_config_fnb.py` (11 `GRANT_TARGETS`), role `fnb_chatbot_reader` — M — **Selesai**
 
 **✅ Checkpoint 1** — commit + log.
 
