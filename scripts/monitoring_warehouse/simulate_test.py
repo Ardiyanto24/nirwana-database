@@ -17,6 +17,17 @@ yang diuji adalah pipa capture-nya sendiri, bukan logic anomali di atasnya.
   2. reverse_etl_mismatch     -- 1 baris sintetis mismatch_aborted -> EXPECT alert
   3. ml_output_freshness_delay (freshness)      -- lag jauh di atas threshold -> EXPECT alert
   4. ml_output_freshness_delay (sensor duration) -- durasi jauh di atas baseline -> EXPECT alert
+
+Milestone 6.4 -- 2 skenario tambahan (KK1 staleness, KK3 drift canary).
+KK2 (completeness) SENGAJA TIDAK ada di sini -- sama alasan KK1 M6.3 di atas:
+butuh fault-injection nyata ke mock_score.py (sudah dibuktikan terpisah
+Checkpoint 3 Task 9, lihat logs.md), bukan cuma logic deteksi di atas data
+sintetis (populasi expected/scored keduanya dari BigQuery, bukan Postgres).
+  5. staleness view (informational, TIDAK ada alert) -- seed 1 baris sintetis,
+     verifikasi view menghitung days_since_first_scored & is_most_recently_active benar
+  6. drift canary (informational, TIDAK ada alert) -- dataset throwaway BigQuery
+     dibuat/dihapus via client Python langsung (bukan is_simulated Postgres --
+     yang diuji adalah list_datasets() BigQuery sungguhan)
 """
 import datetime
 import os
@@ -27,11 +38,16 @@ from db import get_connection
 from detect_volume_anomaly import run_for_table as run_volume_detection
 from detect_parity_mismatch import run as run_parity_detection
 from detect_ml_output_issues import run as run_ml_output_detection
+from bq import get_client as get_bq_client, PROJECT_ID
+from check_drift_data_availability import find_drift_dataset
 
 SIM_DATASET = "_simulation"
 FAKE_FRESHNESS_DATE = datetime.date(2099, 1, 1)
 FAKE_SENSOR_RUN_IDS = [999990001, 999990002, 999990003, 999990004]
 FAKE_SENSOR_ANOMALOUS_RUN_ID = 999990099
+SIM_MODEL_NAME = "sim_model"
+SIM_MODEL_VERSION = "sim_model_v1"
+SIM_DRIFT_DATASET_ID = "ml_monitoring_simtest"
 
 
 def _cleanup(cur):
@@ -43,6 +59,7 @@ def _cleanup(cur):
         (FAKE_SENSOR_RUN_IDS + [FAKE_SENSOR_ANOMALOUS_RUN_ID],),
     )
     cur.execute("DELETE FROM monitoring.alerts WHERE is_simulated = TRUE")
+    cur.execute("DELETE FROM monitoring.ml_model_version_snapshot WHERE model_name = %s", (SIM_MODEL_NAME,))
 
 
 def _seed_volume_history(cur, table, base_count, snapshot_date, dow):
@@ -148,6 +165,62 @@ def run_simulation():
     passed = got is True
     all_passed &= passed
     print(f"[{'PASS' if passed else 'FAIL'}] ml_output_freshness_delay (sensor duration): expected_alert=True -> got={got}")
+
+    # --- Skenario 5: model staleness view (KK1 M6.4, informational -- TIDAK ada alert) ---
+    fake_first_scored = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=100)
+    fake_last_scored = fake_first_scored + datetime.timedelta(hours=2)
+    cur.execute(
+        """
+        INSERT INTO monitoring.ml_model_version_snapshot
+            (model_name, model_version, snapshot_date, first_scored_at, last_scored_at, row_count_total)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        ON CONFLICT (model_name, model_version, snapshot_date)
+        DO UPDATE SET first_scored_at = EXCLUDED.first_scored_at, last_scored_at = EXCLUDED.last_scored_at
+        """,
+        (SIM_MODEL_NAME, SIM_MODEL_VERSION, datetime.date.today(), fake_first_scored, fake_last_scored, 42),
+    )
+    conn.commit()
+    cur.execute(
+        "SELECT days_since_first_scored, is_most_recently_active FROM monitoring.ml_model_staleness_status "
+        "WHERE model_name = %s AND model_version = %s",
+        (SIM_MODEL_NAME, SIM_MODEL_VERSION),
+    )
+    row = cur.fetchone()
+    days_ok = row is not None and row[0] in (99, 100)
+    active_ok = row is not None and row[1] is True
+    passed = days_ok and active_ok
+    all_passed &= passed
+    print(f"[{'PASS' if passed else 'FAIL'}] ml_model_staleness_status: expected days_since_first_scored~100, "
+          f"is_most_recently_active=True -> got={row}")
+
+    # --- Skenario 6: drift data availability canary (KK3 M6.4, informational -- TIDAK ada alert) ---
+    # Beda dari 5 skenario lain -- ini BigQuery sungguhan (dataset throwaway), bukan
+    # data sintetis Postgres, karena yang diuji adalah list_datasets() itu sendiri.
+    # create/delete dataset pakai `bq` CLI (identitas developer sendiri) -- BUKAN
+    # kredensial warehouse-monitor-reader, yang sengaja READER-only (least-privilege,
+    # bigquery.datasets.create ditolak 403 kalau dicoba, sesuai desain). bq_client
+    # (warehouse-monitor-reader) cuma dipakai untuk find_drift_dataset -- deteksinya.
+    import subprocess
+    bq_client = get_bq_client()
+    full_id = f"{PROJECT_ID}:{SIM_DRIFT_DATASET_ID}"
+    # shell=True -- `bq` di Windows adalah wrapper .cmd, tidak diresolve subprocess
+    # tanpa shell (beda dari Bash tool yang punya PATH resolution sendiri)
+    subprocess.run(f"bq rm -f --dataset {full_id}", shell=True, capture_output=True)  # jaga-jaga sisa run sebelumnya
+
+    found_before = find_drift_dataset(bq_client)
+    not_found_ok = SIM_DRIFT_DATASET_ID not in (found_before or "")
+
+    mk_result = subprocess.run(f"bq mk --dataset {full_id}", shell=True, capture_output=True, text=True)
+    found_after = find_drift_dataset(bq_client)
+    found_ok = mk_result.returncode == 0 and found_after == SIM_DRIFT_DATASET_ID
+
+    subprocess.run(f"bq rm -f --dataset {full_id}", shell=True, capture_output=True)
+
+    passed = not_found_ok and found_ok
+    all_passed &= passed
+    print(f"[{'PASS' if passed else 'FAIL'}] ml_drift_data_availability canary: "
+          f"expected not-found-before=True found-after='{SIM_DRIFT_DATASET_ID}' -> "
+          f"got not_found_ok={not_found_ok} found_after={found_after!r}")
 
     cur.close()
     conn.close()

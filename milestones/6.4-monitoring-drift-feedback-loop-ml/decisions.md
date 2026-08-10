@@ -1,7 +1,7 @@
 # Milestone 6.4: Monitoring Data Drift Feedback Loop ML — Decisions
 
 **Source:** `docs/03-implementation-plans/06-monitoring-warehouse-serving-fase2.md` (baris 108-127)
-**Status:** In Progress
+**Status:** Done
 **Date started:** 2026-08-11
 
 ## Contract (from source doc)
@@ -79,25 +79,25 @@ User awalnya minta penjelasan lebih detail sebelum memutuskan (diberikan penjela
 
 ### Checkpoint 1 — Fondasi: decisions.md + kredensial + schema
 - [x] Task 1: `decisions.md` — dokumen ini.
-- [ ] Task 2: Update kredensial `warehouse-monitor-reader` — tambah `roles/bigquery.metadataViewer` project-level. Acceptance: `list_datasets()` mengembalikan seluruh dataset existing tanpa exception. Verify: jalankan `list_datasets()` manual.
-- [ ] Task 3: Extend `scripts/monitoring_warehouse/schema.sql` — 5 tabel/view baru + extend `alerts.alert_type` CHECK. Acceptance: seluruh objek baru live. Verify: query `information_schema`.
+- [x] Task 2: Update kredensial `warehouse-monitor-reader` — tambah `roles/bigquery.metadataViewer` project-level. Acceptance: `list_datasets()` mengembalikan seluruh dataset existing tanpa exception. Verify: jalankan `list_datasets()` manual. **Selesai** — diblokir classifier, dieksekusi manual oleh user, diverifikasi 7/7 dataset terlihat setelah propagasi IAM.
+- [x] Task 3: Extend `scripts/monitoring_warehouse/schema.sql` — 5 tabel/view baru + extend `alerts.alert_type` CHECK. Acceptance: seluruh objek baru live. Verify: query `information_schema`. **Selesai**.
 
 ### Checkpoint 2 — Output 1: Model staleness (KK1)
-- [ ] Task 4: `scripts/monitoring_warehouse/snapshot_ml_model_version.py`.
-- [ ] Task 5: Entri baru `docs/keputusan-tertunda.md`.
-- [ ] Task 6: Verifikasi terhadap data live.
+- [x] Task 4: `scripts/monitoring_warehouse/snapshot_ml_model_version.py`. **Selesai**.
+- [x] Task 5: Entri baru `docs/keputusan-tertunda.md`. **Selesai**.
+- [x] Task 6: Verifikasi terhadap data live. **Selesai**.
 
 ### Checkpoint 3 — Output 2: Completeness validation (KK2)
-- [ ] Task 7: `scripts/monitoring_warehouse/check_ml_output_completeness.py`.
-- [ ] Task 8: Baseline live (harus 0 missing).
-- [ ] Task 9: Uji coba terkontrol — fault-injection nyata `mock_score.py`, revert.
+- [x] Task 7: `scripts/monitoring_warehouse/check_ml_output_completeness.py`. **Selesai** — 1 bug ditemukan+diperbaiki (entity_id komposit, lihat logs.md).
+- [x] Task 8: Baseline live (harus 0 missing). **Selesai** — expected=18 scored=18 missing=0.
+- [x] Task 9: Uji coba terkontrol — fault-injection nyata `mock_score.py`, revert. **Selesai** — 3 entity P03 terdeteksi tepat.
 
 ### Checkpoint 4 — Output 3: Drift canary (KK3)
-- [ ] Task 10: `scripts/monitoring_warehouse/check_drift_data_availability.py`.
-- [ ] Task 11: Verifikasi 2 jalur (found=false state sekarang; found=true via dataset throwaway `bq mk`/`bq rm`).
+- [x] Task 10: `scripts/monitoring_warehouse/check_drift_data_availability.py`. **Selesai**.
+- [x] Task 11: Verifikasi 2 jalur (found=false state sekarang; found=true via dataset throwaway `bq mk`/`bq rm`). **Selesai**.
 
 ### Checkpoint 5 (final) — Konsolidasi
-- [ ] Task 12: Extend `monitoring-warehouse-dq-anomaly.yml` — 3 step baru.
-- [ ] Task 13: Extend `simulate_test.py` — staleness + drift canary (KK2 sengaja tidak masuk, sama alasan KK1 M6.3).
-- [ ] Task 14: Update `docs/10-monitoring-warehouse-serving/pemetaan-titik-pengamatan-pipeline.md`.
-- [ ] Task 15: `logs.md` + `report.md`.
+- [x] Task 12: Extend `monitoring-warehouse-dq-anomaly.yml` — 3 step baru. **Selesai** — run 31443361931 sukses penuh.
+- [x] Task 13: Extend `simulate_test.py` — staleness + drift canary (KK2 sengaja tidak masuk, sama alasan KK1 M6.3). **Selesai** — 6/6 skenario PASS.
+- [x] Task 14: Update `docs/10-monitoring-warehouse-serving/pemetaan-titik-pengamatan-pipeline.md`. **Selesai**.
+- [x] Task 15: `logs.md` + `report.md`. **Selesai**.
