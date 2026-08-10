@@ -62,8 +62,8 @@ Sama alasan M3.2 — murni authoring/apply DDL sekali jalan, bukan operasi haria
 **✅ Checkpoint 0** — commit + log.
 
 ### Fase 1 — Reservation + F&B
-2. `views_reservation.sql` (8 view agregat + `v_lookup_bookings`, `v_lookup_daily_occupancy`) + apply + verifikasi kolom sesuai domain — M
-3. `views_fnb.sql` (8 view agregat + `v_lookup_fnb_inventory`, `v_lookup_fnb_transactions`, `v_lookup_recipe_bom`) + apply + verifikasi — M
+2. `views_reservation.sql` (8 view agregat + `v_lookup_bookings`, `v_lookup_daily_occupancy`) + apply + verifikasi kolom sesuai domain — M — **Selesai**
+3. `views_fnb.sql` (8 view agregat + `v_lookup_fnb_inventory`, `v_lookup_fnb_transactions`, `v_lookup_recipe_bom`) + apply + verifikasi — M — **Selesai**
 
 **✅ Checkpoint 1** — commit + log.
 
