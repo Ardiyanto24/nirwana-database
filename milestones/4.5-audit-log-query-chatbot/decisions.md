@@ -70,6 +70,10 @@ Log `chatbot_query_log` **hanya mencatat request yang sudah lolos Lapis 1** (app
 - **`SUPABASE_DB_URL` ternyata Supavisor pooler URL**, bukan direct connection seperti komentar asli `.env.example` — ditemukan saat `build_role_connection_string` pertama kali gagal dengan asumsi direct-connection regex. Diperbaiki di kode (`_POOLER_URL_RE`, sama pola `chatbot_credentials/connections.py`) dan komentar `.env.example`. Konsekuensi: Supavisor pooler-cache-staleness (temuan M3.5) berlaku juga di sini, jadi `verify_role_isolation.py` tetap memakai warmup-retry (bukan dibuang seperti draft rencana awal yang keliru mengasumsikan "direct connection, no cache").
 - **`GRANT INSERT` saja tidak cukup untuk kolom `bigserial`** — `nextval()` pada sequence backing (`chatbot_query_log_id_seq`) butuh `GRANT USAGE ON SEQUENCE` terpisah. Ditemukan lewat error `permission denied for sequence` (bukan error privilege biasa) saat verifikasi pertama. Ditambahkan ke `apply_grants()`.
 
+## Temuan Implementasi (Checkpoint 1)
+
+- **FastAPI diam-diam membuang `BackgroundTasks` saat handler `raise` exception, bukan `return` normal** — ditemukan saat tes HTTP pertama: response 403/404/400 sendiri benar, tapi baris log untuk ketiganya tidak pernah masuk ke `monitoring.chatbot_query_log` (cuma kasus sukses yang tercatat). Root cause: exception handler bawaan FastAPI untuk `HTTPException` membangun response error dari awal, tidak pernah membawa serta objek `BackgroundTasks` yang sudah diisi task di handler yang gagal — task yang di-attach lewat dependency injection `BackgroundTasks` cuma benar-benar jalan kalau handler `return` response secara normal. Fix: 3 titik jalur ditolak diganti dari `raise HTTPException(...)` menjadi `return JSONResponse(status_code=..., content=..., background=background_tasks)` — status code/body ke caller identik, cuma mekanisme pengiriman yang berubah. Ini murni detail implementasi (Keputusan #3/#4 di atas tetap tidak berubah: tetap `BackgroundTasks`, tetap best-effort, tetap di level `handler()`) — didokumentasikan di sini karena bukan hal yang jelas dari dokumentasi FastAPI standar.
+
 ## Task Breakdown
 
 3 checkpoint.
@@ -82,9 +86,11 @@ Log `chatbot_query_log` **hanya mencatat request yang sudah lolos Lapis 1** (app
 **✅ Checkpoint 0** — commit `71ed6fc`.
 
 ### Checkpoint 1 — Instrumentasi API
-4. `scripts/chatbot_api/audit.py` — `log_query(...)`, koneksi `CHATBOT_AUDIT_WRITER_DB_URL` per panggilan, best-effort try/except.
-5. `main.py`: `background_tasks: BackgroundTasks` di `handler()`, bungkus badan handler, panggil `log_query` di jalur sukses maupun tiap titik ditolak.
-6. Tes HTTP nyata: 1 sukses + 3 ditolak (403/404/400) — verifikasi lewat query `monitoring.chatbot_query_log`.
+4. `scripts/chatbot_api/audit.py` — `log_query(...)`, koneksi `CHATBOT_AUDIT_WRITER_DB_URL` per panggilan, best-effort try/except. — **Selesai**
+5. `main.py`: `background_tasks: BackgroundTasks` di `handler()`, bungkus badan handler, panggil `log_query` di jalur sukses maupun tiap titik ditolak. — **Selesai** (lihat Temuan Implementasi Checkpoint 1: jalur ditolak pakai `return JSONResponse(..., background=...)`, bukan `raise`)
+6. Tes HTTP nyata: 1 sukses + 3 ditolak (403/404/400) — verifikasi lewat query `monitoring.chatbot_query_log`. — **Selesai**, 4/4 baris tercatat dengan detail benar (+1 tes tambahan all_properties, `resolved_property_id` NULL sesuai desain).
+
+**✅ Checkpoint 1** — commit `71f3d56`.
 
 ### Checkpoint 2 (final) — Dokumentasi + Penutupan
 7. `docs/09-serving-ai-chatbot/audit-log-chatbot.md` (termasuk bagian "Batas Lapis 1/Lapis 2").
