@@ -32,7 +32,7 @@ Milestone terbesar di keluarga 6.x sejauh ini, dan pertama yang menyentuh file t
 
 - [x] **Checkpoint 1** — `decisions.md` + kredensial `warehouse-monitor-reader` + extend `schema.sql` — Acceptance: kredensial isolasi terbukti, schema live — Verify: `verify_dataset_isolation.py` 5/5 OK, `information_schema` — M
 - [x] **Checkpoint 2** — Output 1 (KK1): `capture_dbt_test_results.py` + step baru 2 workflow YAML + fault-injection nyata — Verified: run 31436680183, 1/37 fail tertangkap tepat sesuai injeksi — S/M
-- [ ] **Checkpoint 3** — Output 2 (KK2): `snapshot_warehouse_volume.py` + `detect_volume_anomaly.py` + uji coba terkontrol 2 tabel — M
+- [x] **Checkpoint 3** — Output 2 (KK2): `snapshot_warehouse_volume.py` + `detect_volume_anomaly.py` + uji coba terkontrol 2 tabel — Verified: 123 tabel di-snapshot (23+23+77), 2 alert critical benar (mart_cleaned & mart_aggregated, masing-masing tabel teridentifikasi tepat), data sintetis dibersihkan — M
 - [ ] **Checkpoint 4** — Output 3 (KK3): `detect_parity_mismatch.py` + uji coba terkontrol — S
 - [ ] **Checkpoint 5** — Output 4 (KK4): `snapshot_ml_output_freshness.py` + `detect_ml_output_issues.py` + uji coba terkontrol — M
 - [ ] **Checkpoint 6** — Workflow terjadwal + `simulate_test.py` + dokumentasi + `report.md` — M
@@ -54,9 +54,9 @@ Milestone terbesar di keluarga 6.x sejauh ini, dan pertama yang menyentuh file t
 **Context:** Staging = view (M2.2), row count selalu identik `raw_production`.
 **Decision:** Kecualikan staging dari snapshot. **Alasan:** memantau keduanya terpisah murni duplikasi tanpa sinyal baru.
 
-### 4. Row count via `INFORMATION_SCHEMA.TABLE_STORAGE`, bukan `COUNT(*)` per tabel
+### 4. Row count via `__TABLES__` (legacy metadata pseudo-table), bukan `COUNT(*)` per tabel
 
-1 query per dataset (3 total) vs ~122 query individual — hemat kuota BigQuery Sandbox mode.
+**Revisi saat implementasi** (Checkpoint 3): rencana awal `INFORMATION_SCHEMA.TABLE_STORAGE` **ternyata `Access Denied`** di project ini — dicoba dataset-qualified (`Dataset ... INFORMATION_SCHEMA was not found`, indikasi syntax salah) dan region-qualified (`Access Denied: User does not have permission`, syntax benar tapi ditolak) — kemungkinan besar restriksi BigQuery Sandbox mode (view ini terkait storage billing, project ini belum ada billing account). Diganti `SELECT table_id, row_count FROM \`project.dataset.__TABLES__\`` (legacy pseudo-table, beda mekanisme dari `INFORMATION_SCHEMA`, tidak kena restriksi yang sama) — **diverifikasi angka akurat**: `corporate_master__employees`=755, `corporate_master__guests`=24893, `corporate_master__properties`=6, seluruhnya cocok persis angka yang sudah dikonfirmasi M1.1. Manfaat inti keputusan asli tetap dipertahankan: 1 query per dataset (3 total) vs ~122 query individual `COUNT(*)`.
 
 ### 5. Discovery tabel dinamis, bukan config statis
 
