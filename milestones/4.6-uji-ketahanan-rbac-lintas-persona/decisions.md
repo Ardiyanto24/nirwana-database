@@ -2,7 +2,7 @@
 
 **Sumber:** `docs/03-implementation-plans/05-serving-ai-chatbot.md`, Milestone 4.6 (baris 146-161).
 **Prasyarat:** Milestone 4.1-4.5 (pemetaan, view, kredensial, API, audit log — semua Completed).
-**Status:** In Progress
+**Status:** Completed
 **Date started:** 2026-08-10
 
 ## Lingkup Sumber / Contract
@@ -60,5 +60,7 @@
 - **Salah hitung jumlah pasang Layer C di draft rancangan** (`decisions.md`/`rancangan-pengujian-rbac-chatbot.md` versi Checkpoint 0): ditulis "1+7+7+19 = 34 pasang", padahal rantai #1 (Staff→Manager) sendiri berisi 7 pasang, bukan 1 — total sebenarnya 7+7+7+19 = **40**. Ditemukan saat `analyze_superset.py` mencetak "40/40 pasang superset valid" (tidak cocok ekspektasi tertulis 34) — bukan bug logic, murni typo aritmatika saat menulis rancangan. Kedua dokumen dikoreksi ke 40.
 
 ### Checkpoint 4 (final) — Temuan + Penutupan
-7. Dokumentasikan temuan independensi `role_title`/`employee_id`.
-8. `report.md` — verifikasi ulang KK1-KK2, daftar temuan + status perbaikan. Commit; tanya user sebelum push.
+7. Dokumentasikan temuan independensi `role_title`/`employee_id`. — **Selesai**. Dikonfirmasi definitif lewat uji langsung: `employee_id=E0001` (pegawai Corporate manager sungguhan) + klaim `role_title=Housekeeping Staff` (Staff-tier, facility) tetap 200 OK, data P01 (properti asli E0001) — membuktikan API sungguhan tidak pernah mencocokkan keduanya.
+8. `report.md` — verifikasi ulang KK1-KK2, daftar temuan + status perbaikan. Commit; tanya user sebelum push. — **Selesai**.
+
+**✅ Checkpoint 4 (final)** — Status: Completed. 0 temuan bug RBAC di 240 panggilan HTTP (200 Layer A + 30 Layer B).
