@@ -95,8 +95,8 @@ Setelah lolos otorisasi #3, API connect pakai kredensial domain yang sesuai (`RE
 **✅ Checkpoint 3** — commit + log.
 
 ### Fase 4 — 4 Domain Granular
-8. `whitelist_properties_ref.py`/`whitelist_employees_directory.py` (1 entry masing-masing) + tes. — S
-9. `whitelist_guests_pii.py`/`whitelist_guests_profile.py` (1 entry masing-masing) + **uji krusial**: role permitted `guests_pii` memanggil `/chatbot/guests_profile/...` → 403 di layer API (lapisan independen dari deny DB M4.3). — M
+8. `whitelist_properties_ref.py`/`whitelist_employees_directory.py` (1 entry masing-masing) + tes. — S — **Selesai**
+9. `whitelist_guests_pii.py`/`whitelist_guests_profile.py` (1 entry masing-masing) + **uji krusial**: role permitted `guests_pii` memanggil `/chatbot/guests_profile/...` → 403 di layer API (lapisan independen dari deny DB M4.3). — M — **Selesai**. Ditemukan `main.py` perlu digeneralisasi (`own_property_column`, guests pakai `last_active_property_id` bukan `property_id`). Ditemukan juga fakta RBAC: tidak ada persona dengan `guests_profile` tanpa `guests_pii` — arah uji krusial disesuaikan pakai role tanpa keduanya (HR Staff), bukan role guests_profile-only yang memang tidak eksis.
 
 **✅ Checkpoint 4** — commit + log.
 

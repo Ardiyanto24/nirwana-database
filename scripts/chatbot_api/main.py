@@ -40,15 +40,22 @@ def health():
 
 
 def _run_whitelisted_query(domain, entry, query_params, employee_id, access_scope, limit, offset):
-    """entry = {"source": "chatbot_views.<view>", "filters": [{"param","column","op"}, ...]}.
-    Only filters declared in the whitelist entry are ever applied; column
-    names/operators come from the entry (never user input), values are
-    always passed as %s parameters (mirrors M3.4's _run_whitelisted_query)."""
+    """entry = {"source": "chatbot_views.<view>", "filters": [{"param","column","op"}, ...],
+    "own_property_column": "<column>" (optional, default "property_id")}.
+    own_property_column exists because not every view names its property
+    column "property_id" -- guests_contact_view/guests_profile_view (M4.2)
+    expose "last_active_property_id" instead (guests aren't natively
+    property-scoped, see docs/09-serving-ai-chatbot/pemetaan-akses-teknis-chatbot.md
+    Section 3). Only filters declared in the whitelist entry are ever
+    applied; column names/operators come from the entry (never user input),
+    values are always passed as %s parameters (mirrors M3.4's
+    _run_whitelisted_query)."""
+    own_property_column = entry.get("own_property_column", "property_id")
     where_clauses = []
     values = []
 
     for f in entry["filters"]:
-        if f["param"] == "property_id" and access_scope == "own_property":
+        if f["column"] == own_property_column and access_scope == "own_property":
             continue  # handled below via resolve_property_id -- client value never trusted
         val = query_params.get(f["param"])
         if val is not None and val != "":
@@ -61,8 +68,8 @@ def _run_whitelisted_query(domain, entry, query_params, employee_id, access_scop
         resolved_property_id = resolve_property_id(employee_id)
         if resolved_property_id is None:
             raise HTTPException(status_code=400, detail=f"employee_id '{employee_id}' not found")
-        if "property_id" in {f["column"] for f in entry["filters"]}:
-            where_clauses.append("property_id = %s")
+        if own_property_column in {f["column"] for f in entry["filters"]}:
+            where_clauses.append(f"{own_property_column} = %s")
             values.append(resolved_property_id)
 
     sql = f'SELECT * FROM {entry["source"]}'
@@ -122,3 +129,13 @@ from whitelist_financial import WHITELIST as FINANCIAL_WHITELIST
 
 register_domain_routes("hr", HR_WHITELIST)
 register_domain_routes("financial", FINANCIAL_WHITELIST)
+
+from whitelist_properties_ref import WHITELIST as PROPERTIES_REF_WHITELIST
+from whitelist_employees_directory import WHITELIST as EMPLOYEES_DIRECTORY_WHITELIST
+from whitelist_guests_pii import WHITELIST as GUESTS_PII_WHITELIST
+from whitelist_guests_profile import WHITELIST as GUESTS_PROFILE_WHITELIST
+
+register_domain_routes("properties_ref", PROPERTIES_REF_WHITELIST)
+register_domain_routes("employees_directory", EMPLOYEES_DIRECTORY_WHITELIST)
+register_domain_routes("guests_pii", GUESTS_PII_WHITELIST)
+register_domain_routes("guests_profile", GUESTS_PROFILE_WHITELIST)
