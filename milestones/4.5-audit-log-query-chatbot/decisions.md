@@ -2,7 +2,7 @@
 
 **Sumber:** `docs/03-implementation-plans/05-serving-ai-chatbot.md`, Milestone 4.5 (baris 128-144).
 **Prasyarat:** Milestone 4.4 (API Query Interface, Completed).
-**Status:** In Progress
+**Status:** Completed
 **Date started:** 2026-08-10
 
 ## Lingkup Sumber / Contract
@@ -93,6 +93,8 @@ Log `chatbot_query_log` **hanya mencatat request yang sudah lolos Lapis 1** (app
 **✅ Checkpoint 1** — commit `71f3d56`.
 
 ### Checkpoint 2 (final) — Dokumentasi + Penutupan
-7. `docs/09-serving-ai-chatbot/audit-log-chatbot.md` (termasuk bagian "Batas Lapis 1/Lapis 2").
-8. Update `docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md` (+1 baris `chatbot_audit_writer`).
-9. Verifikasi ulang KK1-KK2, tulis `report.md`. Commit; tanya user sebelum push.
+7. `docs/09-serving-ai-chatbot/audit-log-chatbot.md` (termasuk bagian "Batas Lapis 1/Lapis 2"). — **Selesai**
+8. Update `docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md` (+1 baris `chatbot_audit_writer`). — **Selesai**
+9. Verifikasi ulang KK1-KK2, tulis `report.md`. Commit; tanya user sebelum push. — **Selesai**
+
+**✅ Checkpoint 2 (final)** — Status: Completed.
