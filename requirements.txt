@@ -17,3 +17,8 @@ pandas==3.0.2
 # Dependencies for scripts/data_analyst_api/ (Milestone 3.4)
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
+
+# Dependencies for scripts/chatbot_rbac_test/ (Milestone 4.6) -- prior HTTP
+# verification (M3.4-4.5) used curl manually; M4.6's 200-cell matrix needed
+# a real HTTP client to script programmatically.
+requests==2.33.1

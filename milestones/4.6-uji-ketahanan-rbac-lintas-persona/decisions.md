@@ -40,7 +40,9 @@
 2. `decisions.md` (dokumen ini). — **Selesai**
 
 ### Checkpoint 1 — Tooling
-3. `scripts/chatbot_rbac_test/{connections.py,ground_truth.py,run_access_matrix.py}` — dry-run kombinasi dikenal sebelum full run.
+3. `scripts/chatbot_rbac_test/{connections.py,ground_truth.py,run_access_matrix.py}` — dry-run kombinasi dikenal sebelum full run. — **Selesai**. `load_role_permissions()` mengembalikan 77 baris (cocok jumlah `role_permissions`). Dry-run 3 kombinasi: CEO/reservation -> 200 (expect 200), HR Staff/financial -> 403 (expect 403), General Manager/spa_event -> 200 (expect 200) — 3/3 cocok.
+
+**✅ Checkpoint 1** — mekanika tooling tervalidasi, siap full run Layer A.
 
 ### Checkpoint 2 — Layer A: Matriks Akses Penuh (KK1)
 4. Full run 200 kombinasi terhadap `uvicorn` live. Investigasi + perbaiki mismatch (kalau ada).
