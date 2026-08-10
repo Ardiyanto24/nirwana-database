@@ -43,3 +43,88 @@ SELECT DISTINCT ON (titik_id)
     (started_at::date = CURRENT_DATE) AS ran_today
 FROM monitoring.pipeline_run_log
 ORDER BY titik_id, completed_at DESC;
+
+-- Milestone 6.3 — Monitoring Kesalahan dan Anomali di Pipeline Warehouse
+-- Perluasan lanjutan schema monitoring bersama, additive only.
+-- Rujukan: milestones/6.3-monitoring-kesalahan-anomali-warehouse/decisions.md
+
+-- Output 1 (KK1): detail per-test hasil dbt test mart_cleaned/mart_aggregated,
+-- diparse dari warehouse/target/run_results.json setelah step gate promote.py
+-- selesai (promote.py sendiri TIDAK disentuh -- Keputusan #1). Append-only,
+-- tidak ada UNIQUE constraint, sama pola scripts/dq/schema.sql's dq_test_results.
+CREATE TABLE IF NOT EXISTS monitoring.dbt_test_result (
+    id              BIGSERIAL PRIMARY KEY,
+    layer           TEXT NOT NULL CHECK (layer IN ('mart_cleaned', 'mart_aggregated')),
+    unique_id       TEXT NOT NULL,
+    test_name       TEXT,
+    resource_type   TEXT,
+    status          TEXT NOT NULL,
+    execution_time  NUMERIC,
+    failures        INTEGER,
+    github_run_id   BIGINT,   -- cross-reference ke monitoring.pipeline_run_log.run_id (M6.2)
+    captured_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_dbt_test_result_lookup
+    ON monitoring.dbt_test_result (layer, captured_at DESC);
+
+-- Output 2 (KK2): snapshot row-count harian BigQuery, 3 dataset
+-- (raw_production, mart_cleaned, mart_aggregated -- staging sengaja
+-- dikecualikan, lihat decisions.md Keputusan #3). Diisi via
+-- INFORMATION_SCHEMA.TABLE_STORAGE, bukan COUNT(*) per tabel (Keputusan #4).
+CREATE TABLE IF NOT EXISTS monitoring.warehouse_volume_snapshot (
+    id             BIGSERIAL PRIMARY KEY,
+    dataset_name   TEXT NOT NULL,
+    table_name     TEXT NOT NULL,
+    snapshot_date  DATE NOT NULL,
+    row_count      BIGINT NOT NULL,
+    day_of_week    SMALLINT NOT NULL,
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (dataset_name, table_name, snapshot_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_warehouse_volume_snapshot_lookup
+    ON monitoring.warehouse_volume_snapshot (dataset_name, table_name, day_of_week, snapshot_date DESC);
+
+-- Output 4 (KK4): freshness ml_output.predictions -- MAX(scored_at) vs now(),
+-- formula lag_hours direplikasi dari scripts/monitoring/snapshot_freshness.py.
+CREATE TABLE IF NOT EXISTS monitoring.ml_output_freshness_snapshot (
+    id                 BIGSERIAL PRIMARY KEY,
+    snapshot_date      DATE NOT NULL,
+    latest_scored_at   TIMESTAMPTZ,
+    lag_hours          NUMERIC,
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (snapshot_date)
+);
+
+-- Output 3 (KK3): row-count parity BigQuery vs PostgreSQL -- murni konsolidasi,
+-- monitoring.reverse_etl_sync_log (M2.4/M5.5) sudah punya seluruh data yang
+-- dibutuhkan. sync.py TIDAK disentuh -- kolom is_simulated ditambah lewat ALTER
+-- additive (pola identik precedent M5.5 dataset_name), default FALSE untuk
+-- seluruh baris existing dan baris baru dari sync.py (yang tidak tahu-menahu
+-- soal kolom ini), dibutuhkan supaya KK3 bisa diuji coba terkontrol tanpa
+-- mengotori riwayat sync nyata.
+ALTER TABLE monitoring.reverse_etl_sync_log
+    ADD COLUMN IF NOT EXISTS is_simulated BOOLEAN NOT NULL DEFAULT FALSE;
+
+CREATE OR REPLACE VIEW monitoring.warehouse_parity_status AS
+SELECT DISTINCT ON (dataset_name, table_name)
+    dataset_name,
+    table_name,
+    bq_row_count,
+    pg_row_count,
+    status,
+    synced_at
+FROM monitoring.reverse_etl_sync_log
+WHERE is_simulated = FALSE
+ORDER BY dataset_name, table_name, synced_at DESC;
+
+-- Perluas alert_type monitoring.alerts (dibuat M1.2, diperluas M1.3) dengan
+-- 4 sumber sinyal baru Milestone 6.3 -- pola extensibility identik
+-- scripts/dq/schema.sql, sudah dipakai 3x sebelumnya.
+ALTER TABLE monitoring.alerts DROP CONSTRAINT IF EXISTS alerts_alert_type_check;
+ALTER TABLE monitoring.alerts ADD CONSTRAINT alerts_alert_type_check
+    CHECK (alert_type IN (
+        'volume_anomaly', 'freshness_delay', 'dq_test_failure', 'dirty_proportion_drift', 'value_anomaly',
+        'dbt_test_failure', 'warehouse_volume_anomaly', 'reverse_etl_mismatch', 'ml_output_freshness_delay'
+    ));
