@@ -31,6 +31,10 @@ Tidak ada deviasi pada keputusan inti. **4 revisi teknis ditemukan & diperbaiki 
 
 Satu penambahan di luar breakdown Task asli (dicatat di `logs.md`, bukan deviasi keputusan): **`detect_parity_mismatch.py` ditambahkan ke workflow terjadwal** — Task 15 plan awal cuma menyebut Task 7→8 dan 12→13, oversight yang dikoreksi karena KK3 butuh deteksi otomatis harian juga.
 
+## Catatan Pasca-Closure (2026-08-11)
+
+Ditemukan user lewat GitHub Actions UI (bukan dari verifikasi saya) **setelah** milestone ini ditutup Completed: run `monitoring-warehouse-pipeline-log.yml` (workflow **Milestone 6.2**, bukan M6.3) sempat FAILED — dipicu sebagai efek samping uji coba fault-injection Checkpoint 2 Task 6 (`transform-mart-cleaned.yml` sengaja dibuat gagal, menyebabkan `transform-mart-aggregated.yml` skip diri sendiri, dan `snapshot_pipeline_run.py` milik M6.2 crash mengamati run yang di-skip itu). **Bug ini di file M6.2 (`scripts/monitoring_warehouse/snapshot_pipeline_run.py`), bukan di salah satu dari 8 script M6.3** — jalur kodenya sepenuhnya terpisah dari 4 KK yang dilaporkan Completed di atas, jadi hasil verifikasi KK1-4 tidak berubah/terpengaruh. Diperbaiki dan diverifikasi ulang di CI sungguhan (commit `b295338`, run [`31439829146`](https://github.com/Ardiyanto24/nirwana-database/actions/runs/31439829146)) — detail lengkap di `milestones/6.2-monitoring-log-proses-pipeline/logs.md`. Dicatat di sini murni untuk jejak sejarah lengkap (uji coba M6.3 yang menyingkap bug M6.2), bukan revisi terhadap hasil M6.3 sendiri.
+
 ## Known Gaps / Follow-ups
 
 - **Test count mart_aggregated re-verifikasi 190, bukan "244+1" di `report.md` M5.3** — drift kemungkinan dari M5.6/M5.7, akar penyebab tidak ditelusuri (di luar scope M6.3).
