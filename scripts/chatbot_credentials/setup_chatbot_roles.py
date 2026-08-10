@@ -24,6 +24,7 @@ import sys
 
 from connections import (
     build_role_connection_string,
+    get_mart_cleaned_owner_connection,
     get_serving_connection,
     write_env_var,
 )
@@ -86,6 +87,11 @@ try:
     ROLE_CONFIGS.append(GUESTS_PROFILE_CONFIG)
 except ImportError:
     pass
+try:
+    from role_config_authz import ROLE_CONFIG as AUTHZ_CONFIG
+    ROLE_CONFIGS.append(AUTHZ_CONFIG)
+except ImportError:
+    pass
 
 
 def create_or_rotate_role(admin_conn, role, password):
@@ -104,20 +110,50 @@ def create_or_rotate_role(admin_conn, role, password):
 
 
 def apply_grants(admin_conn, role, grant_targets):
-    """All grant_targets are chatbot_views.<view> (Keputusan #3) -- single
-    admin_conn for schema USAGE + object SELECT, no owner-routing needed
-    (every chatbot_views view is owned by the admin role, verified Fase 0)."""
-    with admin_conn.cursor() as cur:
-        cur.execute(f"GRANT USAGE ON SCHEMA chatbot_views TO {role}")
-        for target in grant_targets:
-            schema, obj = target.split(".", 1)
-            if schema != "chatbot_views":
-                raise ValueError(
-                    f"Unexpected grant target schema '{schema}' for {target} -- "
-                    f"Keputusan #3 forbids grants outside chatbot_views."
-                )
-            cur.execute(f"GRANT SELECT ON {schema}.{obj} TO {role}")
-    print(f"  {len(grant_targets)} view(s) granted in schema chatbot_views")
+    """Almost all grant_targets are chatbot_views.<view> (M4.3 Keputusan #3),
+    owned by admin -- single admin_conn suffices for those. The one deliberate
+    exception is mart_cleaned.role_permissions (M4.4 Keputusan #6, only used
+    by chatbot_authz_reader) -- mart_cleaned tables are owned by
+    reverse_etl_writer, not admin (M3.5 finding: admin GRANT on an object it
+    doesn't own silently no-ops), so that target is routed through
+    get_mart_cleaned_owner_connection() instead."""
+    schemas_seen = set()
+    mart_cleaned_conn = None
+    granted_count = 0
+
+    for target in grant_targets:
+        schema, obj = target.split(".", 1)
+        if schema not in ("chatbot_views", "mart_cleaned"):
+            raise ValueError(
+                f"Unexpected grant target schema '{schema}' for {target} -- "
+                f"only chatbot_views (M4.3 Keputusan #3) and mart_cleaned."
+                f"role_permissions (M4.4 Keputusan #6 exception) are expected here."
+            )
+        if schema == "mart_cleaned" and obj != "role_permissions":
+            raise ValueError(
+                f"Unexpected mart_cleaned grant target '{obj}' -- the only sanctioned "
+                f"mart_cleaned exception is role_permissions (chatbot_authz_reader)."
+            )
+
+        if schema not in schemas_seen:
+            with admin_conn.cursor() as cur:
+                cur.execute(f"GRANT USAGE ON SCHEMA {schema} TO {role}")
+            schemas_seen.add(schema)
+
+        if schema == "mart_cleaned":
+            if mart_cleaned_conn is None:
+                mart_cleaned_conn = get_mart_cleaned_owner_connection()
+                mart_cleaned_conn.autocommit = True
+            with mart_cleaned_conn.cursor() as cur:
+                cur.execute(f"GRANT SELECT ON {schema}.{obj} TO {role}")
+        else:
+            with admin_conn.cursor() as cur:
+                cur.execute(f"GRANT SELECT ON {schema}.{obj} TO {role}")
+        granted_count += 1
+
+    if mart_cleaned_conn:
+        mart_cleaned_conn.close()
+    print(f"  {granted_count} object(s) granted across schema(s): {sorted(schemas_seen)}")
 
 
 def setup_role(admin_conn, config):

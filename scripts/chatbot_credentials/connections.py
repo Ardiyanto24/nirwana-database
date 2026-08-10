@@ -1,13 +1,16 @@
 """
-Connection helpers for Milestone 4.3 AI Chatbot credential scripts.
+Connection helpers for Milestone 4.3/4.4 AI Chatbot credential scripts.
 
 Copy of scripts/data_analyst_credentials/connections.py (not imported --
-project convention since M2.1), with get_mart_cleaned_owner_connection
-DELIBERATELY OMITTED: Milestone 4.3's decisions.md Keputusan #3 forbids any
-GRANT on mart_cleaned/mart_aggregated tables at all -- every grant target is
-a chatbot_views.<view>, and all 67 of those views are owned by the same admin
-role (verified empirically, Fase 0 -- pg_class.relowner all = 'postgres',
-same role as SERVING_DB_URL). No owner-routing complexity needed here.
+project convention since M2.1). get_mart_cleaned_owner_connection was
+originally omitted in M4.3 (Keputusan #3 forbade any grant outside
+chatbot_views, and all 67 chatbot_views views are owned by the admin role --
+verified empirically, no owner-routing needed for those). Milestone 4.4
+Keputusan #6 adds ONE deliberate exception (chatbot_authz_reader, granted
+SELECT on mart_cleaned.role_permissions directly) -- mart_cleaned tables are
+owned by reverse_etl_writer, not admin (M3.5 finding: admin GRANT on an
+object it doesn't own silently no-ops), so this helper is needed again for
+that single grant.
 """
 import os
 import re
@@ -37,6 +40,16 @@ def get_serving_connection(readonly=False):
     conn = psycopg2.connect(env["SERVING_DB_URL"])
     if readonly:
         conn.set_session(readonly=True, autocommit=True)
+    return conn
+
+
+def get_mart_cleaned_owner_connection():
+    """Connection as reverse_etl_writer -- the actual OWNER of mart_cleaned
+    tables. Needed only for chatbot_authz_reader's grant on
+    mart_cleaned.role_permissions (M4.4 Keputusan #6) -- admin_conn silently
+    no-ops on objects it doesn't own (M3.5 finding)."""
+    env = _load_env(os.path.join(REPO_ROOT, ".env"))
+    conn = psycopg2.connect(env["REVERSE_ETL_WRITER_DB_URL"])
     return conn
 
 
