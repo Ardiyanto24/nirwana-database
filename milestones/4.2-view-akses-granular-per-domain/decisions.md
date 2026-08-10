@@ -80,8 +80,8 @@ Sama alasan M3.2 — murni authoring/apply DDL sekali jalan, bukan operasi haria
 **✅ Checkpoint 3** — commit + log.
 
 ### Fase 4 — 4 Domain Granular
-8. `views_properties_ref.sql` (`v_properties_ref`) + `views_employees_directory.sql` (`v_employees_directory`) + apply — S
-9. `views_guests.sql` (`guests_contact_view`, `guests_profile_view`, `last_active_property_id`) + apply + **uji eksplisit KK2**: `guests_profile_view` tidak punya kolom `email`/`phone`, `guests_contact_view` tidak punya kolom `loyalty_tier`/`nationality` — M
+8. `views_properties_ref.sql` (`v_properties_ref`) + `views_employees_directory.sql` (`v_employees_directory`) + apply — S — **Selesai**
+9. `views_guests.sql` (`guests_contact_view`, `guests_profile_view`, `last_active_property_id`) + apply + **uji eksplisit KK2**: `guests_profile_view` tidak punya kolom `email`/`phone`, `guests_contact_view` tidak punya kolom `loyalty_tier`/`nationality` — M — **Selesai**. 2 koreksi ditemukan: (a) `event_bookings` tidak punya `guest_id`, dikeluarkan dari join; (b) draf `LATERAL` per-baris timeout, diganti agregasi 1x scan (`DISTINCT ON`).
 
 **✅ Checkpoint 4** — commit + log.
 

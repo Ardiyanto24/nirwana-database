@@ -148,7 +148,7 @@ Dua view berbeda di atas tabel fisik `mart_cleaned.guests` yang sama (bukan dua 
 ```
 guest_id, full_name, email, phone, last_active_property_id
 ```
-`last_active_property_id` diturunkan dari `property_id` booking/transaksi guest_id tersebut yang paling baru di antara `bookings`, `spa_bookings`, `event_bookings` (guest tidak terikat 1 properti tetap — lihat `Metadata.md` "guests adalah master PELANGGAN"). Kolom ini yang dipakai API (M4.4) untuk menegakkan filter `own_property`.
+`last_active_property_id` diturunkan dari `property_id` booking/transaksi guest_id tersebut yang paling baru di antara `bookings` dan `spa_bookings` (guest tidak terikat 1 properti tetap — lihat `Metadata.md` "guests adalah master PELANGGAN"). **Koreksi M4.2**: `event_bookings` awalnya disebut ikut di-`UNION`, tapi tabel itu tidak punya kolom `guest_id` sama sekali (klien event diidentifikasi lewat `client_name` teks bebas, bukan tamu terdaftar) — dikeluarkan dari join saat implementasi SQL nyata (`scripts/chatbot_views/views_guests.sql`). Kolom ini yang dipakai API (M4.4) untuk menegakkan filter `own_property`.
 
 ### `guests_profile_view` (domain `guests_profile`)
 ```
