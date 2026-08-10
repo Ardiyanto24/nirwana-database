@@ -43,13 +43,19 @@ LEFT JOIN mart_aggregated.dim_property p ON p.property_id = f.property_id;
 -- Filtering staff_id=diri-sendiri (untuk role Staff) adalah tanggung jawab
 -- Milestone 4.4 (API), bukan view ini (M4.1 §2.3 Filter properti; pola sama
 -- v_housekeeping_staff_daily M3.2).
+-- KOREKSI (M4.4): property_id awalnya tidak ikut di-SELECT meski sudah
+-- tersedia lewat join dim_employee -- ditemukan saat Milestone 4.4 mendesain
+-- filter own_property, tanpa kolom ini API tidak bisa membatasi baris ke
+-- properti karyawan yang meminta. Ditambahkan di akhir SELECT (bukan
+-- disisipkan -- CREATE OR REPLACE VIEW tidak mengizinkan itu, pola sama M4.2).
 CREATE OR REPLACE VIEW chatbot_views.v_housekeeping_staff_daily AS
 SELECT
     f.staff_id,
     e.full_name AS staff_name,
     f.period_date,
     f.avg_cleaning_duration_minutes,
-    f.team_avg_duration_minutes
+    f.team_avg_duration_minutes,
+    e.property_id
 FROM mart_aggregated.fact_housekeeping_staff_daily f
 LEFT JOIN mart_aggregated.dim_employee e ON e.employee_id = f.staff_id;
 
@@ -125,13 +131,16 @@ SELECT
 FROM mart_aggregated.fact_maintenance_property_benchmark_yearly f
 LEFT JOIN mart_aggregated.dim_property p ON p.property_id = f.property_id;
 
+-- KOREKSI (M4.4): sama seperti v_housekeeping_staff_daily di atas --
+-- property_id ditambahkan di akhir SELECT untuk filter own_property M4.4.
 CREATE OR REPLACE VIEW chatbot_views.v_maintenance_technician_daily AS
 SELECT
     f.assigned_staff_id,
     e.full_name AS technician_name,
     f.period_date,
     f.ticket_count,
-    f.labor_hours
+    f.labor_hours,
+    e.property_id
 FROM mart_aggregated.fact_maintenance_technician_daily f
 LEFT JOIN mart_aggregated.dim_employee e ON e.employee_id = f.assigned_staff_id;
 

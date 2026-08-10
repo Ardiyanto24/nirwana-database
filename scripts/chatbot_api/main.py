@@ -110,3 +110,9 @@ from whitelist_fnb import WHITELIST as FNB_WHITELIST
 
 register_domain_routes("reservation", RESERVATION_WHITELIST)
 register_domain_routes("fnb", FNB_WHITELIST)
+
+from whitelist_facility import WHITELIST as FACILITY_WHITELIST
+from whitelist_spa_event import WHITELIST as SPA_EVENT_WHITELIST
+
+register_domain_routes("facility", FACILITY_WHITELIST)
+register_domain_routes("spa_event", SPA_EVENT_WHITELIST)

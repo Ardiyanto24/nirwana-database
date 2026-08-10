@@ -83,8 +83,8 @@ Setelah lolos otorisasi #3, API connect pakai kredensial domain yang sesuai (`RE
 **✅ Checkpoint 1** — commit + log.
 
 ### Fase 2 — Facility + Spa & Event
-4. `whitelist_facility.py` (12 entry) + tes. — M
-5. `whitelist_spa_event.py` (9 entry) + tes. — M
+4. `whitelist_facility.py` (12 entry) + tes. — M — **Selesai**. Gap ditemukan & diperbaiki: `v_housekeeping_staff_daily`/`v_maintenance_technician_daily` (M4.2) tidak punya `property_id` sama sekali, ditambal via `views_facility.sql` (join `dim_employee` sudah ada, tinggal `SELECT`).
+5. `whitelist_spa_event.py` (9 entry) + tes. — M — **Selesai**
 
 **✅ Checkpoint 2** — commit + log.
 

@@ -55,6 +55,8 @@ Inventaris seluruh view di schema `chatbot_views`, sumber SQL di `scripts/chatbo
 
 **Performa individu staff** (`v_housekeeping_staff_daily`, `v_maintenance_technician_daily`, `v_lookup_housekeeping_log.staff_id`, `v_lookup_maintenance_tickets.assigned_staff_id`) — filtering "hanya lihat data sendiri" untuk role Staff adalah tanggung jawab Milestone 4.4, bukan view ini (carry-over business rule M3.1 #11).
 
+**Koreksi M4.4**: `v_housekeeping_staff_daily` dan `v_maintenance_technician_daily` awalnya tidak mengekspos `property_id` sama sekali (cuma `staff_id`/`assigned_staff_id`+`period_date`), meski `dim_employee` yang sudah di-join di kedua view itu punya kolomnya — ditemukan saat Milestone 4.4 merancang filter `own_property`, tanpa perbaikan filter itu tidak bisa diterapkan di kedua view ini. Ditambal dengan menambahkan `e.property_id` di akhir `SELECT` (`scripts/chatbot_views/views_facility.sql`), diverifikasi 0 baris `NULL`.
+
 ## Spa & Event (6 agregat + 3 lookup)
 
 | View | Sumber | Catatan |
