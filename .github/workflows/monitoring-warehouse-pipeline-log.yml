@@ -1,0 +1,60 @@
+name: Monitoring Warehouse - Pipeline Log
+
+# Milestone 6.2 -- mencatat status/durasi tiap titik pengamatan pipeline Fase 2
+# (peta 10 titik Milestone 6.1, docs/10-monitoring-warehouse-serving/) ke
+# monitoring.pipeline_run_log, murni observasional -- tidak mengubah 1 baris
+# pun di 6 workflow pipeline yang didengarkan (Keputusan #1 decisions.md).
+# Rujukan: milestones/6.2-monitoring-log-proses-pipeline/decisions.md,
+# scripts/monitoring_warehouse/titik_config.py,
+# docs/05-orchestrator/konvensi-job-dependency.md (domain monitoring-warehouse).
+#
+# 1 file gabungan mendengarkan ke 6 workflow pipeline sekaligus lewat
+# workflow_run.workflows: array (Keputusan #3) -- BUKAN pola workflow_run 1:1
+# yang dipakai job pipeline lain di repo ini, karena job ini adalah aggregator
+# lintas-workflow, bukan dependency chain linear.
+#
+# PENTING: job ini SENGAJA tidak mengecek github.event.workflow_run.conclusion
+# sebelum jalan (beda dari job pipeline lain yang skip kalau upstream gagal) --
+# mencatat kegagalan run pipeline justru inti tugas milestone ini.
+
+on:
+  workflow_run:
+    workflows:
+      - "Extract Production to Raw Warehouse"
+      - "Transform Staging and Mart Cleaned"
+      - "Reverse ETL Mart Cleaned to Serving PostgreSQL"
+      - "Scoring Occupancy Forecast (Mock)"
+      - "Transform Mart Aggregated"
+      - "Reverse ETL Mart Aggregated to Serving PostgreSQL"
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Run ID GitHub Actions untuk diproses manual (uji coba)"
+        required: true
+
+permissions:
+  actions: read
+
+jobs:
+  run-monitoring-warehouse-pipeline-log:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write .env untuk snapshot_pipeline_run.py
+        run: |
+          echo "SUPABASE_DB_URL=${{ secrets.SUPABASE_DB_URL }}" >> .env
+
+      - name: Milestone 6.2 -- catat status/durasi run ke monitoring.pipeline_run_log
+        working-directory: scripts/monitoring_warehouse
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python snapshot_pipeline_run.py "${{ github.event.workflow_run.id || github.event.inputs.run_id }}"
