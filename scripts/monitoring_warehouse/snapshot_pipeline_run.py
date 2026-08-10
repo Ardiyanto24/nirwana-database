@@ -130,14 +130,27 @@ def main(run_id):
         print(f"No titik configured for workflow {workflow_name!r}, skip.")
         return
 
+    # Job-level 'skipped' (mis. transform-mart-aggregated.yml men-skip diri sendiri
+    # lewat if:-guard sendiri karena upstream gagal, pola M5.4 KK3 isolasi kegagalan)
+    # berarti TIDAK ADA satu pun step yang benar-benar jalan -- fetch_steps akan
+    # kembalikan list kosong. Titik step-level untuk workflow ini dicatat 'skipped'
+    # langsung dari data run (step_name=NULL, timing dari run bukan step) TANPA
+    # memanggil find_step() sama sekali -- ditemukan sebagai bug nyata (run
+    # 31436870678, M6.3 Checkpoint 2): find_step() crash "found 0" pada kondisi ini,
+    # membuat SELURUH titik untuk run itu gagal tercatat (bukan cuma yang crash),
+    # dan step GitHub Actions-nya sendiri ikut FAILED padahal cuma observasional.
+    run_was_skipped = run["conclusion"] == "skipped"
+
     steps = None
     conn = get_connection()
     try:
         for titik_id, titik_label, _wf_name, step_sub, granularity in rows:
-            if step_sub is None:
-                insert_row(conn, titik_id, titik_label, workflow_name, run_id, None,
+            if step_sub is None or run_was_skipped:
+                step_name = None if step_sub is None else f"{step_sub} (run skipped, no steps executed)"
+                insert_row(conn, titik_id, titik_label, workflow_name, run_id, step_name,
                            granularity, conclusion, run_started_at, run_completed_at, trigger_event)
-                print(f"Logged titik {titik_id} ({titik_label}) run-level: {conclusion}")
+                level = "run-level" if step_sub is None else "step-level (run skipped, inferred)"
+                print(f"Logged titik {titik_id} ({titik_label}) {level}: {conclusion}")
             else:
                 if steps is None:
                     steps = fetch_steps(repo, run_id, token)
