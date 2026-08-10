@@ -78,8 +78,8 @@ Update `docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md` (10 baris
 **✅ Checkpoint 1** — commit + log.
 
 ### Fase 2 — Facility + Spa & Event roles
-4. `role_config_facility.py` (12 `GRANT_TARGETS`), role `facility_chatbot_reader` — M
-5. `role_config_spa_event.py` (9 `GRANT_TARGETS`), role `spa_event_chatbot_reader` — M
+4. `role_config_facility.py` (12 `GRANT_TARGETS`), role `facility_chatbot_reader` — M — **Selesai**
+5. `role_config_spa_event.py` (9 `GRANT_TARGETS`), role `spa_event_chatbot_reader` — M — **Selesai**
 
 **✅ Checkpoint 2** — commit + log.
 

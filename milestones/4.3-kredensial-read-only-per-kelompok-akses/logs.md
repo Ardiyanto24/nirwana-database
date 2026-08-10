@@ -11,3 +11,7 @@ Result: worked. Asumsi terbukti: 67/67 view owner = 1 role, GRANT selalu lewat 1
 ## 2026-08-10 -- Fase 1: reservation + fnb roles
 Did: `role_config_reservation.py` (10 GRANT_TARGETS) dan `role_config_fnb.py` (11 GRANT_TARGETS), masing-masing dengan deny-check role_permissions eksplisit (M4.1 Keputusan #7) selain bypass mart_aggregated/mart_cleaned dan cross-domain. `python setup_chatbot_roles.py --role <nama>` dijalankan per role.
 Result: worked. Kedua role: 9/9 check OK (2 allow, 6 deny, 1 write-deny). Tidak ada retry pooler warmup diperlukan (langsung sukses attempt pertama, beda dari beberapa kasus M3.5).
+
+## 2026-08-10 -- Fase 2: facility + spa_event roles
+Did: `role_config_facility.py` (12 GRANT_TARGETS) dan `role_config_spa_event.py` (9 GRANT_TARGETS), pola sama Fase 1.
+Result: worked. Kedua role: 9/9 check OK masing-masing.
