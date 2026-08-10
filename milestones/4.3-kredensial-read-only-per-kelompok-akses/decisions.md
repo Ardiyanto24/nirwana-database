@@ -84,8 +84,8 @@ Update `docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md` (10 baris
 **✅ Checkpoint 2** — commit + log.
 
 ### Fase 3 — HR + Financial roles
-6. `role_config_hr.py` (10 `GRANT_TARGETS`, tanpa payroll), role `hr_chatbot_reader`, deny-test tambahan: `v_lookup_payroll`/`v_payroll_department_monthly`/dst — M
-7. `role_config_financial.py` (11 `GRANT_TARGETS`), role `financial_chatbot_reader`, deny-test bypass `mart_aggregated.fact_financial_business_line_monthly` (business rule `Overall` exclusion) — M
+6. `role_config_hr.py` (10 `GRANT_TARGETS`, tanpa payroll), role `hr_chatbot_reader`, deny-test tambahan: `v_lookup_payroll`/`v_payroll_department_monthly`/dst — M — **Selesai**
+7. `role_config_financial.py` (11 `GRANT_TARGETS`), role `financial_chatbot_reader`, deny-test bypass `mart_aggregated.fact_financial_business_line_monthly` (business rule `Overall` exclusion) — M — **Selesai**
 
 **✅ Checkpoint 3** — commit + log.
 

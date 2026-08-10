@@ -15,3 +15,7 @@ Result: worked. Kedua role: 9/9 check OK (2 allow, 6 deny, 1 write-deny). Tidak 
 ## 2026-08-10 -- Fase 2: facility + spa_event roles
 Did: `role_config_facility.py` (12 GRANT_TARGETS) dan `role_config_spa_event.py` (9 GRANT_TARGETS), pola sama Fase 1.
 Result: worked. Kedua role: 9/9 check OK masing-masing.
+
+## 2026-08-10 -- Fase 3: hr + financial roles
+Did: `role_config_hr.py` (10 GRANT_TARGETS, 6 deny-check payroll-adjacent eksplisit: mart_cleaned.payroll, v_lookup_payroll, v_payroll_department_monthly, v_payroll_access_level_monthly, v_financial_service_charge_monthly, v_financial_labor_cost_monthly). `role_config_financial.py` (11 GRANT_TARGETS, deny-check bypass fact_financial_business_line_monthly -- business rule Overall exclusion paling kritis).
+Result: worked. hr: 12/12 check OK (2 allow, 9 deny, 1 write). financial: 8/8 check OK.
