@@ -104,3 +104,9 @@ def register_domain_routes(domain, whitelist):
 
 
 # Domain routes registered below, one block added per M4.4 checkpoint.
+
+from whitelist_reservation import WHITELIST as RESERVATION_WHITELIST
+from whitelist_fnb import WHITELIST as FNB_WHITELIST
+
+register_domain_routes("reservation", RESERVATION_WHITELIST)
+register_domain_routes("fnb", FNB_WHITELIST)

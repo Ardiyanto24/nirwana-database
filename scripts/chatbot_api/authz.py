@@ -17,7 +17,7 @@ def get_access_scope(role_title, domain):
     role" from "known role, wrong domain" from the response, by design: doesn't
     leak which role_titles exist to a caller probing with a fake one)."""
     rows = query_authz(
-        "SELECT access_scope FROM role_permissions WHERE role_title = %s AND data_domain = %s",
+        "SELECT access_scope FROM mart_cleaned.role_permissions WHERE role_title = %s AND data_domain = %s",
         (role_title, domain),
     )
     return rows[0]["access_scope"] if rows else None

@@ -77,8 +77,8 @@ Setelah lolos otorisasi #3, API connect pakai kredensial domain yang sesuai (`RE
 **✅ Checkpoint 0** — commit + log.
 
 ### Fase 1 — Reservation + F&B
-2. `whitelist_reservation.py` (10 entry) + register route. Tes HTTP: persona legitimate + percobaan domain lain ditolak. — M
-3. `whitelist_fnb.py` (11 entry) + register route + tes. — M
+2. `whitelist_reservation.py` (10 entry) + register route. Tes HTTP: persona legitimate + percobaan domain lain ditolak. — M — **Selesai**
+3. `whitelist_fnb.py` (11 entry) + register route + tes. — M — **Selesai**
 
 **✅ Checkpoint 1** — commit + log.
 
