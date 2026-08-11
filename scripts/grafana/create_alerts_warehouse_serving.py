@@ -41,6 +41,7 @@ def _root_cause_rule_body(uid, folder_uid, ds_uid):
                         "SELECT root_titik_id::text AS root_titik_id, "
                         "COUNT(*)::float AS value "
                         "FROM monitoring.alerts_with_root_cause "
+                        "WHERE is_simulated = false "
                         "GROUP BY root_titik_id;"
                     ),
                     "format": "table",

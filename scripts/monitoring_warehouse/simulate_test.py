@@ -28,6 +28,24 @@ sintetis (populasi expected/scored keduanya dari BigQuery, bukan Postgres).
   6. drift canary (informational, TIDAK ada alert) -- dataset throwaway BigQuery
      dibuat/dihapus via client Python langsung (bukan is_simulated Postgres --
      yang diuji adalah list_datasets() BigQuery sungguhan)
+
+Milestone 6.7 -- 1 skenario tambahan (KK2, root-cause grouping):
+  7. Titik 2 gagal (pipeline_run_log) + Titik 3/6/7/9 ikut punya event hari
+     yang sama (semua lewat monitoring.alerts, is_simulated=TRUE) -> EXPECT
+     monitoring.alerts_with_root_cause mengelompokkan SEMUA ke root_titik_id=2
+     (1-hop: 3,6,9 langsung depends_on 2; 2-hop: 7 depends_on 6 depends_on 2 --
+     menguji recursive CTE naik lebih dari 1 tingkat). BEDA dari skenario 1-6:
+     monitoring.titik_event_today/alerts_with_root_cause adalah VIEW yang
+     hardcode CURRENT_DATE (bukan terima parameter snapshot_date seperti
+     detect_*/check_* lain) -- karena itu skenario ini WAJIB pakai tanggal
+     hari ini sungguhan (bukan tanggal penanda 2099 seperti skenario 3/4),
+     konsekuensi sadar dari desain "kondisi terkini" KK1/KK2 M6.7. Titik 3/7
+     dipakai lewat alert_type='dbt_test_failure' (monitoring.alerts, BUKAN
+     monitoring.dbt_test_result -- tabel itu tidak punya kolom is_simulated
+     ATAU konvensi injeksi sintetis apa pun, lihat catatan Milestone 6.3 di
+     atas; dbt_test_failure sendiri reserved-tapi-tak-pernah-dipakai di
+     produksi, M6.7 decisions.md -- tapi valid dipakai di sini justru untuk
+     menguji cabang CASE mapping-nya yang sebelumnya tidak pernah terlewati).
 """
 import datetime
 import os
@@ -48,6 +66,7 @@ FAKE_SENSOR_ANOMALOUS_RUN_ID = 999990099
 SIM_MODEL_NAME = "sim_model"
 SIM_MODEL_VERSION = "sim_model_v1"
 SIM_DRIFT_DATASET_ID = "ml_monitoring_simtest"
+SIM_M67_TITIK2_RUN_ID = 999990301
 
 
 def _cleanup(cur):
@@ -56,7 +75,7 @@ def _cleanup(cur):
     cur.execute("DELETE FROM monitoring.ml_output_freshness_snapshot WHERE snapshot_date = %s", (FAKE_FRESHNESS_DATE,))
     cur.execute(
         "DELETE FROM monitoring.pipeline_run_log WHERE run_id = ANY(%s)",
-        (FAKE_SENSOR_RUN_IDS + [FAKE_SENSOR_ANOMALOUS_RUN_ID],),
+        (FAKE_SENSOR_RUN_IDS + [FAKE_SENSOR_ANOMALOUS_RUN_ID, SIM_M67_TITIK2_RUN_ID],),
     )
     cur.execute("DELETE FROM monitoring.alerts WHERE is_simulated = TRUE")
     cur.execute("DELETE FROM monitoring.ml_model_version_snapshot WHERE model_name = %s", (SIM_MODEL_NAME,))
@@ -221,6 +240,72 @@ def run_simulation():
     print(f"[{'PASS' if passed else 'FAIL'}] ml_drift_data_availability canary: "
           f"expected not-found-before=True found-after='{SIM_DRIFT_DATASET_ID}' -> "
           f"got not_found_ok={not_found_ok} found_after={found_after!r}")
+
+    # --- Skenario 7: root-cause grouping lintas titik (KK2 M6.7) ---
+    # Titik 2 (root, pipeline_run_log gagal) + Titik 3/6/7/9 (downstream, semua
+    # lewat monitoring.alerts, is_simulated=TRUE) hari ini -- tanggal SUNGGUHAN
+    # hari ini (bukan penanda 2099), lihat catatan desain di docstring atas.
+    #
+    # Cleanup dulu -- skenario 1-5 di atas SUDAH di-assert lolos/gagal duluan
+    # (tidak dibutuhkan lagi), tapi baris is_simulated=TRUE mereka (terutama
+    # ml_output_freshness_delay skenario 4, snapshot_date=today) masih aktif
+    # di monitoring.alerts/pipeline_run_log HARI INI juga -- kalau tidak
+    # dibersihkan, akan ikut ke-pick up monitoring.titik_event_today (yang
+    # sekarang TIDAK memfilter is_simulated, lihat Checkpoint 2 refactor) dan
+    # mencemari graph korelasi skenario 7 (titik 5 & 6 sama-sama depends_on
+    # tumpang tindih -- persis kelas masalah yang sama dengan temuan "2 alert
+    # M6.6 nyata tak terkait" di logs.md Checkpoint 2, di sini muncul lagi
+    # tapi antar-SKENARIO simulate_test.py sendiri).
+    _cleanup(cur)
+    conn.commit()
+
+    now = datetime.datetime.now(datetime.timezone.utc)
+    cur.execute(
+        """
+        INSERT INTO monitoring.pipeline_run_log
+            (titik_id, titik_label, workflow_name, run_id, step_name, granularity, status, started_at, completed_at, duration_seconds, trigger_event)
+        VALUES (2, 'Transformasi staging -> mart_cleaned (SIM)', 'Transform Staging and Mart Cleaned', %s,
+                'build->test->swap gate ke mart_cleaned', 'detailed', 'failure', %s, %s, 60, 'simulated')
+        """,
+        (SIM_M67_TITIK2_RUN_ID, now, now + datetime.timedelta(seconds=60)),
+    )
+    downstream_alerts = [
+        ('mart_cleaned', '_m67sim_test', 'dbt_test_failure', 'critical', 'M6.7 sim titik 3'),
+        ('mart_aggregated', '_m67sim_fact_table', 'warehouse_volume_anomaly', 'warning', 'M6.7 sim titik 6'),
+        ('mart_aggregated', '_m67sim_test', 'dbt_test_failure', 'critical', 'M6.7 sim titik 7'),
+        ('mart_cleaned', '_m67sim_table', 'serving_swap_slow', 'critical', 'M6.7 sim titik 9'),
+    ]
+    for schema_name, table_name, alert_type, severity, detail in downstream_alerts:
+        cur.execute(
+            """
+            INSERT INTO monitoring.alerts (schema_name, table_name, alert_type, severity, detail, snapshot_date, is_simulated)
+            VALUES (%s, %s, %s, %s, %s, %s, TRUE)
+            """,
+            (schema_name, table_name, alert_type, severity, detail, today),
+        )
+    conn.commit()
+
+    cur.execute(
+        "SELECT titik_id, root_titik_id, is_root FROM monitoring.alerts_with_root_cause "
+        "WHERE is_simulated = TRUE AND titik_id = 2 AND event_source = 'pipeline_run_log'"
+    )
+    root_row = cur.fetchone()
+    root_ok = root_row is not None and root_row[1] == 2 and root_row[2] is True
+
+    cur.execute(
+        "SELECT titik_id, root_titik_id FROM monitoring.alerts_with_root_cause "
+        "WHERE is_simulated = TRUE AND event_source = 'alerts' "
+        "ORDER BY titik_id"
+    )
+    downstream_rows = cur.fetchall()
+    expected_titik = {3, 6, 7, 9}
+    got_titik = {r[0] for r in downstream_rows}
+    downstream_ok = got_titik == expected_titik and all(r[1] == 2 for r in downstream_rows)
+
+    passed = root_ok and downstream_ok
+    all_passed &= passed
+    print(f"[{'PASS' if passed else 'FAIL'}] alerts_with_root_cause (KK2 M6.7): expected root_titik_id=2 untuk "
+          f"Titik {{2 (root),3,6,7,9}} -> got root_row={root_row} downstream={downstream_rows}")
 
     cur.close()
     conn.close()

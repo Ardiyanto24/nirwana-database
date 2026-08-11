@@ -70,6 +70,7 @@ def build_panels():
         2, "Alert Aktif Hari Ini -- Dikelompokkan per Akar Masalah (KK2, M6.7)",
         """SELECT root_titik_id, is_root, titik_id, event_source, severity, detail, event_at
            FROM monitoring.alerts_with_root_cause
+           WHERE is_simulated = false
            ORDER BY root_titik_id, is_root DESC, event_at DESC;""",
         0, y, h=8,
     ))

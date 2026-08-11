@@ -271,7 +271,28 @@ ALTER TABLE monitoring.alerts ADD CONSTRAINT alerts_alert_type_check
 -- dbt_test_failure dipetakan juga meski TIDAK PERNAH diinsert skrip manapun
 -- (temuan M6.7 decisions.md -- reserved-tapi-mati sejak M6.3) -- future-proof,
 -- tidak berpengaruh selama tidak ada baris.
-CREATE OR REPLACE VIEW monitoring.titik_event_today AS
+--
+-- is_simulated DIEKSPOS (bukan difilter di sini) -- pola sama
+-- detect_parity_mismatch.py vs monitoring.warehouse_parity_status (view aman
+-- default, detector butuh akses is_simulated eksplisit): karena view ini
+-- gabungan 3 tabel (bukan 1 tabel sederhana), "bypass view" tidak praktis
+-- untuk Checkpoint 5 (uji coba terkontrol butuh mem-verifikasi VIEW ini
+-- sendiri, bukan logic Python terpisah) -- jadi filter "aman untuk
+-- konsumsi dashboard" (is_simulated=false) dipindah ke titik KONSUMSI
+-- (panel Grafana Checkpoint 3, alert rule Checkpoint 4), bukan dibakukan di
+-- view. pipeline_run_log tidak punya kolom is_simulated -- diturunkan dari
+-- trigger_event='simulated' (marker M6.2/M6.3). dbt_test_result juga tidak
+-- punya kolom ini DAN tidak ada konvensi injeksi sintetis untuk tabel itu
+-- (M6.3 decisions.md -- butuh fault-injection dbt nyata, bukan snapshot) --
+-- is_simulated di-hardcode FALSE (akurat, tidak ada baris sintetis yang
+-- pernah masuk ke tabel ini).
+-- DROP+CREATE (bukan CREATE OR REPLACE) -- Postgres menolak REPLACE kalau urutan/nama
+-- kolom berubah dari versi sebelumnya (terjadi nyata saat Checkpoint 5 menambah
+-- is_simulated di tengah daftar kolom), re-runnable lewat DROP IF EXISTS dulu.
+DROP VIEW IF EXISTS monitoring.alerts_with_root_cause;
+DROP VIEW IF EXISTS monitoring.titik_event_today;
+
+CREATE VIEW monitoring.titik_event_today AS
 WITH alerts_mapped AS (
     SELECT
         CASE
@@ -292,12 +313,12 @@ WITH alerts_mapped AS (
         'alerts' AS event_source,
         severity,
         (alert_type || ': ' || detail) AS detail,
-        triggered_at AS event_at
+        triggered_at AS event_at,
+        is_simulated
     FROM monitoring.alerts
-    WHERE is_simulated = FALSE
-      AND triggered_at::date = CURRENT_DATE
+    WHERE triggered_at::date = CURRENT_DATE
 )
-SELECT titik_id, event_source, severity, detail, event_at
+SELECT titik_id, event_source, severity, detail, event_at, is_simulated
 FROM alerts_mapped
 WHERE titik_id IS NOT NULL
 
@@ -308,7 +329,8 @@ SELECT
     'pipeline_run_log' AS event_source,
     'critical' AS severity,
     ('Titik ' || titik_id || ' gagal: ' || workflow_name || COALESCE(' / step ' || step_name, '')) AS detail,
-    completed_at AS event_at
+    completed_at AS event_at,
+    (trigger_event = 'simulated') AS is_simulated
 FROM monitoring.pipeline_run_log
 WHERE status = 'failure'
   AND started_at::date = CURRENT_DATE
@@ -320,7 +342,8 @@ SELECT
     'dbt_test_result' AS event_source,
     'critical' AS severity,
     ('DQ gate ' || layer || ' gagal: ' || COALESCE(test_name, unique_id)) AS detail,
-    captured_at AS event_at
+    captured_at AS event_at,
+    FALSE AS is_simulated
 FROM monitoring.dbt_test_result
 WHERE status = 'fail'
   AND captured_at::date = CURRENT_DATE;
@@ -329,18 +352,19 @@ WHERE status = 'fail'
 -- root_titik_id = leluhur TERTINGGI yang juga punya event hari ini (kalau
 -- tidak ada leluhur gagal, event itu sendiri adalah root -- is_root=true).
 -- depth<10 sekadar guard defensif (graph 10 titik adalah DAG, tidak mungkin
--- siklus, tapi tetap dibatasi).
-CREATE OR REPLACE VIEW monitoring.alerts_with_root_cause AS
+-- siklus, tapi tetap dibatasi). is_simulated diteruskan dari event LEAF
+-- (bukan leluhurnya) -- konsumen (dashboard/alert rule) filter di sini.
+CREATE VIEW monitoring.alerts_with_root_cause AS
 WITH RECURSIVE ancestry AS (
     SELECT
-        e.titik_id AS event_titik_id, e.event_source, e.severity, e.detail, e.event_at,
+        e.titik_id AS event_titik_id, e.event_source, e.severity, e.detail, e.event_at, e.is_simulated,
         e.titik_id AS current_titik_id, 0 AS depth
     FROM monitoring.titik_event_today e
 
     UNION ALL
 
     SELECT
-        a.event_titik_id, a.event_source, a.severity, a.detail, a.event_at,
+        a.event_titik_id, a.event_source, a.severity, a.detail, a.event_at, a.is_simulated,
         td.depends_on_titik_id, a.depth + 1
     FROM ancestry a
     JOIN monitoring.titik_dependency td ON td.titik_id = a.current_titik_id
@@ -353,7 +377,7 @@ WITH RECURSIVE ancestry AS (
 ),
 root_per_event AS (
     SELECT DISTINCT ON (event_titik_id, event_source, detail, event_at)
-        event_titik_id, event_source, severity, detail, event_at, current_titik_id AS root_titik_id
+        event_titik_id, event_source, severity, detail, event_at, is_simulated, current_titik_id AS root_titik_id
     FROM ancestry
     ORDER BY event_titik_id, event_source, detail, event_at, depth DESC
 )
@@ -363,6 +387,7 @@ SELECT
     severity,
     detail,
     event_at,
+    is_simulated,
     root_titik_id,
     (root_titik_id = event_titik_id) AS is_root
 FROM root_per_event;
