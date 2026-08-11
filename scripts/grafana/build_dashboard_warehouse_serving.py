@@ -56,11 +56,19 @@ def build_panels():
         1, "Status 10 Titik Pengamatan Hari Ini (peta M6.1)",
         """WITH titik_meta AS (
                 SELECT DISTINCT titik_id, titik_label, priority_class FROM monitoring.titik_dependency
+            ),
+            real_status AS (
+                SELECT DISTINCT ON (titik_id)
+                    titik_id, status, (started_at::date = CURRENT_DATE) AS ran_today,
+                    started_at, completed_at, duration_seconds
+                FROM monitoring.pipeline_run_log
+                WHERE trigger_event != 'simulated'
+                ORDER BY titik_id, completed_at DESC
             )
             SELECT tm.titik_id, tm.priority_class, tm.titik_label,
-                   prs.status, prs.ran_today, prs.started_at, prs.completed_at, prs.duration_seconds
+                   rs.status, rs.ran_today, rs.started_at, rs.completed_at, rs.duration_seconds
             FROM titik_meta tm
-            LEFT JOIN monitoring.pipeline_run_status prs ON prs.titik_id = tm.titik_id
+            LEFT JOIN real_status rs ON rs.titik_id = tm.titik_id
             ORDER BY tm.titik_id;""",
         0, y, h=10,
     ))
