@@ -85,8 +85,8 @@ Diajukan 3 opsi: (A) tambah instrumentasi `duration_ms` ke `chatbot_api` (percen
 - [x] Task 9: `explain_representative_queries.py`. **Selesai** — 10/10 query representatif (1 per domain) tereksekusi + tersimpan, temuan nyata: `guests_contact_view` 2354ms (paling lambat, observasional, tidak diperbaiki di M6.5).
 
 ### Checkpoint 4 — KK3: connection pool spike
-- [ ] Task 10: `snapshot_connection_pool.py` + `detect_connection_pool_spike.py`.
-- [ ] Task 11: Uji coba terkontrol burst paralel.
+- [x] Task 10: `snapshot_connection_pool.py` + `detect_connection_pool_spike.py`. **Selesai** — 1 bug ditemukan+diperbaiki (self-count `chatbot_perf_reader`, lihat logs.md).
+- [x] Task 11: Uji coba terkontrol burst paralel. **Selesai** — 20 concurrent request nyata, alert `chatbot_connection_pool_spike` CRITICAL benar. **Temuan operasional nyata**: 5/20 request gagal 500 -- Supavisor session-mode `pool_size=15` per role domain, `chatbot_api` tidak punya connection pooling sendiri (temuan M4.6 terbukti benar konsekuensinya).
 
 ### Checkpoint 5 (final) — Konsolidasi
 - [ ] Task 12: `simulate_test.py`.
