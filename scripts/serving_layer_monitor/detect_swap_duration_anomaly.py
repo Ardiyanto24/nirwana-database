@@ -120,19 +120,41 @@ def run(conn, dataset_name, table_name, as_of_id=None, persist=True, is_simulate
     return {"result": result, "alert_raised": alert_raised}
 
 
+def list_tables_synced_today(conn, today):
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT DISTINCT dataset_name, table_name FROM monitoring.reverse_etl_sync_log "
+        "WHERE synced_at::date = %s AND swap_duration_ms IS NOT NULL",
+        (today,),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+
 if __name__ == "__main__":
+    import datetime
+
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--table", required=True)
-    parser.add_argument("--dataset", required=True, choices=["mart_cleaned", "mart_aggregated"])
+    parser.add_argument("--table", help="cek 1 tabel spesifik (butuh --dataset juga)")
+    parser.add_argument("--dataset", choices=["mart_cleaned", "mart_aggregated"])
     args = parser.parse_args()
 
     conn = get_connection(readonly=False)
     try:
-        outcome = run(conn, args.dataset, args.table, is_simulated=False)
-        if outcome["alert_raised"]:
-            severity, detail = outcome["alert_raised"]
-            print(f"[{severity.upper()}] serving_swap_slow: {detail}")
+        if args.table:
+            pairs = [(args.dataset, args.table)]
         else:
-            print(f"[ok] {outcome['result']}")
+            # mode terjadwal -- cek SEMUA tabel yang sync hari ini (pola sama
+            # scripts/monitoring_warehouse/detect_volume_anomaly.py::list_tables_for_date)
+            pairs = list_tables_synced_today(conn, datetime.datetime.now(datetime.timezone.utc).date())
+
+        for dataset, table in pairs:
+            outcome = run(conn, dataset, table, is_simulated=False)
+            if outcome["alert_raised"]:
+                severity, detail = outcome["alert_raised"]
+                print(f"[{severity.upper()}] serving_swap_slow {dataset}.{table}: {detail}")
+            else:
+                print(f"[ok] {dataset}.{table}: {outcome['result']}")
     finally:
         conn.close()

@@ -1,0 +1,57 @@
+name: Monitoring Serving Layer Health
+
+# Milestone 6.6 -- 2 mekanisme deteksi terjadwal harian untuk kesehatan
+# PostgreSQL serving layer secara umum (bukan spesifik chatbot, itu M6.5):
+# (1) snapshot storage growth + table bloat/vacuum status (Output 1, KK1)
+# (2) deteksi orphan table + swap duration anomaly (Output 2, KK2)
+# Rujukan: milestones/6.6-monitoring-reverse-etl-serving-layer/decisions.md
+#
+# BEDA dari M6.5 (chatbot_perf_monitor, TIDAK ada workflow terjadwal): sistem
+# reverse ETL di sini PUNYA traffic terjadwal nyata (cron chain sungguhan
+# extract -> transform -> reverse ETL), jadi snapshot terjadwal genuinely
+# bermakna -- beda dari chatbot_api yang manual-only.
+#
+# workflow_run listener ke "Reverse ETL Mart Aggregated to Serving PostgreSQL"
+# (titik akhir pipeline, sama trigger point M6.3) -- memastikan sync
+# mart_cleaned DAN mart_aggregated sudah settle sebelum snapshot dihitung.
+# Murni observasional -- sync.py (kecuali instrumentasi M6.6 sendiri),
+# apply_views.py, reindex_analyze.py TIDAK disentuh workflow ini.
+
+on:
+  workflow_run:
+    workflows: ["Reverse ETL Mart Aggregated to Serving PostgreSQL"]
+    types: [completed]
+  workflow_dispatch: {}
+
+jobs:
+  run-monitoring-serving-layer-health:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write .env
+        run: |
+          echo "SERVING_STORAGE_READER_DB_URL=${{ secrets.SERVING_STORAGE_READER_DB_URL }}" >> .env
+          echo "SUPABASE_DB_URL=${{ secrets.SUPABASE_DB_URL }}" >> .env
+
+      - name: Milestone 6.6 -- snapshot storage growth + table bloat/vacuum (KK1)
+        working-directory: scripts/serving_layer_monitor
+        run: python snapshot_serving_storage.py
+
+      - name: Milestone 6.6 -- deteksi orphan table (KK2)
+        working-directory: scripts/serving_layer_monitor
+        run: python detect_orphan_tables.py
+
+      - name: Milestone 6.6 -- deteksi swap duration anomaly (KK2)
+        working-directory: scripts/serving_layer_monitor
+        run: python detect_swap_duration_anomaly.py
