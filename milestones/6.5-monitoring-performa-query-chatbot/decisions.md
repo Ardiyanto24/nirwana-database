@@ -76,9 +76,9 @@ Diajukan 3 opsi: (A) tambah instrumentasi `duration_ms` ke `chatbot_api` (percen
 - [x] Task 4: `scripts/chatbot_perf_monitor/{db.py, serving_pg.py}` + schema baru (`chatbot_query_perf_snapshot`, `chatbot_connection_snapshot`, `chatbot_explain_analyze_log`, extend `alerts.alert_type`). **Selesai** — diverifikasi `information_schema`.
 
 ### Checkpoint 2 — KK1 bagian 1: instrumentasi durasi + latency percentile
-- [ ] Task 5: Edit `main.py`/`audit.py`/`schema.sql` — **commit fix**.
-- [ ] Task 6: Verifikasi HTTP nyata.
-- [ ] Task 7: `compute_latency_percentiles.py`.
+- [x] Task 5: Edit `main.py`/`audit.py`/`schema.sql` — **commit fix**. **Selesai**.
+- [x] Task 6: Verifikasi HTTP nyata. **Selesai** — 3 request nyata (200 sukses, 403+404 denied), `duration_ms` terisi benar, baris lama tetap NULL.
+- [x] Task 7: `compute_latency_percentiles.py`. **Selesai** — p50/p95/p99 sungguhan (n=3), tren volume/denied lintas 2 hari (2026-08-10: 239 total/127 denied; 2026-08-11: 3/2).
 
 ### Checkpoint 3 — KK1 bagian 2: pg_stat_statements snapshot + EXPLAIN ANALYZE
 - [ ] Task 8: `snapshot_query_perf.py`.
