@@ -81,8 +81,8 @@ Diajukan 3 opsi: (A) tambah instrumentasi `duration_ms` ke `chatbot_api` (percen
 - [x] Task 7: `compute_latency_percentiles.py`. **Selesai** — p50/p95/p99 sungguhan (n=3), tren volume/denied lintas 2 hari (2026-08-10: 239 total/127 denied; 2026-08-11: 3/2).
 
 ### Checkpoint 3 — KK1 bagian 2: pg_stat_statements snapshot + EXPLAIN ANALYZE
-- [ ] Task 8: `snapshot_query_perf.py`.
-- [ ] Task 9: `explain_representative_queries.py`.
+- [x] Task 8: `snapshot_query_perf.py`. **Selesai** — 50 query nyata tersimpan (bug parameterisasi ILIKE ditemukan+diperbaiki, lihat logs.md).
+- [x] Task 9: `explain_representative_queries.py`. **Selesai** — 10/10 query representatif (1 per domain) tereksekusi + tersimpan, temuan nyata: `guests_contact_view` 2354ms (paling lambat, observasional, tidak diperbaiki di M6.5).
 
 ### Checkpoint 4 — KK3: connection pool spike
 - [ ] Task 10: `snapshot_connection_pool.py` + `detect_connection_pool_spike.py`.
