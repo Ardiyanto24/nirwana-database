@@ -102,8 +102,8 @@ Diajukan 2 pertanyaan awal (instrumentasi sync.py, cleanup orphan). User: "saya 
 - [x] Task 6: Verifikasi live. **Selesai, LEBIH LENGKAP dari rencana** — bukan cuma jalur happy-path (`properties`, `dropped`, 959.87ms), tapi juga jalur WARNING nyata untuk fix yang baru di-port: reapply `chatbot_views` (lepas dependency `employees__old` lama) → drop `employees__old` lama → sync `employees` ulang → warning graceful muncul (`old_table_status='kept (...)'`, TIDAK crash) — pertama kali fix M5.7 terbukti bekerja di mart_cleaned, bukan cuma port kode tanpa bukti jalan.
 
 ### Checkpoint 3 — KK1: storage growth + vacuum
-- [ ] Task 7: `snapshot_serving_storage.py`.
-- [ ] Task 8: Verifikasi live.
+- [x] Task 7: `snapshot_serving_storage.py`. **Selesai** — 173 tabel tersimpan, 531.6MB total.
+- [x] Task 8: Verifikasi live. **Selesai** — 73 orphan tepat terdeteksi (112.1MB, cocok temuan riset awal), `dead_pct`/`last_autovacuum` masuk akal.
 
 ### Checkpoint 4 — KK2: swap health detection
 - [ ] Task 9: `detect_orphan_tables.py` — SEBELUM cleanup.
