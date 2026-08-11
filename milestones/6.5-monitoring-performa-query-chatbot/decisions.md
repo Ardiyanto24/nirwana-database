@@ -1,7 +1,7 @@
 # Milestone 6.5: Monitoring Performa Query AI Chatbot — Decisions
 
 **Source:** `docs/03-implementation-plans/06-monitoring-warehouse-serving-fase2.md` (baris 130-147)
-**Status:** In Progress
+**Status:** Done
 **Date started:** 2026-08-11
 
 ## Contract (from source doc)
@@ -89,6 +89,6 @@ Diajukan 3 opsi: (A) tambah instrumentasi `duration_ms` ke `chatbot_api` (percen
 - [x] Task 11: Uji coba terkontrol burst paralel. **Selesai** — 20 concurrent request nyata, alert `chatbot_connection_pool_spike` CRITICAL benar. **Temuan operasional nyata**: 5/20 request gagal 500 -- Supavisor session-mode `pool_size=15` per role domain, `chatbot_api` tidak punya connection pooling sendiri (temuan M4.6 terbukti benar konsekuensinya).
 
 ### Checkpoint 5 (final) — Konsolidasi
-- [ ] Task 12: `simulate_test.py`.
-- [ ] Task 13: Update peta M6.1 (Titik 11).
-- [ ] Task 14: `logs.md` + `report.md`.
+- [x] Task 12: `simulate_test.py`. **Selesai** — 1/1 skenario PASS (KK1/KK2 sengaja tidak masuk, butuh traffic HTTP nyata, sudah dibuktikan terpisah Checkpoint 2/4).
+- [x] Task 13: Update peta M6.1 (Titik 11). **Selesai**.
+- [x] Task 14: `logs.md` + `report.md`. **Selesai**.

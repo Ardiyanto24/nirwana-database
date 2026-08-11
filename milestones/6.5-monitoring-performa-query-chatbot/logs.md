@@ -45,3 +45,11 @@ Task 11 uji coba terkontrol: `uvicorn` lokal + script burst 20 request paralel (
 Result: worked. **Temuan operasional nyata (bukan cuma bukti mekanisme kerja)**: 5 dari 20 request gagal `HTTP 500` -- log `uvicorn` mengonfirmasi akar penyebab: `psycopg2.OperationalError: FATAL: (EMAXCONNSESSION) max clients reached in session mode - max clients are limited to pool_size: 15`. Ini adalah **batas nyata Supavisor session-mode** (`pool_size=15`) untuk role domain yang dipakai `chatbot_api` -- `chatbot_api` sendiri tidak punya connection pooling apa pun (buka koneksi baru tiap request, temuan M4.6), jadi >15 request bersamaan ke domain yang sama akan mulai gagal. Max koneksi terlihat 30 (baseline mean=0, stdev=0) -> detector benar memicu `CRITICAL` (`z=3e10`, extreme karena stdev historis 0 -- konsisten epsilon-guard `1e-9` yang sama seperti M6.3). Alert tersimpan benar di `monitoring.alerts`.
 
 **Temuan ini di luar scope M6.5 untuk diperbaiki** (M6.5 murni observasional) -- dicatat sebagai Known Gap/Handoff Note eksplisit di `report.md`, bukan diperbaiki di sini.
+
+## 2026-08-11 — Checkpoint 5 (Task 12-14): simulate_test.py + peta M6.1 + report.md
+Did: `simulate_test.py` -- 1 skenario (connection pool spike, KK3): 8 baseline sintetis + 1 spike (count=45), ditandai `snapshot_time` tanggal marker 2099-01-01 (`chatbot_connection_snapshot` tidak punya kolom `is_simulated`, beda dari `monitoring.alerts`/`reverse_etl_sync_log`), dites via `detect_connection_pool_spike.py(as_of_id=...)`. KK1 (percentile) dan KK2 (tren) SENGAJA TIDAK masuk -- sama alasan KK1 M6.3/KK2 M6.4, butuh traffic HTTP nyata (sudah dibuktikan terpisah Checkpoint 2 Task 6 dan Checkpoint 4 Task 11).
+Result: worked. 1/1 skenario PASS (`z=90.11`, alert benar terpicu).
+
+Update `docs/10-monitoring-warehouse-serving/pemetaan-titik-pengamatan-pipeline.md` -- Titik 11 (AI Chatbot) gap latency ditutup eksplisit, header catatan Update M6.4/M6.5 ditambahkan (M6.4 sebelumnya belum tercatat di header meski sudah Completed -- diperbaiki sekalian).
+
+`report.md` ditulis, 3/3 KK dicocokkan dengan bukti konkret. Milestone 6.5 ditutup Completed.
