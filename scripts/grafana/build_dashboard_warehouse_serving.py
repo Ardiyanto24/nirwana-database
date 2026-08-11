@@ -98,7 +98,7 @@ def build_panels():
         4, "Volume Anomaly Warehouse BigQuery -- Alert Terbaru (M6.3)",
         """SELECT triggered_at, schema_name AS dataset_name, table_name, severity, detail
            FROM monitoring.alerts
-           WHERE alert_type = 'warehouse_volume_anomaly' AND is_simulated = false
+           WHERE alert_type = 'warehouse_volume_anomaly' AND is_simulated = false AND schema_name != '_simulation'
            ORDER BY triggered_at DESC LIMIT 20;""",
         0, y, h=8,
     ))
