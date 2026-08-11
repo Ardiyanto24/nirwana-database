@@ -27,6 +27,8 @@ monitoring.chatbot_query_log via audit.log_query, scheduled through FastAPI
 BackgroundTasks so the log write never adds latency to the response
 (decisions.md M4.5 Keputusan #3/#4).
 """
+import time
+
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from starlette.requests import Request
@@ -118,7 +120,15 @@ def register_domain_routes(domain, whitelist):
     rather than returns, because FastAPI's own exception handler builds an
     unrelated response that never carries the tasks forward. Status code and
     body are identical to what `raise HTTPException` would have produced --
-    only the delivery mechanism changes."""
+    only the delivery mechanism changes.
+
+    Milestone 6.5 fix: measures wall-clock duration of the handler's own work
+    (authorize + whitelist lookup + query) and passes it to log_query as
+    duration_ms -- M4.5 shipped without this column, and pg_stat_statements
+    cannot substitute for it (aggregate-only, no percentile/per-request data,
+    see decisions.md M6.5 Keputusan A). Timer starts before authorize() and
+    stops right before each log_query call, so it covers exactly the work
+    this handler is responsible for -- not network/ASGI overhead outside it."""
 
     def handler(
         request: Request,
@@ -129,6 +139,7 @@ def register_domain_routes(domain, whitelist):
         limit: int = DEFAULT_LIMIT,
         offset: int = 0,
     ):
+        start = time.perf_counter()
         try:
             access_scope = authorize(role_title, domain)
 
@@ -140,6 +151,7 @@ def register_domain_routes(domain, whitelist):
                 domain, entry, request.query_params, employee_id, access_scope, limit, offset
             )
         except HTTPException as exc:
+            duration_ms = round((time.perf_counter() - start) * 1000, 2)
             background_tasks.add_task(
                 log_query,
                 role_title=role_title,
@@ -148,6 +160,7 @@ def register_domain_routes(domain, whitelist):
                 employee_id=employee_id,
                 status="denied",
                 denial_reason=str(exc.detail),
+                duration_ms=duration_ms,
             )
             return JSONResponse(
                 status_code=exc.status_code,
@@ -155,6 +168,7 @@ def register_domain_routes(domain, whitelist):
                 background=background_tasks,
             )
 
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
         background_tasks.add_task(
             log_query,
             role_title=role_title,
@@ -165,6 +179,7 @@ def register_domain_routes(domain, whitelist):
             resolved_property_id=resolved_property_id,
             status="success",
             row_count=len(rows),
+            duration_ms=duration_ms,
         )
         return rows
 

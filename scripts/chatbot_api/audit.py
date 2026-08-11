@@ -43,6 +43,7 @@ def log_query(
     status="denied",
     denial_reason=None,
     row_count=None,
+    duration_ms=None,
 ):
     try:
         conn_str = _load_env(os.path.join(REPO_ROOT, ".env"))["CHATBOT_AUDIT_WRITER_DB_URL"]
@@ -54,8 +55,8 @@ def log_query(
                     """
                     INSERT INTO monitoring.chatbot_query_log
                         (role_title, domain, view_name, employee_id, access_scope,
-                         resolved_property_id, status, denial_reason, row_count)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                         resolved_property_id, status, denial_reason, row_count, duration_ms)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """,
                     (
                         role_title,
@@ -67,6 +68,7 @@ def log_query(
                         status,
                         denial_reason,
                         row_count,
+                        duration_ms,
                     ),
                 )
         finally:

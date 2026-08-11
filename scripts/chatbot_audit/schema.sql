@@ -36,3 +36,13 @@ CREATE INDEX IF NOT EXISTS idx_chatbot_query_log_requested_at
     ON monitoring.chatbot_query_log (requested_at DESC);
 CREATE INDEX IF NOT EXISTS idx_chatbot_query_log_status
     ON monitoring.chatbot_query_log (status, requested_at DESC);
+
+-- Milestone 6.5 fix: this table shipped in M4.5 with no per-request duration
+-- column at all -- KK1 M6.5 needs real p50/p95/p99 latency, which
+-- pg_stat_statements structurally cannot provide (no percentile columns,
+-- only mean/min/max/stddev per query SHAPE, not per request). Additive,
+-- nullable (old rows from M4.5/M4.6 stay NULL, never backfilled -- they
+-- predate this instrumentation and there is no way to reconstruct their
+-- duration after the fact).
+ALTER TABLE monitoring.chatbot_query_log
+    ADD COLUMN IF NOT EXISTS duration_ms numeric;
