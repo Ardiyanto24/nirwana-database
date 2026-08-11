@@ -106,10 +106,10 @@ Diajukan 2 pertanyaan awal (instrumentasi sync.py, cleanup orphan). User: "saya 
 - [x] Task 8: Verifikasi live. **Selesai** — 73 orphan tepat terdeteksi (112.1MB, cocok temuan riset awal), `dead_pct`/`last_autovacuum` masuk akal.
 
 ### Checkpoint 4 — KK2: swap health detection
-- [ ] Task 9: `detect_orphan_tables.py` — SEBELUM cleanup.
-- [ ] Task 10: `detect_swap_duration_anomaly.py`.
-- [ ] Task 11: Uji coba terkontrol slow-swap nyata (lock).
-- [ ] Task 12: Re-run `test_no_downtime_swap.py`.
+- [x] Task 9: `detect_orphan_tables.py` — SEBELUM cleanup. **Selesai** — 73 orphan nyata terdeteksi tepat (112.1MB), 1 alert CRITICAL.
+- [x] Task 10: `detect_swap_duration_anomaly.py`. **Selesai**.
+- [x] Task 11: Uji coba terkontrol slow-swap nyata (lock). **Selesai** — lock `ACCESS EXCLUSIVE` 20 detik via kredensial OWNER tabel (bukan admin — admin ternyata tidak punya privilege sama sekali di tabel yang tidak dimilikinya, temuan M3.5 terbukti lagi), swap RENAME menunggu lock, `swap_duration_ms=10518.7ms` tertangkap, detector CRITICAL (`z=71.43`).
+- [x] Task 12: Re-run `test_no_downtime_swap.py`. **Selesai untuk mart_cleaned** (300 query, 0 error). **mart_aggregated DITUNDA ke pasca-cleanup Checkpoint 5** — ditemukan bukti nyata lagi: test hardcode tabel `dim_property`, yang PUNYA orphan `dim_property__old` belum dibersihkan, jadi RENAME langsung crash `DuplicateTable` SEBELUM sempat menguji apa pun. Memperkuat urgensi Task 13.
 
 ### Checkpoint 5 (final) — Cleanup + konsolidasi
 - [ ] Task 13: Cleanup 73 orphan.
