@@ -22,6 +22,13 @@ name: Monitoring Warehouse - DQ and Anomaly Detection
 # hari itu sudah settle (extract -> transform x2 -> reverse ETL x2) sebelum
 # snapshot volume/parity/freshness dihitung. Murni observasional -- sync.py,
 # promote.py, wait_for_ml_output.py, mock_score.py TIDAK disentuh sama sekali.
+#
+# Milestone 6.7 -- 1 step tambahan (Keputusan B): deteksi gap dependency
+# Titik 1->2 yang belum digate lewat workflow_run (docs/keputusan-tertunda.md,
+# ditemukan M6.1). Cuma butuh monitoring.pipeline_run_log (SUPABASE_DB_URL
+# yang sudah ditulis di atas) -- tidak perlu kredensial BigQuery baru.
+# extract-production.yml/transform-mart-cleaned.yml TIDAK disentuh.
+# Rujukan: milestones/6.7-dashboard-alerting-terpadu/decisions.md
 
 on:
   workflow_run:
@@ -86,3 +93,7 @@ jobs:
       - name: Milestone 6.4 -- canary ketersediaan data drift (KK3)
         working-directory: scripts/monitoring_warehouse
         run: python check_drift_data_availability.py
+
+      - name: Milestone 6.7 -- deteksi gap dependency Titik 1->2 (KK2)
+        working-directory: scripts/monitoring_warehouse
+        run: python detect_pipeline_dependency_gap.py

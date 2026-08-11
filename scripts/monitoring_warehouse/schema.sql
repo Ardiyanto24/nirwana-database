@@ -258,3 +258,111 @@ ALTER TABLE monitoring.alerts ADD CONSTRAINT alerts_alert_type_check
         'ml_output_incomplete_scoring', 'chatbot_connection_pool_spike',
         'serving_swap_orphan_table', 'serving_swap_slow', 'pipeline_dependency_gap'
     ));
+
+-- Checkpoint 2 (Keputusan A): 2 view root-cause correlation, real-time,
+-- tanpa job/tabel snapshot baru -- logic deteksi TETAP di 8 detect_*.py/
+-- check_*.py existing, view ini murni menyusun ulang hasilnya. 5 alert_type
+-- Fase 1 (volume_anomaly, freshness_delay, dq_test_failure,
+-- dirty_proportion_drift, value_anomaly -- production, sebelum raw_production)
+-- dan chatbot_connection_pool_spike (Titik 11, out of scope peta M6.1) SENGAJA
+-- tidak dipetakan ke titik manapun -- baris itu tersaring keluar (titik_id
+-- NULL) dari view ini, bukan bug.
+--
+-- dbt_test_failure dipetakan juga meski TIDAK PERNAH diinsert skrip manapun
+-- (temuan M6.7 decisions.md -- reserved-tapi-mati sejak M6.3) -- future-proof,
+-- tidak berpengaruh selama tidak ada baris.
+CREATE OR REPLACE VIEW monitoring.titik_event_today AS
+WITH alerts_mapped AS (
+    SELECT
+        CASE
+            WHEN alert_type = 'warehouse_volume_anomaly' AND schema_name = 'raw_production' THEN 1
+            WHEN alert_type = 'warehouse_volume_anomaly' AND schema_name = 'mart_cleaned' THEN 2
+            WHEN alert_type = 'warehouse_volume_anomaly' AND schema_name = 'mart_aggregated' THEN 6
+            WHEN alert_type = 'dbt_test_failure' AND schema_name = 'mart_cleaned' THEN 3
+            WHEN alert_type = 'dbt_test_failure' AND schema_name = 'mart_aggregated' THEN 7
+            WHEN alert_type = 'ml_output_incomplete_scoring' THEN 4
+            WHEN alert_type = 'ml_output_freshness_delay' THEN 5
+            WHEN alert_type = 'serving_swap_slow' AND schema_name = 'mart_aggregated' THEN 8
+            WHEN alert_type = 'serving_swap_slow' AND schema_name = 'mart_cleaned' THEN 9
+            WHEN alert_type = 'reverse_etl_mismatch' THEN 10
+            WHEN alert_type = 'serving_swap_orphan_table' THEN 10
+            WHEN alert_type = 'pipeline_dependency_gap' THEN 1
+            ELSE NULL
+        END AS titik_id,
+        'alerts' AS event_source,
+        severity,
+        (alert_type || ': ' || detail) AS detail,
+        triggered_at AS event_at
+    FROM monitoring.alerts
+    WHERE is_simulated = FALSE
+      AND triggered_at::date = CURRENT_DATE
+)
+SELECT titik_id, event_source, severity, detail, event_at
+FROM alerts_mapped
+WHERE titik_id IS NOT NULL
+
+UNION ALL
+
+SELECT
+    titik_id,
+    'pipeline_run_log' AS event_source,
+    'critical' AS severity,
+    ('Titik ' || titik_id || ' gagal: ' || workflow_name || COALESCE(' / step ' || step_name, '')) AS detail,
+    completed_at AS event_at
+FROM monitoring.pipeline_run_log
+WHERE status = 'failure'
+  AND started_at::date = CURRENT_DATE
+
+UNION ALL
+
+SELECT
+    CASE layer WHEN 'mart_cleaned' THEN 3 WHEN 'mart_aggregated' THEN 7 END AS titik_id,
+    'dbt_test_result' AS event_source,
+    'critical' AS severity,
+    ('DQ gate ' || layer || ' gagal: ' || COALESCE(test_name, unique_id)) AS detail,
+    captured_at AS event_at
+FROM monitoring.dbt_test_result
+WHERE status = 'fail'
+  AND captured_at::date = CURRENT_DATE;
+
+-- Recursive CTE menaiki monitoring.titik_dependency dari tiap event hari ini;
+-- root_titik_id = leluhur TERTINGGI yang juga punya event hari ini (kalau
+-- tidak ada leluhur gagal, event itu sendiri adalah root -- is_root=true).
+-- depth<10 sekadar guard defensif (graph 10 titik adalah DAG, tidak mungkin
+-- siklus, tapi tetap dibatasi).
+CREATE OR REPLACE VIEW monitoring.alerts_with_root_cause AS
+WITH RECURSIVE ancestry AS (
+    SELECT
+        e.titik_id AS event_titik_id, e.event_source, e.severity, e.detail, e.event_at,
+        e.titik_id AS current_titik_id, 0 AS depth
+    FROM monitoring.titik_event_today e
+
+    UNION ALL
+
+    SELECT
+        a.event_titik_id, a.event_source, a.severity, a.detail, a.event_at,
+        td.depends_on_titik_id, a.depth + 1
+    FROM ancestry a
+    JOIN monitoring.titik_dependency td ON td.titik_id = a.current_titik_id
+    WHERE td.depends_on_titik_id IS NOT NULL
+      AND a.depth < 10
+      AND EXISTS (
+          SELECT 1 FROM monitoring.titik_event_today e2
+          WHERE e2.titik_id = td.depends_on_titik_id
+      )
+),
+root_per_event AS (
+    SELECT DISTINCT ON (event_titik_id, event_source, detail, event_at)
+        event_titik_id, event_source, severity, detail, event_at, current_titik_id AS root_titik_id
+    FROM ancestry
+    ORDER BY event_titik_id, event_source, detail, event_at, depth DESC
+)
+SELECT
+    event_titik_id AS titik_id,
+    event_source,
+    severity,
+    detail,
+    event_at,
+    root_titik_id,
+    (root_titik_id = event_titik_id) AS is_root
+FROM root_per_event;
