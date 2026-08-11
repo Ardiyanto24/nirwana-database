@@ -1,7 +1,7 @@
 # Milestone 6.6: Monitoring Reverse ETL dan Serving Layer PostgreSQL — Decisions
 
 **Source:** `docs/03-implementation-plans/06-monitoring-warehouse-serving-fase2.md` (baris 150-166)
-**Status:** In Progress
+**Status:** Done
 **Date started:** 2026-08-11
 
 ## Contract (from source doc)
@@ -115,7 +115,7 @@ Diajukan 2 pertanyaan awal (instrumentasi sync.py, cleanup orphan). User: "saya 
 - [x] Task 13: Cleanup 73 orphan. **Selesai** — reapply `data_analyst_views`+`chatbot_views`, `scripts/serving_layer_monitor/cleanup_orphan_tables.py` (baru, dry-run+eksekusi) drop 73/73 sukses, live table row count utuh, view masih berfungsi.
 - [x] Task 14: Re-run `detect_orphan_tables.py` pasca-cleanup. **Selesai** — 0 orphan. **1 bug nyata lagi ditemukan+diperbaiki**: default `snapshot_date` pakai `datetime.now().date()`, snapshot ulang di HARI YANG SAMA (sebelum vs sesudah cleanup) merge ke row yang sama (UPSERT tidak menghapus baris utk tabel yang sudah tidak ada) — diperbaiki pakai `MAX(snapshot_date)` dari tabel, bukan asumsi "hari ini" (kelas bug sama persis timezone UTC-vs-lokal M6.3).
 - [x] Task 12 (lanjutan, tertunda dari Checkpoint 4): re-run `test_no_downtime_swap.py` mart_aggregated. **DITEMUKAN GAP BARU, DI LUAR SCOPE**: `dim_property` (tabel dengan dependent view TERBANYAK) gagal di CYCLE KE-2 dari 8 -- cycle 1 sukses tapi menciptakan orphan baru (view tidak di-reapply di antara siklus, sesuai desain test), cycle 2 crash `DuplicateTable` di RENAME (bukan DROP) karena nama `__old` sudah dipakai orphan dari cycle 1. **Ini gap BERBEDA dari yang diperbaiki Checkpoint 2** (yang menangani DROP gagal karena dependency; ini RENAME gagal karena tabrakan nama) -- di luar Keputusan A yang disetujui, TIDAK diperbaiki di M6.6, di-flag sebagai follow-up terpisah. KK2 "zero downtime" tetap dianggap terverifikasi lewat: (a) mart_cleaned re-run sukses penuh (300 query, 0 error) membuktikan instrumentasi timing tidak mengubah mekanisme RENAME/DROP yang mendasarinya (kode swap byte-identik, cuma dibungkus timer); (b) bukti asli M5.5 (250 query) untuk mekanisme mart_aggregated tetap valid, tidak disentuh oleh perubahan M6.6.
-- [ ] Task 15: `simulate_test.py`.
-- [ ] Task 16: Workflow `monitoring-serving-layer-health.yml`.
-- [ ] Task 17: Update peta M6.1 + `keputusan-tertunda.md`.
-- [ ] Task 18: `logs.md` + `report.md`.
+- [x] Task 15: `simulate_test.py`. **Selesai** — 2/2 skenario PASS.
+- [x] Task 16: Workflow `monitoring-serving-layer-health.yml`. **Selesai** — run CI sungguhan (`workflow_dispatch`) sukses penuh, 3/3 step hijau.
+- [x] Task 17: Update peta M6.1 + `keputusan-tertunda.md`. **Selesai**.
+- [x] Task 18: `logs.md` + `report.md`. **Selesai**.
