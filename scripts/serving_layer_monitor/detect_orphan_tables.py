@@ -46,8 +46,25 @@ def _insert_alert(cur, detail, snapshot_date, is_simulated):
     )
 
 
+def _latest_snapshot_date(conn):
+    cur = conn.cursor()
+    cur.execute("SELECT MAX(snapshot_date) FROM monitoring.serving_storage_snapshot")
+    row = cur.fetchone()
+    cur.close()
+    return row[0]
+
+
 def run(conn, snapshot_date=None, persist=True, is_simulated=False):
-    snapshot_date = snapshot_date or datetime.datetime.now(datetime.timezone.utc).date()
+    # MAX(snapshot_date) from the table, NOT datetime.now().date() -- found
+    # during Checkpoint 5 verification: a same-day re-snapshot after cleanup
+    # merges into the SAME date bucket via ON CONFLICT, but rows for tables
+    # that no longer exist (dropped orphans) are never removed by that
+    # UPSERT, only rows for tables still present get refreshed. Querying by
+    # calendar "today" found those stale pre-cleanup rows; querying by
+    # MAX(snapshot_date) has the same practical effect in normal one-run-per-
+    # day operation but doesn't silently assume "today" is what was captured
+    # (same bug class as M6.3's UTC-vs-local date mismatch).
+    snapshot_date = snapshot_date or _latest_snapshot_date(conn)
     cur = conn.cursor()
     orphans = find_orphans(conn, snapshot_date)
 
