@@ -122,13 +122,15 @@ ORDER BY dataset_name, table_name, synced_at DESC;
 -- Perluas alert_type monitoring.alerts (dibuat M1.2, diperluas M1.3) dengan
 -- 4 sumber sinyal baru Milestone 6.3 -- pola extensibility identik
 -- scripts/dq/schema.sql, sudah dipakai 3x sebelumnya.
-ALTER TABLE monitoring.alerts DROP CONSTRAINT IF EXISTS alerts_alert_type_check;
-ALTER TABLE monitoring.alerts ADD CONSTRAINT alerts_alert_type_check
-    CHECK (alert_type IN (
-        'volume_anomaly', 'freshness_delay', 'dq_test_failure', 'dirty_proportion_drift', 'value_anomaly',
-        'dbt_test_failure', 'warehouse_volume_anomaly', 'reverse_etl_mismatch', 'ml_output_freshness_delay',
-        'ml_output_incomplete_scoring'
-    ));
+--
+-- CATATAN M6.7: blok DROP+ADD CONSTRAINT yang tadinya di sini (hanya 10 nilai,
+-- versi M6.3) DIHAPUS -- re-run apply_schema.py file ini gagal CheckViolation
+-- terhadap data live sekarang karena 3 folder LAIN (chatbot_perf_monitor M6.5,
+-- serving_layer_monitor M6.6) sudah menambah alert_type baru via file schema.sql
+-- mereka sendiri sejak blok ini ditulis -- constraint yang sama dipakai bersama
+-- 4 file terpisah, tiap file cuma re-apply versi historisnya sendiri kalau
+-- di-run ulang. Definisi final (union seluruh alert_type sampai M6.7) tetap
+-- satu, dipindah ke blok Milestone 6.7 di akhir file ini -- lihat di bawah.
 
 -- Milestone 6.4 — Monitoring Data Drift Feedback Loop ML
 -- Perluasan lanjutan schema monitoring bersama, additive only.
@@ -205,3 +207,54 @@ CREATE TABLE IF NOT EXISTS monitoring.ml_drift_data_availability_check (
 
 CREATE INDEX IF NOT EXISTS idx_ml_drift_check_lookup
     ON monitoring.ml_drift_data_availability_check (checked_at DESC);
+
+-- Milestone 6.7 — Dashboard dan Alerting Terpadu (Fase 2)
+-- Perluasan lanjutan schema monitoring bersama, additive only.
+-- Rujukan: milestones/6.7-dashboard-alerting-terpadu/decisions.md
+
+-- Checkpoint 1 (Keputusan A): graph dependency statis 10 titik pengamatan
+-- (docs/10-monitoring-warehouse-serving/pemetaan-titik-pengamatan-pipeline.md,
+-- kolom Dependency + Klasifikasi Prioritas), dasar view root-cause Checkpoint 2.
+-- 1 baris per (titik_id, depends_on_titik_id); titik_id=1 (root, tanpa
+-- dependency) direpresentasikan depends_on_titik_id=NULL. titik_label/
+-- priority_class didenormalisasi (redundan di tiap baris titik yang sama) --
+-- diterima karena tabel ini statis, 12 baris total, tidak pernah di-update.
+CREATE TABLE IF NOT EXISTS monitoring.titik_dependency (
+    id                   BIGSERIAL PRIMARY KEY,
+    titik_id             SMALLINT NOT NULL CHECK (titik_id BETWEEN 1 AND 10),
+    depends_on_titik_id  SMALLINT CHECK (depends_on_titik_id BETWEEN 1 AND 10),
+    titik_label          TEXT NOT NULL,
+    priority_class       TEXT NOT NULL CHECK (priority_class IN ('kritis', 'tinggi', 'sedang'))
+);
+
+-- NULL depends_on_titik_id (titik 1, root) tidak bisa diandalkan UNIQUE biasa
+-- (Postgres menganggap tiap NULL berbeda) -- pola sama COALESCE yang sudah
+-- dipakai monitoring.pipeline_run_log (M6.2) untuk step_name nullable.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_titik_dependency_edge
+    ON monitoring.titik_dependency (titik_id, COALESCE(depends_on_titik_id, 0));
+
+INSERT INTO monitoring.titik_dependency (titik_id, depends_on_titik_id, titik_label, priority_class) VALUES
+    (1,  NULL, 'Sinkronisasi ekstraksi (production -> raw_production)', 'tinggi'),
+    (2,  1,    'Transformasi staging -> mart_cleaned', 'kritis'),
+    (3,  2,    'Pengujian data: validasi mart_cleaned', 'tinggi'),
+    (4,  2,    'Trigger scoring eksternal (mock)', 'sedang'),
+    (5,  4,    'Sensor: menunggu ml_output selesai ditulis', 'sedang'),
+    (6,  2,    'Transformasi mart_aggregated (+ join ml_output)', 'tinggi'),
+    (6,  5,    'Transformasi mart_aggregated (+ join ml_output)', 'tinggi'),
+    (7,  6,    'Pengujian data: validasi mart_aggregated', 'tinggi'),
+    (8,  6,    'Reverse ETL: mart_aggregated -> PostgreSQL', 'tinggi'),
+    (9,  2,    'Reverse ETL: mart_cleaned -> PostgreSQL', 'tinggi'),
+    (10, 8,    'Post-sync validation (row count parity check)', 'tinggi'),
+    (10, 9,    'Post-sync validation (row count parity check)', 'tinggi')
+ON CONFLICT (titik_id, COALESCE(depends_on_titik_id, 0)) DO NOTHING;
+
+-- Alert_type baru (Keputusan B, Checkpoint 2): sinyal turunan gap dependency
+-- Titik 1 -> 2 yang belum digate lewat workflow_run (docs/keputusan-tertunda.md).
+ALTER TABLE monitoring.alerts DROP CONSTRAINT IF EXISTS alerts_alert_type_check;
+ALTER TABLE monitoring.alerts ADD CONSTRAINT alerts_alert_type_check
+    CHECK (alert_type IN (
+        'volume_anomaly', 'freshness_delay', 'dq_test_failure', 'dirty_proportion_drift', 'value_anomaly',
+        'dbt_test_failure', 'warehouse_volume_anomaly', 'reverse_etl_mismatch', 'ml_output_freshness_delay',
+        'ml_output_incomplete_scoring', 'chatbot_connection_pool_spike',
+        'serving_swap_orphan_table', 'serving_swap_slow', 'pipeline_dependency_gap'
+    ));
