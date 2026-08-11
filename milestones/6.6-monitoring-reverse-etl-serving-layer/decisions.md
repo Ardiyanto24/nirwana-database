@@ -97,9 +97,9 @@ Diajukan 2 pertanyaan awal (instrumentasi sync.py, cleanup orphan). User: "saya 
 - [x] Task 3: `scripts/serving_layer_monitor/{connections.py, verify_role_isolation.py, db.py}` + schema baru. **Selesai** — diverifikasi `information_schema`.
 
 ### Checkpoint 2 — Instrumentasi sync.py — commit `fix:`
-- [ ] Task 4: `scripts/reverse_etl_mart_aggregated/sync.py` — capture `old_table_status`+`swap_duration_ms`.
-- [ ] Task 5: `scripts/reverse_etl/sync.py` — port graceful-degradation + `swap_duration_ms` + capture `old_table_status`.
-- [ ] Task 6: Verifikasi live.
+- [x] Task 4: `scripts/reverse_etl_mart_aggregated/sync.py` — capture `old_table_status`+`swap_duration_ms`. **Selesai** — diverifikasi `dim_shift_type` (`dropped`, 818.54ms).
+- [x] Task 5: `scripts/reverse_etl/sync.py` — port graceful-degradation + `swap_duration_ms` + capture `old_table_status`. **Selesai**.
+- [x] Task 6: Verifikasi live. **Selesai, LEBIH LENGKAP dari rencana** — bukan cuma jalur happy-path (`properties`, `dropped`, 959.87ms), tapi juga jalur WARNING nyata untuk fix yang baru di-port: reapply `chatbot_views` (lepas dependency `employees__old` lama) → drop `employees__old` lama → sync `employees` ulang → warning graceful muncul (`old_table_status='kept (...)'`, TIDAK crash) — pertama kali fix M5.7 terbukti bekerja di mart_cleaned, bukan cuma port kode tanpa bukti jalan.
 
 ### Checkpoint 3 — KK1: storage growth + vacuum
 - [ ] Task 7: `snapshot_serving_storage.py`.

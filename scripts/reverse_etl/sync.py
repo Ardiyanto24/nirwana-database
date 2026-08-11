@@ -21,6 +21,7 @@ import argparse
 import io
 import os
 import sys
+import time
 
 import psycopg2
 from google.cloud import bigquery
@@ -125,9 +126,15 @@ def sync_table(bq_client, pg_conn, table):
         with pg_conn.cursor() as cur:
             cur.execute(f'DROP TABLE {PG_SCHEMA}."{staging_table}"')
         pg_conn.commit()
-        return {"table": table, "bq_count": bq_count, "pg_count": pg_count, "status": "mismatch_aborted"}
+        return {"table": table, "bq_count": bq_count, "pg_count": pg_count, "status": "mismatch_aborted",
+                "old_table": None, "swap_duration_ms": None}
 
     # --- swap (RENAME-based, matches arsitektur doc Bagian 7.2) ---
+    # Milestone 6.6 fix: timer wraps RENAME+DROP only (not the whole
+    # sync_table() call, which is dominated by BigQuery fetch+COPY) -- this
+    # is the literal "proses swap table" KK2 M6.6 asks about, and no
+    # duration was ever captured anywhere for it before this.
+    swap_start = time.monotonic()
     with pg_conn.cursor() as cur:
         cur.execute(
             "SELECT 1 FROM information_schema.tables WHERE table_schema = %s AND table_name = %s",
@@ -140,26 +147,57 @@ def sync_table(bq_client, pg_conn, table):
         cur.execute(f'ALTER TABLE {PG_SCHEMA}."{staging_table}" RENAME TO "{table}"')
     pg_conn.commit()
 
+    # --- cleanup: drop the renamed-away old table, best-effort ---
+    # Milestone 6.6 fix: ported from scripts/reverse_etl_mart_aggregated/sync.py
+    # (M5.7 finding, proven there since) -- this sibling copy never had it,
+    # so it crashed the whole --all run (not just warned) on the exact same
+    # DependentObjectsStillExist error real production history already hit
+    # once (milestones/6.2-.../logs.md: "employees__old already exists").
+    # Postgres views bind to the underlying table by OID, not name -- once
+    # analyst_views/chatbot_views exist on top of mart_cleaned tables, a
+    # RENAME-based swap leaves them still pointing at "<table>__old" until
+    # those views are explicitly reapplied. The live table under "<table>"
+    # is already correct at this point -- dropping "__old" is pure cleanup,
+    # not correctness-critical -- so a dependency conflict here is downgraded
+    # to a warning instead of crashing the whole sync run.
+    old_table_status = "n/a"
     if live_exists:
-        with pg_conn.cursor() as cur:
-            cur.execute(f'DROP TABLE {PG_SCHEMA}."{table}__old"')
-        pg_conn.commit()
+        try:
+            with pg_conn.cursor() as cur:
+                cur.execute(f'DROP TABLE {PG_SCHEMA}."{table}__old"')
+            pg_conn.commit()
+            old_table_status = "dropped"
+        except psycopg2.errors.DependentObjectsStillExist:
+            pg_conn.rollback()
+            old_table_status = "kept (analyst_views/chatbot_views dependency -- reapply views, then rerun sync to clean up)"
+            print(
+                f"  WARNING: {table}__old kept -- a view still depends on it. "
+                "Run scripts/data_analyst_views/apply_views.py --all and/or "
+                "scripts/chatbot_views/apply_views.py --all, then rerun sync "
+                "to drop the orphaned table."
+            )
+    swap_duration_ms = round((time.monotonic() - swap_start) * 1000, 2)
 
-    return {"table": table, "bq_count": bq_count, "pg_count": pg_count, "status": "synced"}
+    return {"table": table, "bq_count": bq_count, "pg_count": pg_count, "status": "synced",
+            "old_table": old_table_status, "swap_duration_ms": swap_duration_ms}
 
 
 def log_sync_result(prod_conn, result):
     """Write one row to monitoring.reverse_etl_sync_log on the PRODUCTION
     Supabase project (decisions.md Decision 6 -- monitoring stays centralized
-    there regardless of where the serving layer physically lives)."""
+    there regardless of where the serving layer physically lives).
+
+    Milestone 6.6 fix: old_table_status and swap_duration_ms are new columns
+    (monitoring.reverse_etl_sync_log had neither before this)."""
     with prod_conn.cursor() as cur:
         cur.execute(
             """
             INSERT INTO monitoring.reverse_etl_sync_log
-                (table_name, bq_row_count, pg_row_count, status)
-            VALUES (%s, %s, %s, %s)
+                (table_name, bq_row_count, pg_row_count, status, old_table_status, swap_duration_ms)
+            VALUES (%s, %s, %s, %s, %s, %s)
             """,
-            (result["table"], result["bq_count"], result["pg_count"], result["status"]),
+            (result["table"], result["bq_count"], result["pg_count"], result["status"],
+             result.get("old_table"), result.get("swap_duration_ms")),
         )
     prod_conn.commit()
 

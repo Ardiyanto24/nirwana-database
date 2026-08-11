@@ -29,6 +29,7 @@ import argparse
 import io
 import os
 import sys
+import time
 
 import psycopg2
 from google.cloud import bigquery
@@ -136,9 +137,15 @@ def sync_table(bq_client, pg_conn, table):
         with pg_conn.cursor() as cur:
             cur.execute(f'DROP TABLE {PG_SCHEMA}."{staging_table}"')
         pg_conn.commit()
-        return {"table": table, "bq_count": bq_count, "pg_count": pg_count, "status": "mismatch_aborted"}
+        return {"table": table, "bq_count": bq_count, "pg_count": pg_count, "status": "mismatch_aborted",
+                "old_table": None, "swap_duration_ms": None}
 
     # --- swap (RENAME-based, matches arsitektur doc Bagian 7.2) ---
+    # Milestone 6.6 fix: timer wraps RENAME+DROP only (not the whole
+    # sync_table() call, which is dominated by BigQuery fetch+COPY) -- this
+    # is the literal "proses swap table" KK2 M6.6 asks about, and no
+    # duration was ever captured anywhere for it before this.
+    swap_start = time.monotonic()
     with pg_conn.cursor() as cur:
         cur.execute(
             "SELECT 1 FROM information_schema.tables WHERE table_schema = %s AND table_name = %s",
@@ -181,22 +188,30 @@ def sync_table(bq_client, pg_conn, table):
                 "Run scripts/data_analyst_views/apply_views.py --all, then rerun sync "
                 "to drop the orphaned table."
             )
+    swap_duration_ms = round((time.monotonic() - swap_start) * 1000, 2)
 
-    return {"table": table, "bq_count": bq_count, "pg_count": pg_count, "status": "synced", "old_table": old_table_status}
+    return {"table": table, "bq_count": bq_count, "pg_count": pg_count, "status": "synced",
+            "old_table": old_table_status, "swap_duration_ms": swap_duration_ms}
 
 
 def log_sync_result(prod_conn, result):
     """Write one row to monitoring.reverse_etl_sync_log on the PRODUCTION
     Supabase project -- same shared log table as M2.4 (decisions.md
-    Keputusan #9), disambiguated via dataset_name='mart_aggregated'."""
+    Keputusan #9), disambiguated via dataset_name='mart_aggregated'.
+
+    Milestone 6.6 fix: old_table_status and swap_duration_ms were already
+    being COMPUTED in sync_table() since M5.7/this milestone but never
+    reached this INSERT -- the values were printed to stdout and discarded.
+    monitoring.reverse_etl_sync_log had no columns for them until now."""
     with prod_conn.cursor() as cur:
         cur.execute(
             """
             INSERT INTO monitoring.reverse_etl_sync_log
-                (table_name, bq_row_count, pg_row_count, status, dataset_name)
-            VALUES (%s, %s, %s, %s, %s)
+                (table_name, bq_row_count, pg_row_count, status, dataset_name, old_table_status, swap_duration_ms)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
-            (result["table"], result["bq_count"], result["pg_count"], result["status"], DATASET_LOG_NAME),
+            (result["table"], result["bq_count"], result["pg_count"], result["status"], DATASET_LOG_NAME,
+             result.get("old_table"), result.get("swap_duration_ms")),
         )
     prod_conn.commit()
 
