@@ -13,13 +13,14 @@ Dokumentasi ini adalah jalur baca terkurasi untuk memahami Nirwana Data Platform
 | cara data disajikan ke setiap konsumen | [05 — Serving dan Kontrol Akses](05-serving-and-access-control.md) |
 | cara sistem dioperasikan dan diamati | [06 — Observability dan Operasi](06-observability-and-operations.md) |
 | batasan yang diketahui dan langkah berikutnya | [07 — Trade-off dan Keputusan Lanjutan](07-tradeoffs-and-next-decisions.md) |
+| dokumen teknis, script, workflow, atau bukti milestone tertentu | [Referensi Teknis Level 3](../README.md) |
 
 ## Tiga tingkat dokumentasi
 
 ```mermaid
 flowchart TD
     L1["README root<br/>Gambaran singkat dan peta masuk"] --> L2["docs/guides/<br/>Narasi sistem dan keputusan utama"]
-    L2 --> L3["docs/, milestones/, warehouse/, scripts/<br/>Referensi teknis dan bukti implementasi"]
+    L2 --> L3["docs/README.md, milestones/README.md,<br/>scripts/README.md, dan workflow catalog"]
 ```
 
 Level ini berada di tengah: cukup ringkas untuk dibaca berurutan, tetapi setiap klaim penting mengarah ke artefak yang dapat diperiksa.

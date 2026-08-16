@@ -17,6 +17,7 @@ Choose the path that matches what you want to understand:
 | Read this | To understand |
 | --- | --- |
 | [System Guides](docs/guides/README.md) | the guided narrative from problem context to operational trade-offs |
+| [Technical Reference](docs/README.md) | detailed architecture, milestone records, scripts, workflow, and verification sources |
 | [System Architecture](docs/guides/02-system-architecture.md) | data flow, component boundaries, and the difference between target and as-built architecture |
 | [Build Journey](docs/guides/03-building-the-platform.md) | how the platform evolved from production monitoring to end-to-end observability |
 | [Trust and Access Controls](docs/guides/04-data-quality-and-trust.md) | quality gates, parity checks, scoped credentials, and verification evidence |
@@ -65,6 +66,7 @@ flowchart LR
 ```text
 README.md                         Project entry point
 docs/guides/                      Guided system narrative
+docs/README.md                    Technical-reference index
 docs/01-architecture/             Architecture, metadata, and schema rationale
 docs/02-requirements/             Consumer and RBAC requirements
 docs/03-implementation-plans/     Milestone contracts and scope
