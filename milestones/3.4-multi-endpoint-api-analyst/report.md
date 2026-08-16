@@ -40,5 +40,5 @@
 ## Handoff Notes
 
 - **Milestone 3.5 (Isolasi Akses):** struktur URL per-domain (`/api/{domain}/...`) di dokumen ini dirancang eksplisit supaya gerbang akses (API key/middleware/reverse-proxy) bisa mengunci per-prefix — HR Analyst hanya boleh `/api/hr/*`, Property/GM Analyst boleh 5 domain tapi wajib `property_id` di-inject otomatis (bukan opsional dari sisi pemanggil), dst.
-- **Kalau API ini nanti perlu benar-benar di-deploy** (bukan cuma jalan lokal): ikuti pola `api/` (M1.6) untuk konfigurasi deployment (`render.yaml`, dsb) TAPI evaluasi ulang apakah tetap perlu gitignored+repo terpisah — kemungkinan tidak, karena tetap internal-only meski di-deploy (beda alasan dari `api/` yang portfolio-facing).
+- **Kalau API ini nanti perlu benar-benar di-deploy** (bukan cuma jalan lokal): ikuti pola `api/` (M1.6) untuk konfigurasi deployment (`render.yaml`, dsb) TAPI evaluasi ulang apakah tetap perlu gitignored+repo terpisah — kemungkinan tidak, karena tetap internal-only meski di-deploy (beda alasan dari `api/` yang menyajikan monitoring publik).
 - **Siapa pun yang menambah view/tabel baru** ke `analyst_views`/`mart_cleaned` untuk Data Analyst: tambahkan entri whitelist di file domain terkait (`scripts/data_analyst_api/whitelist_<domain>.py`), bukan endpoint baru — pola parametrized+whitelisted sudah menampung penambahan tanpa perlu route baru.

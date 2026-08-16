@@ -1,5 +1,5 @@
 
-# Skema Database — Nirwana Hospitality Group (AI Agent Data Analysis Portfolio)
+# Skema Database — Nirwana Hospitality Group (AI Agent Data Analysis)
  
 > Status: Skema tabel operasional (6 database logis). Dokumen pendamping: `02-use-case-statistik-ml.md` (cakupan analisis) dan `03-metadata-data-dictionary.md` (**data dictionary lengkap** — arti setiap kolom & nilai). Tabel hasil ML/alert/decision log menyusul setelah detail teknis tiap use case (fitur, formula, output) dirampungkan.
  
@@ -304,7 +304,7 @@ Catatan konteks bisnis:
  
 ## Landasan Riset Industri (v0.4)
  
-> Angka-angka kunci di data sintetis ini **tidak dikarang** — diambil dari riset industri hospitality. Ini penting untuk kredibilitas portofolio: kalau ada yang bertanya "kenapa capture rate Jakarta 16%?", jawabannya bukan "kira-kira segitu".
+> Angka-angka kunci di data sintetis ini **tidak dikarang** — diambil dari riset industri hospitality. Ini penting untuk kredibilitas dokumentasi teknis: kalau ada yang bertanya "kenapa capture rate Jakarta 16%?", jawabannya bukan "kira-kira segitu".
  
 ### Capture Rate F&B (% tamu menginap yang makan di outlet hotel)
  
@@ -480,7 +480,7 @@ Pola lintas-database dikoordinasikan lewat **file bantu internal** (bukan bagian
  
 ### Data Quality Issues (Data Kotor Terkontrol)
  
-Sengaja disuntikkan ke `guests` & `employees` supaya portofolio bisa menunjukkan tahap **data cleaning**.
+Sengaja disuntikkan ke `guests` & `employees` agar mekanisme **data cleaning** dapat diuji terhadap kondisi yang realistis.
  
 | Jenis | Jumlah | Kolom |
 |---|---|---|

@@ -39,7 +39,7 @@ Catatan lingkup: sesuai source doc, M2.0 murni fondasi platform orchestrator —
 - **Context:** `CLAUDE.md` sebelumnya eksplisit menyatakan Fase 2 "out of this repo's scope, reference only". Perlu diputuskan apakah Milestone 2.0 dst dikerjakan di sini atau repo terpisah (pola M1.6/1.7).
 - **Decision:** Dikerjakan di repo `nirwana-database` ini. `CLAUDE.md` diupdate untuk mencerminkan scope baru.
 - **Alternatives considered:** Repo baru terpisah (mis. `nirwana-warehouse-elt`), konsisten dengan pola `api/`/`web/` yang gitignored & deploy dari repo sendiri.
-- **Rejected because:** user memilih tetap di repo ini — beda karakter dari M1.6/1.7 (yang portfolio-facing, deployed services terpisah dari environment Python repo ini); Fase 2 secara teknis adalah kelanjutan langsung pipeline data yang sama, bukan aplikasi terpisah yang butuh runtime/deploy target berbeda.
+- **Rejected because:** user memilih tetap di repo ini — berbeda dari M1.6/1.7 yang merupakan layanan monitoring publik dengan deployment terpisah dari environment Python repo ini; Fase 2 secara teknis adalah kelanjutan langsung pipeline data yang sama, bukan aplikasi terpisah yang butuh runtime/deploy target berbeda.
 
 ### Decision: Tool orchestrator — GitHub Actions extended (bukan orchestrator sungguhan)
 
