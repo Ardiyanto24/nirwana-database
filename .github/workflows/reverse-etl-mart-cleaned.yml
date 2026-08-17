@@ -5,7 +5,12 @@ name: Reverse ETL Mart Cleaned to Serving PostgreSQL
 # RENAME swap, row-count-parity gate before swap), then reindex_analyze.py
 # (Milestone 3.3 -- REINDEX/ANALYZE pasca-swap, sama alasan dengan
 # reverse-etl-mart-aggregated.yml: staging table hasil swap tidak mewarisi
-# index sama sekali, bukan cuma statistik basi).
+# index sama sekali, bukan cuma statistik basi), then
+# regrant_downstream_readers.py (found 2026-08-17 -- same swap mechanism also
+# drops GRANT SELECT for every role granted directly on a mart_cleaned table,
+# e.g. chatbot_authz_reader/role_permissions and the M3.5 *_analyst_reader
+# roles' own row-level table -- see regrant_downstream_readers.py docstring
+# and milestones/2.4-reverse-etl-postgresql/logs.md for the incident).
 # Rujukan: milestones/2.4-reverse-etl-postgresql/decisions.md,
 # milestones/3.3-index-optimasi-performa-analyst/decisions.md,
 # docs/05-orchestrator/konvensi-job-dependency.md (naming: reverse-etl-*.yml).
@@ -56,3 +61,7 @@ jobs:
       - name: Milestone 3.3 -- REINDEX/ANALYZE pasca-swap (23 tabel + index desain)
         working-directory: scripts/reverse_etl
         run: python reindex_analyze.py --all
+
+      - name: Re-apply GRANT SELECT ke downstream reader roles pasca-swap (M3.5/M4.4 credentials)
+        working-directory: scripts/reverse_etl
+        run: python regrant_downstream_readers.py --all

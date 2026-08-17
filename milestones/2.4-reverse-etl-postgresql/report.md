@@ -65,3 +65,9 @@ Tidak ada deviasi fungsional. Detail implementasi dikoreksi saat environment mem
 - Provision role consumer read-only sebelum serving layer dibuka ke persona baru.
 - Pertahankan urutan transform → reverse ETL dan pantau `reverse_etl_sync_log`.
 - Consumer Data Scientist berikutnya tetap memakai BigQuery sesuai keputusan aksesnya, bukan writer serving ini.
+
+## Addendum (2026-08-17) — RENAME-swap ditemukan diam-diam mencabut GRANT downstream reader
+
+RENAME-based swap (Bagian 3) menukar objek tabel `mart_cleaned.*` sepenuhnya di setiap sync — sudah ditangani untuk index oleh M3.3 (`reindex_analyze.py`), tapi belum ada mekanisme setara untuk GRANT. Ditemukan lewat laporan tim AI Chatbot: `chatbot_authz_reader` (M4.4) dan 6 dari 7 kredensial `*_analyst_reader` (M3.5) yang GRANT-nya langsung ke tabel `mart_cleaned` (bukan lewat view) kehilangan akses SELECT sejak sync terjadwal pertama pasca-setup masing-masing — dikonfirmasi lewat `information_schema.role_table_grants` (kosong) dan `monitoring.reverse_etl_sync_log` (tanggal sync setelah setup kredensial). View (`analyst_views`/`chatbot_views`) tidak terdampak karena `CREATE OR REPLACE VIEW` mempertahankan OID objek.
+
+Fix: `scripts/reverse_etl/regrant_downstream_readers.py` (baru) — peta tabel→role hand-maintained, re-GRANT SELECT lewat `get_serving_writer_connection()` (reverse_etl_writer, owner sebenarnya). Ditambahkan sebagai step baru di `.github/workflows/reverse-etl-mart-cleaned.yml` setelah `reindex_analyze.py --all`. Detail investigasi dan verifikasi lengkap di `logs.md` (2026-08-17) dan `milestones/3.5-isolasi-akses-kredensial-analyst/logs.md`.

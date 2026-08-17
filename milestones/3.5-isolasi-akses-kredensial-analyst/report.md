@@ -63,3 +63,9 @@ GRANT admin tidak berlaku untuk objek milik writer lain, sehingga setup diruteka
 - Integrasikan koneksi role ke API analyst.
 - Re-run setup dan verifier setelah perubahan view/whitelist.
 - Dokumentasikan prosedur pencabutan dan rotasi otomatis.
+
+## Addendum (2026-08-17) — Regresi: GRANT ke mart_cleaned hilang akibat sync harian M2.4, sudah diperbaiki
+
+6 dari 7 role di milestone ini (`revenue_analyst_reader`, `fnb_analyst_reader`, `facility_analyst_reader`, `spa_event_analyst_reader`, `hr_analyst_reader`, `corporate_financial_analyst_reader`) menyimpan GRANT SELECT langsung ke satu tabel `mart_cleaned` masing-masing (Bagian 5.2 keterbatasan ini tidak disebut eksplisit di laporan asli). Ditemukan lewat investigasi laporan tim AI Chatbot: `scripts/reverse_etl/sync.py` (M2.4) melakukan RENAME-swap harian yang mengganti objek fisik tabel `mart_cleaned` setiap sync, dan objek baru tidak pernah mewarisi GRANT yang diverifikasi Checkpoint 9 di atas — bukan salah diagnosis waktu itu (grant memang benar ada 2026-08-09), tapi regresi nyata dari interaksi dengan sync terjadwal yang mulai aktif tanggal yang sama. Dikonfirmasi via `information_schema.role_table_grants`: 0 grant di 6 tabel row-level tersebut sebelum fix. `property_gm_analyst_reader` (role inheritance, tanpa grant langsung) ikut terdampak turunan karena role sumbernya rusak.
+
+Fix (`scripts/reverse_etl/regrant_downstream_readers.py`, di-wire ke `reverse-etl-mart-cleaned.yml`) sudah dieksekusi dan diverifikasi 7/7 role bisa query tabel row-level masing-masing lagi lewat kredensial sungguhan. Detail lengkap: `logs.md` (2026-08-17), `milestones/2.4-reverse-etl-postgresql/report.md` addendum (akar mekanisme).
