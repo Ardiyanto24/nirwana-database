@@ -6,6 +6,8 @@
 
 > An end-to-end data platform for governed analytics, AI-ready serving, and observable operations in a multi-property hospitality environment.
 
+> **Repository version:** `1.0.0` — see [Changelog](CHANGELOG.md) and [release process](docs/versi-dan-rilis.md).
+
 This repository documents the design, implementation, verification, and operational trade-offs behind Nirwana Data Platform. It follows the path from operational PostgreSQL data, through a BigQuery warehouse and dbt marts, to PostgreSQL serving layers for Data Analysts and an AI Chatbot.
 
 The data domain represents a fictional five-property hospitality group. Its synthetic data deliberately includes realistic quality conditions—such as meaningful missing values, formatting variation, and selected duplicates—so the platform can demonstrate how data quality controls preserve business context rather than simply remove imperfect records.
@@ -87,6 +89,13 @@ This repository contains production-oriented scripts and infrastructure configur
 - read [warehouse/README.md](warehouse/README.md) before running dbt models, especially the section on values intentionally not cleaned;
 - read [Keputusan Tertunda](docs/keputusan-tertunda.md) before treating a known limitation as an accidental omission;
 - follow the existing workflow and credential conventions rather than creating broad access paths.
+
+## Versioning and releases
+
+The canonical repository version is stored in [`VERSION`](VERSION). Each
+release has a user-facing entry in [CHANGELOG.md](CHANGELOG.md) and a matching
+annotated Git tag (`vMAJOR.MINOR.PATCH`); see [Versi dan rilis](docs/versi-dan-rilis.md)
+for the complete release process and consistency check.
 
 ## Current boundaries and next decisions
 
