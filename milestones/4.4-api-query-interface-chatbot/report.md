@@ -66,3 +66,9 @@ Tidak ada deviasi. `own_property_column` digeneralisasi per whitelist karena vie
 - M4.5 menambahkan jejak audit untuk allow dan deny.
 - M4.6 menguji matriks seluruh persona/domain.
 - Integrasi chatbot harus mengikat identity dan role sebelum memanggil API.
+
+## Addendum (2026-08-17) — Gap RBAC row-level ditemukan & diperbaiki pasca-milestone
+
+Tim AI Chatbot (Lapis 1) melaporkan bahwa 7 dari 9 view bergrain per-individu staf (`v_hr_employee_monthly`, `v_hr_employee_performance_semester`, `v_hr_watchlist_monthly`, `v_housekeeping_staff_daily`, `v_maintenance_technician_daily`, `v_lookup_housekeeping_log`, `v_lookup_maintenance_tickets`) tidak mendeklarasikan filter `employee_id`/kolom individu di whitelist `chatbot_api` — meski Lapis 1 sudah mengirim parameter tersebut. Diverifikasi nyata: `main.py` hanya menerapkan filter yang eksplisit dideklarasikan di `entry["filters"]`, jadi dampaknya Staff dengan akses `own_property` menerima data seluruh staf di propertinya, bukan cuma dirinya sendiri, saat memanggil 7 view itu. Ini di luar cakupan tiga Kriteria Keberhasilan sumber (yang menguji isolasi properti/domain, bukan isolasi baris per-individu di dalam satu properti) sehingga tidak tertangkap oleh Fase 4-6 milestone ini maupun M4.6.
+
+Diperbaiki: `whitelist_hr.py`/`whitelist_facility.py` (7 entry diberi filter `employee_id` ke kolom individu yang benar — lihat `logs.md` 2026-08-17). Tidak ada perubahan pada `main.py`, `authz.py`, maupun view SQL — mekanisme filternya sudah ada dan terbukti benar di 2 view yang sudah dideklarasikan sebelumnya (`v_lookup_staff_shifts`/`v_lookup_employee_performance`), gap-nya murni deklarasi whitelist yang belum lengkap.

@@ -19,8 +19,23 @@ _PROPERTY_REVIEW_PERIOD_FILTERS = [
 
 WHITELIST = {
     "attendance-daily": {"source": "chatbot_views.v_hr_attendance_daily", "filters": _PROPERTY_PERIOD_FILTERS},
-    "employee-monthly": {"source": "chatbot_views.v_hr_employee_monthly", "filters": _PROPERTY_PERIOD_FILTERS},
-    "employee-performance-semester": {"source": "chatbot_views.v_hr_employee_performance_semester", "filters": _PROPERTY_REVIEW_PERIOD_FILTERS},
+    "employee-monthly": {
+        "source": "chatbot_views.v_hr_employee_monthly",
+        "filters": [
+            {"param": "property_id", "column": "property_id", "op": "="},
+            {"param": "employee_id", "column": "employee_id", "op": "="},
+            {"param": "date_from", "column": "period_date", "op": ">="},
+            {"param": "date_to", "column": "period_date", "op": "<"},
+        ],
+    },
+    "employee-performance-semester": {
+        "source": "chatbot_views.v_hr_employee_performance_semester",
+        "filters": [
+            {"param": "property_id", "column": "property_id", "op": "="},
+            {"param": "employee_id", "column": "employee_id", "op": "="},
+            {"param": "review_period", "column": "review_period", "op": "="},
+        ],
+    },
     "turnover-snapshot": {
         "source": "chatbot_views.v_hr_turnover_snapshot",
         "filters": [{"param": "property_id", "column": "property_id", "op": "="}],
@@ -28,7 +43,15 @@ WHITELIST = {
     "headcount-status-daily": {"source": "chatbot_views.v_hr_headcount_status_daily", "filters": _PROPERTY_PERIOD_FILTERS},
     "performance-department-semester": {"source": "chatbot_views.v_hr_performance_department_semester", "filters": _PROPERTY_REVIEW_PERIOD_FILTERS},
     "performance-by-status-semester": {"source": "chatbot_views.v_hr_performance_by_status_semester", "filters": _PROPERTY_REVIEW_PERIOD_FILTERS},
-    "watchlist-monthly": {"source": "chatbot_views.v_hr_watchlist_monthly", "filters": _PROPERTY_PERIOD_FILTERS},
+    "watchlist-monthly": {
+        "source": "chatbot_views.v_hr_watchlist_monthly",
+        "filters": [
+            {"param": "property_id", "column": "property_id", "op": "="},
+            {"param": "employee_id", "column": "employee_id", "op": "="},
+            {"param": "date_from", "column": "period_date", "op": ">="},
+            {"param": "date_to", "column": "period_date", "op": "<"},
+        ],
+    },
     "staff-shifts": {
         "source": "chatbot_views.v_lookup_staff_shifts",
         "filters": [
