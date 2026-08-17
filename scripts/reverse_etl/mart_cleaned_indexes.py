@@ -67,4 +67,17 @@ MART_CLEANED_INDEXES = [
         "index_name": "idx_payroll_employee_period",
         "columns": ["employee_id", "period"],
     },
+    # --- Guests (M6.5 follow-up: fix performa guests_contact_view/guests_profile_view,
+    # domain "guests" tidak masuk 6 checkpoint M3.3 di atas -- lihat logs.md M6.5).
+    # HANYA guest_id di sini -- guest_id+booking_date pada bookings/spa_bookings dicoba
+    # (termasuk varian DESC yang cocok persis arah ORDER BY view) tapi TERBUKTI TIDAK
+    # DIPAKAI planner untuk query DISTINCT ON gabungan UNION ALL milik view ini (dites
+    # paksa via enable_seqscan=off -- planner tetap re-sort penuh, malah lebih lambat)
+    # -- dibuang lagi sesuai Keputusan #2 M3.3: hanya index yang empirically confirmed
+    # dipakai planner yang dipertahankan di sini.
+    {
+        "table": "guests",
+        "index_name": "idx_guests_guest_id",
+        "columns": ["guest_id"],
+    },
 ]

@@ -52,17 +52,19 @@ flowchart LR
 
 ## 4. Perubahan dari Plan
 
+Tidak ada deviasi terhadap plan. Follow-up 2026-08-11 menambahkan `idx_guests_guest_id` setelah investigasi outlier `guests_contact_view` dan `guests_profile_view`; perubahan tersebut tetap mempertahankan logic view, RBAC, dan whitelist.
+
 M6.5 tidak hanya menggunakan sinyal yang tersedia: ia menambahkan `duration_ms` karena `pg_stat_statements` tidak menyimpan percentile per request. Implementasi juga memperbaiki nama role agar sesuai konvensi Postgres, mengakses extension dengan schema eksplisit, menggunakan parameter SQL yang aman, dan mengecualikan koneksi monitor dari hitungan pool.
 
 ## 5. Keterbatasan dan Item Provisional
 
 - `chatbot_api` tidak memiliki connection pooling sendiri; di atas sekitar 15 request konkuren per domain, sebagian request dapat gagal `500` karena batas Supavisor session-mode.
 - Sample percentile awal kecil (`n=3`) dan 245 baris audit lama bernilai `duration_ms=NULL` tanpa kemungkinan backfill.
-- Outlier `guests_contact_view` belum dioptimalkan.
+- `idx_guests_guest_id` menghapus sort-disk pada sisi `guests`, tetapi sisa 85–90% biaya `guests_contact_view` dan `guests_profile_view` berasal dari `UNION ALL` + `DISTINCT ON` pada sekitar 318 ribu baris `bookings` dan `spa_bookings`; pengujian menunjukkan index tambahan tidak menghilangkan full sort tersebut.
 - Scope hanya `chatbot_views`, bukan semua tabel/view serving.
 
 ## 6. Follow-up
 
 - Tambahkan pooling aplikasi sebelum chatbot menerima traffic produksi yang nyata.
-- Investigasi dan optimalkan `guests_contact_view`.
+- Jika kedua view guest perlu dioptimalkan sepenuhnya, buat tabel ringkasan pre-computed satu baris per guest yang diperbarui pada reverse-ETL, lalu arahkan kedua view ke tabel itu.
 - M6.7 menampilkan snapshot performa sebagai informasi agregat; data audit granular tidak diekspos publik.
