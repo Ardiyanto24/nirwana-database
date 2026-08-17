@@ -1,7 +1,7 @@
 """
 Milestone 4.4 -- API Query Interface for AI Chatbot.
 
-Internal tool (NOT portfolio-facing like api/, M1.6) -- no auth/CORS/rate-
+Internal tool (distinct from the public monitoring API in api/, M1.6) -- no auth/CORS/rate-
 limiting at the transport level, same classification as scripts/data_analyst_api/
 (M3.4). But unlike M3.4 -- which used one shared admin connection because
 isolation was M3.5's job, exercised by humans OUTSIDE that API -- this API IS

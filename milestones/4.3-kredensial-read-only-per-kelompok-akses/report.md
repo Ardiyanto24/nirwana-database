@@ -1,32 +1,57 @@
-# Milestone 4.3: Kredensial Read-Only Per Kelompok Akses — Report
+# Report — Milestone 4.3: Kredensial Read-Only Per Kelompok Akses
 
-**Status:** Completed
-**Date completed:** 2026-08-10
+Milestone ini berjenis **berbasis kode/sistem**. Hasilnya adalah sepuluh role PostgreSQL chatbot, satu per `data_domain`.
 
-## Kriteria Keberhasilan — Hasil
+## Bagian 1 — Ringkasan Hasil
 
-- [x] **Kredensial chatbot terbukti tidak bisa mengakses tabel `mart_cleaned` di luar yang dipetakan Milestone 4.1, `raw_production`, atau sistem production sama sekali saat diuji coba langsung.** — Diuji langsung (connect-as-role, bukan asumsi) untuk seluruh 10 role: setiap role gagal (`InsufficientPrivilege`) saat mencoba `SELECT` ke tabel dasar `mart_aggregated.fact_*`/`dim_*` **dan** `mart_cleaned.<table>` mentah manapun (lebih ketat dari M3.5 yang cuma menguji bypass `mart_aggregated`) — role bahkan tidak punya `USAGE` ke schema `mart_cleaned`/`mart_aggregated` sama sekali, hanya ke `chatbot_views`. `mart_cleaned.role_permissions` diuji eksplisit ditolak di seluruh 10 role (M4.1 Keputusan #7). Tidak ada role manapun yang punya kredensial ke `raw_production`/BigQuery sama sekali — kredensial ini murni PostgreSQL serving project.
-- [x] **Kredensial terbukti hanya bisa membaca (`SELECT`), tidak bisa menulis/mengubah data di `mart_aggregated` maupun tabel `mart_cleaned` yang dijangkau.** — `write_check_sql` (`INSERT`) diuji di seluruh 10 role, semua gagal `InsufficientPrivilege`. Karena tidak ada satu pun role dengan `USAGE` ke `mart_cleaned`/`mart_aggregated`, write-denial ini sekaligus membuktikan isolasi schema penuh, bukan cuma table-level.
+**Status akhir:** Selesai sesuai rencana.
 
-## Deliverables
+M4.3 membuat kredensial read-only yang hanya memiliki `USAGE` dan `SELECT` pada `chatbot_views` sesuai domainnya. Role tidak memiliki akses schema `mart_aggregated` atau `mart_cleaned`, sehingga tidak dapat menembus view ke tabel mentah. Sepuluh role diverifikasi dengan koneksi sungguhan dan write denial.
 
-- `scripts/chatbot_credentials/{connections.py,verify_role_isolation.py,setup_chatbot_roles.py,role_config_<10 domain>.py}` — 10 role Postgres di serving project, seluruhnya read-only, GRANT eksklusif ke `chatbot_views`.
-- `docs/09-serving-ai-chatbot/kredensial-chatbot.md` — dokumentasi kebijakan akses lengkap per role, bukti isolasi, temuan operasional.
-- Update `docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md` — 10 baris inventaris baru + bagian "Siapa Boleh Memegang" untuk `*_chatbot_reader`.
-- `.env`/`.env.example` — 10 `*_CHATBOT_READER_DB_URL` baru.
+## Bagian 2 — Kriteria Keberhasilan vs Bukti Nyata
 
-## Deviations from decisions.md
+| Kriteria (dari dokumen sumber) | Bukti Aktual | Terpenuhi? |
+|---|---|---|
+| Kredensial tidak dapat mengakses data di luar pemetaan, raw, atau production source. | Semua role ditolak pada mart dasar, `role_permissions`, dan domain yang tidak diizinkan; kredensial hanya hidup di serving PostgreSQL. | Ya |
+| Kredensial hanya dapat membaca. | INSERT diuji pada setiap role dan seluruhnya ditolak `InsufficientPrivilege`. | Ya |
 
-Tidak ada deviasi — seluruh 10 keputusan teknis dieksekusi persis seperti direncanakan (10 role 1:1 `data_domain`, GRANT eksklusif `chatbot_views`, tanpa role union, verifier isolasi copy M3.5, deny-test bypass ganda `mart_aggregated`+`mart_cleaned` di semua role).
+## Bagian 3 — Cara Kerja dan Arsitektur
 
-## Known Gaps / Follow-ups
+### Cara Kerja
 
-- **Belum ada rotasi terjadwal otomatis** untuk 10 password ini — konsisten gap yang sudah dicatat project-wide di `kebijakan-akses-kredensial-scoped.md` §Rotasi dan Pencabutan (tidak ada kredensial manapun di project ini yang punya rotasi otomatis). Rotasi manual lewat re-run `setup_chatbot_roles.py --all`.
-- **Belum ada konsumen nyata** yang memakai 10 kredensial ini — Milestone 4.4 (API) yang akan memilih/mengorkestrasi kredensial mana dipakai per request berdasarkan `role_permissions` persona belum dibangun. Kredensial sudah terbukti terisolasi teknis, tapi belum "hidup" dipakai produksi.
-- **Tidak ada mekanisme untuk komposisi multi-domain** (mis. General Manager butuh 7+4 domain sekaligus dalam 1 sesi chat) di level kredensial ini — sesuai Keputusan #9, ini sengaja didesain jadi tanggung jawab Milestone 4.4, bukan gap yang terlewat.
+Konfigurasi domain membuat role dan grant eksklusif ke daftar view. Verifier menguji view yang diizinkan, bypass ke dua schema mart, akses lintas domain, dan penulisan.
 
-## Handoff Notes
+### Diagram Arsitektur
 
-- **Untuk Milestone 4.4 (API):** 10 kredensial siap dipakai. API perlu logika pemilihan kredensial per request: baca `role_title` dari identitas user (via Lapis 1), lookup `data_domain` yang diizinkan di `corporate_master.role_permissions`, pilih koneksi database yang sesuai (kemungkinan connection pool per role, bukan 1 koneksi admin universal). Filter `own_property`/`all_properties` (M4.1 Keputusan #5) juga sepenuhnya tanggung jawab API — kredensial ini tidak melakukan filtering properti apa pun.
-- **`guests_pii_chatbot_reader`/`guests_profile_chatbot_reader`**: API harus memastikan permintaan domain `guests_pii` tidak pernah salah routing ke kredensial `guests_profile` (atau sebaliknya) — kedua kredensial sengaja saling menolak akses satu sama lain (diverifikasi eksplisit), jadi kesalahan routing akan gagal keras (bukan silang data), tapi tetap perlu logika pemilihan yang benar di sisi API.
-- **Dokumentasi kredensial project-wide** (`kebijakan-akses-kredensial-scoped.md`) sudah mencakup 10 kredensial baru ini — pemilik infrastruktur data berikutnya bisa langsung rujuk ke situ untuk gambaran lengkap seluruh kredensial project (sekarang 27 baris: 8 non-analyst + 7 analyst + 1 analyst-readonly + 10 chatbot + 1 baris exception `dbt-transform`... total tepatnya lihat tabel).
+```mermaid
+flowchart LR
+ subgraph BEFORE["Sebelum — view domain chatbot"]
+  V[chatbot_views]
+ end
+ subgraph CORE["Inti — role read-only per domain"]
+  V --> G[GRANT SELECT terpilih]
+  G --> R[10 chatbot reader role]
+  R --> T[Verifier allow dan deny]
+ end
+ subgraph AFTER["Sesudah — API memilih role domain"]
+  R --> A[API chatbot]
+ end
+```
+
+### Integrasi dengan Komponen Lain
+
+M4.4 memakai role ini per request; API tetap mengurus komposisi multi-domain dan filter properti.
+
+## Bagian 4 — Perubahan dari Plan
+
+Tidak ada penyimpangan.
+
+## Bagian 5 — Keterbatasan dan Item Provisional
+
+- Password belum berotasi otomatis.
+- Belum ada consumer nyata dan komposisi multi-domain ada di API.
+
+## Bagian 6 — Follow-up
+
+- M4.4 memilih koneksi role berdasarkan domain yang diizinkan.
+- Re-run setup setelah whitelist view berubah.

@@ -19,7 +19,7 @@
 
 ## Temuan Eksplorasi (sebelum breakdown)
 
-- Preseden terdekat: `milestones/3.4-multi-endpoint-api-analyst/` (`scripts/data_analyst_api/`) — FastAPI internal (bukan portfolio-facing), route whitelist per domain, filter parametrized (psycopg2 `%s`, tidak pernah interpolasi bebas), paginasi wajib row-level (`limit`/`offset`).
+- Preseden terdekat: `milestones/3.4-multi-endpoint-api-analyst/` (`scripts/data_analyst_api/`) — FastAPI internal (bukan layanan monitoring publik), route whitelist per domain, filter parametrized (psycopg2 `%s`, tidak pernah interpolasi bebas), paginasi wajib row-level (`limit`/`offset`).
 - **Beda struktural krusial dari M3.4**: M3.4 memakai 1 koneksi admin untuk semua query — isolasi sesungguhnya diserahkan ke M3.5 yang dipakai manusia analyst **langsung**, di luar API. API M3.4 bukan trust boundary sesungguhnya. **API M4.4 justru harus jadi trust boundary itu** — dokumen sumber eksplisit "tidak boleh mengasumsikan Lapis 1 selalu benar". Chatbot tidak punya "manusia pemegang kredensial M4.3 langsung" seperti analyst — API adalah satu-satunya perantara ke seluruh 10 kredensial domain.
 - **Gap ditemukan**: tidak ada satu pun dari 10 kredensial M4.3 yang bisa baca `role_permissions` (memang sengaja, diverifikasi M4.3) — tapi API M4.4 butuh cara membaca tabel itu untuk memutuskan otorisasi per request. Dibutuhkan kredensial ke-11, scoped SELECT-only ke `mart_cleaned.role_permissions` saja, murni untuk keputusan internal API — bukan untuk dijawabkan ke pengguna chatbot manapun.
 - `mart_cleaned.employees` (kolom: `employee_id`, `property_id`, `full_name`, `role_title`, `department`, `access_level`, `hire_date`, `status`) dan `chatbot_views.v_employees_directory` (M4.2, kolom: `employee_id`, `full_name`, `property_id`, `property_name`, `department_name`, `access_level_name`) sudah cukup untuk resolve `employee_id` → `property_id` sebenarnya, dipakai kredensial `employees_directory_chatbot_reader` (M4.3) yang sudah ada.
@@ -29,7 +29,7 @@
 
 ### 1. Topologi: in-repo, tidak dideploy
 
-`scripts/chatbot_api/`, FastAPI, tidak ada auth/CORS/rate-limit — klasifikasi sama M3.4 (internal, bukan portfolio-facing).
+`scripts/chatbot_api/`, FastAPI, tidak ada auth/CORS/rate-limit — klasifikasi sama M3.4 (internal, bukan layanan monitoring publik).
 
 ### 2. Desain route: 1 pola per domain, whitelist gabungan
 

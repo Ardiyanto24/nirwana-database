@@ -1,44 +1,64 @@
-# Milestone 3.4: Multi-Endpoint API untuk Data Analyst — Report
+# Report — Milestone 3.4: Multi-Endpoint API untuk Data Analyst
 
-**Status:** Completed
-**Date completed:** 2026-08-09
+Milestone ini berjenis **berbasis kode/sistem**. Hasilnya adalah API internal dengan 12 route whitelisted per domain.
 
-## Kriteria Keberhasilan — Hasil
+## Bagian 1 — Ringkasan Hasil
 
-- [x] **KK1 — Setiap 6 pola peran (dan Property/GM Analyst sebagai union) bisa mendapatkan data yang relevan dengan perannya lewat endpoint yang sesuai, tanpa perlu mengakses endpoint domain lain di luar cakupannya.** Terpenuhi. 12 route (6 domain × 2 jalur) diverifikasi via HTTP nyata terhadap server `uvicorn` sungguhan — bukan asumsi. Struktural: tiap domain punya prefix URL sendiri (`/api/revenue`, `/api/fnb`, dst) dengan whitelist view/tabel terpisah, tidak ada endpoint generik lintas domain. Property/GM Analyst diverifikasi eksplisit: 5 domain (bukan Corporate/Financial) dipanggil dengan `property_id=P02`, seluruhnya mengembalikan data yang benar-benar terbatas ke P02 tanpa endpoint baru.
-- [x] **KK2 — Endpoint row-level berhasil menjawab skenario investigasi ad-hoc yang representatif.** Terpenuhi, diverifikasi dengan skenario **persis** yang dikutip dokumen sumber: `GET /api/revenue/rowlevel/bookings?property_id=P01&date_from=2024-03-01&date_to=2024-04-01&status=cancelled` ("kenapa cancellation Bali Maret 2024 tinggi") mengembalikan booking granular yang benar. Skenario row-level lain juga diverifikasi tiap domain: `fnb-transactions` (902rb baris), `maintenance-tickets`, `event-bookings`, `staff-shifts`, `financial-summary`/`payroll`.
+**Status akhir:** Selesai sesuai rencana.
 
-## Deliverables
+M3.4 membangun dua endpoint untuk masing-masing enam domain: satu jalur aggregate berbasis `analyst_views` dan satu jalur row-level berbasis tabel cleaned yang telah disetujui. Tidak ada endpoint generik lintas domain. Property/GM memakai union lima domain dengan filter properti pada request.
 
-- `docs/08-serving-data-analyst/api-analyst.md` — dokumentasi lengkap 12 route, filter per view/tabel, contoh `curl`.
-- `scripts/data_analyst_api/{main.py, connections.py, whitelist_revenue.py, whitelist_fnb.py, whitelist_facility.py, whitelist_spa_event.py, whitelist_hr.py, whitelist_corporate_financial.py}`.
-- `requirements.txt` — blok `fastapi`/`uvicorn` baru.
-- `milestones/3.4-multi-endpoint-api-analyst/{decisions,logs}.md`.
+Route diverifikasi via HTTP terhadap server FastAPI/uvicorn nyata. Kasus pembatalan booking Bali, transaksi F&B, ticket maintenance, event, shift, serta financial/payroll terbukti dapat dijawab dari endpoint row-level. Rule Overall/Corporate Overhead, payroll eksklusif, pending count SLA, dan larangan metrik tertentu tetap terbawa sampai API.
 
-## Cakupan Final
+## Bagian 2 — Kriteria Keberhasilan vs Bukti Nyata
 
-12 route aktif: 6 domain × (1 aggregate whitelisted + 1 row-level whitelisted). Whitelist mencakup seluruh 48 view `analyst_views` (M3.2) dan 9 tabel row-level `mart_cleaned` yang dipetakan M3.1.
+| Kriteria (dari dokumen sumber) | Bukti Aktual | Terpenuhi? |
+|---|---|---|
+| Enam peran dan Property/GM mendapat data sesuai domain tanpa endpoint di luar scope. | Dua belas route dipisah prefix domain; Property/GM diuji pada lima domain dengan `property_id=P02`, tanpa route Corporate/Financial. | Ya |
+| Endpoint row-level menjawab investigasi ad-hoc representatif. | Skenario cancellation P01 Maret 2024 serta skenario row-level setiap domain berhasil melalui HTTP. | Ya |
 
-## Business Rule Kritis Diverifikasi End-to-End (DB → view → API)
+## Bagian 3 — Cara Kerja dan Arsitektur
 
-1. **`Overall`/`Corporate Overhead` exclusion** (Corporate/Financial, paling berisiko sejak M3.1): `GET /api/corporate-financial/aggregate/departmental-margin?property_id=P01` tanpa filter `business_line_name` apa pun tetap hanya mengembalikan `F&B`/`Room`/`Spa&Event` — dikonfirmasi lewat panggilan HTTP nyata, bukan cuma di level SQL (M3.2/M3.3).
-2. **Payroll eksklusif Corporate/Financial**: `GET /api/hr/rowlevel/payroll` → 404 nyata — endpoint itu memang tidak terdaftar di whitelist HR.
-3. **SLA `pending_count` terpisah dari breach**: `v_maintenance_ticket_daily` lewat endpoint tetap mengembalikan `pending_count` dan `avg_exceeds_sla_threshold` sebagai kolom terpisah, tidak disederhanakan di layer API.
-4. **Basket analysis dan repeat-client-event/cross-sell**: sengaja tidak ada endpoint — didokumentasikan eksplisit di `api-analyst.md`, bukan cuma "lupa dibuat".
+### Cara Kerja
 
-## Deviations from decisions.md
+`main.py` mendaftarkan prefix domain dan modul whitelist hanya mengizinkan view/tabel yang dipetakan M3.1. Endpoint aggregate membaca `analyst_views`; endpoint row-level menerima parameter batas yang relevan. API tidak menghitung ulang business rule—ia memakai view yang sudah menanamkannya.
 
-**1 penyesuaian operasional, tidak mengubah keputusan inti:** `uvicorn --reload` (WatchFiles) terbukti tidak konsisten memuat ulang modul di lingkungan sesi ini — perubahan file terdeteksi tapi server lama kadang tetap melayani request (404 palsu untuk route yang baru saja ditambahkan). Solusi: tiap checkpoint domain, server di-kill dan direstart bersih (bukan mengandalkan `--reload`) sebelum verifikasi HTTP. Tidak memengaruhi keputusan desain apa pun — murni prosedur verifikasi.
+### Diagram Arsitektur
 
-## Known Gaps / Follow-ups
+```mermaid
+flowchart LR
+ subgraph BEFORE["Sebelum — view, tabel row-level, dan index"]
+  V[analyst_views]
+  R[(mart_cleaned terpilih)]
+ end
+ subgraph CORE["Inti — API domain whitelisted"]
+  V --> A[Route aggregate per domain]
+  R --> B[Route row-level per domain]
+  W[Whitelist domain] --> A
+  W --> B
+ end
+ subgraph AFTER["Sesudah — konsumsi analyst dengan kontrol akses"]
+  A --> C[Client/API consumer]
+  B --> C
+ end
+```
 
-- **Tidak ada auth/isolasi per-peran** — sesuai desain (Milestone 3.5), API ini masih bisa diakses siapa pun yang punya akses ke server (belum dideploy ke mana pun, cuma jalan lokal `uvicorn`). Endpoint `corporate-financial` secara teknis masih bisa dipanggil oleh siapa saja termasuk role yang seharusnya tidak berwenang (HR Analyst, Property/GM) — larangan saat ini murni konvensi dokumentasi, bukan ditegakkan sistem.
-- **Filter properti tidak wajib secara teknis** — Property/GM Analyst *seharusnya* selalu menyertakan `property_id`, tapi API tidak memaksanya (Keputusan #7). Kalau dipanggil tanpa `property_id`, endpoint tetap mengembalikan data lintas 5 properti — bukan bug, tapi risiko kalau dipakai keliru sebelum M3.5 menegakkan isolasi sungguhan.
-- **`fact_revenue_pace_booking_snapshot`** tetap tidak punya endpoint — konsisten Known Gap M3.1/M3.2/M3.3 (status implementasi append-only belum final).
-- **`dim_employee.property_id`-dependent endpoints** (`employee-monthly`, `employee-performance-semester`, `watchlist-monthly`) memakai kolom yang baru ada sejak M5.7 — bekerja benar, tapi belum ada uji beban khusus untuk kolom trailing (non-indexed) ini dibanding kolom yang memang diindeks M3.3.
+### Integrasi dengan Komponen Lain
 
-## Handoff Notes
+M3.2 menjadi kontrak data; M3.3 mempercepat pola query. M3.5 harus mengganti koneksi admin dan menegakkan domain serta properti berdasarkan identitas caller.
 
-- **Milestone 3.5 (Isolasi Akses):** struktur URL per-domain (`/api/{domain}/...`) di dokumen ini dirancang eksplisit supaya gerbang akses (API key/middleware/reverse-proxy) bisa mengunci per-prefix — HR Analyst hanya boleh `/api/hr/*`, Property/GM Analyst boleh 5 domain tapi wajib `property_id` di-inject otomatis (bukan opsional dari sisi pemanggil), dst.
-- **Kalau API ini nanti perlu benar-benar di-deploy** (bukan cuma jalan lokal): ikuti pola `api/` (M1.6) untuk konfigurasi deployment (`render.yaml`, dsb) TAPI evaluasi ulang apakah tetap perlu gitignored+repo terpisah — kemungkinan tidak, karena tetap internal-only meski di-deploy (beda alasan dari `api/` yang portfolio-facing).
-- **Siapa pun yang menambah view/tabel baru** ke `analyst_views`/`mart_cleaned` untuk Data Analyst: tambahkan entri whitelist di file domain terkait (`scripts/data_analyst_api/whitelist_<domain>.py`), bukan endpoint baru — pola parametrized+whitelisted sudah menampung penambahan tanpa perlu route baru.
+## Bagian 4 — Perubahan dari Plan
+
+Tidak ada perubahan desain. `uvicorn --reload` terbukti tidak konsisten sehingga verifikasi setiap checkpoint memakai restart server bersih.
+
+## Bagian 5 — Keterbatasan dan Item Provisional
+
+- API belum memiliki auth/isolasi per peran dan belum dideploy.
+- `property_id` belum diwajibkan secara teknis; tanpa filter masih mungkin mengembalikan lintas properti.
+- Pace booking snapshot belum mempunyai route.
+
+## Bagian 6 — Follow-up
+
+- M3.5 memakai kredensial per role dan harus meng-inject property filter untuk Property/GM.
+- Consumer baru menambah whitelist, bukan endpoint generik.
+- Evaluasi deployment internal bila API dipakai di luar localhost.

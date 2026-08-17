@@ -1,41 +1,70 @@
-# Milestone 1.6: API Publik Data Monitoring — Report
+# Report — Milestone 1.6: API Publik Data Monitoring
 
-**Status:** Completed
-**Date completed:** 2026-08-07
+Milestone ini berjenis **berbasis kode/sistem**. Hasilnya adalah API FastAPI publik, read-only, yang menjadi batas aman antara data monitoring dan website publik.
 
-## Kriteria Keberhasilan — Hasil
+## Bagian 1 — Ringkasan Hasil
 
-- [x] **Endpoint API bisa diakses publik (tanpa login/API key) dan mengembalikan data yang konsisten dengan `monitoring.current_status` dan tabel `monitoring.*` lain.** — Terpenuhi. Deploy publik di Render: https://nirwana-monitoring-api.onrender.com. Seluruh 7 endpoint data diverifikasi dari luar (curl eksternal, bukan localhost) setelah deploy: `/api/status/tables` 23 baris, `/api/dq/summary` 23 baris, `/api/dq/failures` 3 baris, `/api/dq/dirty-proportion` 8 baris, `/api/dq/anomalies` 6 baris, `/api/schema-drift` 0 baris, `/api/alerts` 28 baris — semuanya konsisten dengan panel Grafana Milestone 1.5.
-- [x] **Tidak ada endpoint yang mengekspos kredensial atau data production sensitif di luar whitelist yang disetujui.** — Terpenuhi, diverifikasi dua lapis: (1) teknis di level Postgres — role `monitoring_api_reader` ditolak SELECT ke tabel di luar whitelist dan ditolak INSERT sama sekali (`scripts/api_reader/setup_reader_role.py`); (2) level aplikasi — `/api/sample/{table}` mengembalikan 404 untuk tabel di luar whitelist, dikonfirmasi ulang dari deployment publik (`/api/sample/guests` → 404).
-- [x] **Rate limiting per IP terbukti aktif saat diuji coba terkontrol.** — Terpenuhi, diuji lokal: `RATE_LIMIT=3/menit`, request ke-4 & ke-5 dalam window sama → HTTP 429. Konfigurasi yang sama (`slowapi`, default 60/menit) aktif di deployment publik.
+**Status akhir:** Selesai dengan penyesuaian dari plan.
 
-## Deliverables
+Milestone 1.6 menyediakan API FastAPI publik di Render untuk status 23 tabel, hasil DQ, proporsi dirty data, anomali IQR, schema drift, alert, dan tiga sample data master yang telah di-whitelist. API membaca hasil monitoring yang sudah ada; ia tidak menghitung ulang anomali. Seluruh endpoint dapat digunakan tanpa login, dibatasi rate limit per IP, dan memiliki CORS untuk consumer web.
 
-- Role Postgres read-only `monitoring_api_reader` (`scripts/api_reader/grants.sql`, `scripts/api_reader/setup_reader_role.py`) — scoped ke `monitoring.*` (seluruh tabel + otomatis untuk tabel baru via `ALTER DEFAULT PRIVILEGES`) plus 3 tabel whitelist non-sensitif.
-- FastAPI app di `api/` — 9 endpoint (`/health`, `/api/status/tables`, `/api/dq/summary`, `/api/dq/failures`, `/api/dq/dirty-proportion`, `/api/dq/anomalies`, `/api/schema-drift`, `/api/alerts`, `/api/sample/{table}`), rate limiting per IP (`slowapi`), CORS terbuka.
-- Repo GitHub publik: https://github.com/Ardiyanto24/nirwana-monitoring-api.
-- Deploy publik live: **https://nirwana-monitoring-api.onrender.com** (Render free tier, Blueprint `render.yaml`).
-- `milestones/1.6-public-monitoring-api/{decisions,logs,report}.md`.
-- Penambahan section Milestone 1.6 & 1.7 di `docs/03-implementation-plans/01-monitoring-data-production-fase1.md`.
+Keamanan dijaga pada dua lapis: kode hanya menerima tiga nama sample table, dan role `monitoring_api_reader` hanya memiliki `SELECT` pada `monitoring.*` serta `properties`, `fnb_outlets`, dan `rooms`. Verifikasi lokal serta dari deployment publik membuktikan data monitoring konsisten, tabel non-whitelist mengembalikan 404, dan burst request melewati limit menghasilkan HTTP 429.
 
-## Deviations from decisions.md
+## Bagian 2 — Kriteria Keberhasilan vs Bukti Nyata
 
-- Tidak ada deviasi teknis — seluruh keputusan (FastAPI, data scope, proteksi rate-limit-tanpa-auth, repo terpisah, Render sebagai platform final dipilih user saat konfirmasi Task 7) diimplementasikan sesuai rencana.
+| Kriteria (dari dokumen sumber) | Bukti Aktual | Terpenuhi? |
+|---|---|---|
+| Endpoint publik tanpa login/API key mengembalikan data monitoring terkini yang konsisten dengan tabel monitoring. | Deployment Render diuji dari luar localhost: status 23 tabel, ringkasan DQ 23 tabel, tiga kegagalan DQ, delapan dirty proportion, enam anomali, nol drift, dan 28 alert konsisten dengan dashboard. | Ya |
+| Tidak ada endpoint yang mengekspos kredensial atau data sensitif di luar whitelist. | Role database ditolak untuk `SELECT` tabel non-whitelist dan `INSERT`; endpoint `/api/sample/guests` menghasilkan 404, sedangkan tiga master table aman dapat dibaca. Konfigurasi tidak menyimpan password dalam respons. | Ya |
+| Rate limiting per IP terbukti aktif. | Dengan `RATE_LIMIT=3/minute`, request keempat dan kelima dalam window yang sama menerima HTTP 429. Konfigurasi `slowapi` default 60/menit diterapkan pada endpoint data. | Ya |
 
-## Catatan Proses
+## Bagian 3 — Cara Kerja dan Arsitektur
 
-Milestone ini sempat dieksekusi (Task 1-6) sebelum ditulis sebagai rancangan resmi di source doc — dikoreksi begitu ditegur user, lihat entri log 2026-08-07 "Koreksi proses" dan penambahan section di `docs/03-implementation-plans/01-monitoring-data-production-fase1.md`. Dicatat di sini secara permanen sebagai bagian riwayat milestone, bukan dihapus dari jejak.
+### Cara Kerja
 
-Deploy publik (Task 7) mengalami 4 hambatan berurutan sebelum berhasil (repo tidak ter-authorize ke Render, Start Command salah, env var lupa diisi, env var korup whitespace) — seluruhnya diselesaikan lewat panduan langkah-demi-langkah karena aksinya harus dilakukan user sendiri (Render adalah akun pihak ketiga). Detail lengkap tiap hambatan & fix ada di `logs.md`.
+FastAPI menerima GET request dan `main.py` memilih query read-only yang sudah diselaraskan dengan query panel Grafana, termasuk filter `_simulation` dan `is_simulated`. `db.py` membuka koneksi dengan `API_DB_URL` milik role scoped; `queries.py` membentuk respons untuk setiap kategori monitoring. Handler sample data memeriksa whitelist sebelum query dibuat. Middleware SlowAPI membatasi endpoint data per alamat IP, dan CORS mengizinkan origin yang ditentukan environment.
 
-## Known Gaps / Follow-ups
+Role di provision oleh `setup_reader_role.py` dan grants SQL. Supabase pooler mensyaratkan nama login berformat role dan project reference; script akhirnya menurunkan reference itu dari URL yang ada dan memverifikasi empat larangan/izin akses secara otomatis.
 
-- Tidak ada gap terhadap Kriteria Keberhasilan milestone ini sendiri.
-- Render free tier: service bisa "sleep" setelah idle (~15 menit) dan butuh beberapa detik cold-start di request pertama setelahnya — relevan untuk ekspektasi Milestone 1.7 (website publik akan terasa lambat di load pertama jika API sempat idle). Dicatat sebagai konteks, bukan bug.
+### Diagram Arsitektur
 
-## Handoff Notes
+```mermaid
+flowchart LR
+    subgraph BEFORE["Sebelum — data monitoring dan master yang aman"]
+        M[(Monitoring snapshots, alert, dan drift)]
+        P[(Tiga master table whitelist)]
+        X[PII, HR, finansial, transaksi]
+    end
+    subgraph CORE["Inti — API publik read-only"]
+        M --> R[(Role monitoring_api_reader)]
+        P --> R
+        R --> Q[Query read-only FastAPI]
+        Q --> L[Rate limiter per IP]
+        L --> A[Endpoint JSON publik]
+        X -. akses ditolak .-> R
+    end
+    subgraph AFTER["Sesudah — consumer data publik"]
+        A --> W[Website monitoring publik]
+        A --> O[Consumer publik lain]
+    end
+```
 
-- **Base URL untuk Milestone 1.7**: `https://nirwana-monitoring-api.onrender.com`. 9 endpoint tersedia (lihat Deliverables), semua GET, JSON array of object, tanpa auth, rate limit 60/menit per IP default.
-- **`/api/sample/{table}`**: `table` ∈ `properties`, `fnb_outlets`, `rooms` — tabel lain 404.
-- **Rotasi kredensial**: `scripts/api_reader/setup_reader_role.py` aman dijalankan ulang (idempotent, generate password baru, update `api/.env` lokal otomatis) — tapi env var `API_DB_URL` di Render **harus di-update manual** setelahnya (pelajaran dari hambatan Task 7: pastikan tidak ada whitespace tersisa saat paste).
-- **CORS**: saat ini `*` (semua origin). Setelah Milestone 1.7 punya domain final, pertimbangkan mempersempit `CORS_ALLOW_ORIGINS` di env var Render ke domain website itu saja.
+### Integrasi dengan Komponen Lain
+
+Data M1.2–M1.5 masuk melalui `monitoring.*`; API mempertahankan hasil dan filter mereka sebagai kontrak publik. Website monitoring menjadi consumer utama. Restriksi CORS dapat diperketat ke domain web final setelah deployment website tersedia.
+
+## Bagian 4 — Perubahan dari Plan
+
+Tidak ada deviasi teknis dari keputusan FastAPI, data scope, role read-only, atau rate limit. Ada penyimpangan proses: Task 1–6 sempat dikerjakan sebelum M1.6 dan M1.7 ditambahkan ke dokumen source plan. Hal ini dikoreksi pada hari yang sama dengan menambahkan section resmi dan mencatat urutan kejadian secara jujur. Deploy Render memerlukan perbaikan konfigurasi user—akses repo, start command, dan whitespace pada URL database—bukan perubahan desain API.
+
+## Bagian 5 — Keterbatasan dan Item Provisional
+
+- Render free tier dapat sleep setelah idle, sehingga request pertama dapat cold-start lebih lambat.
+- CORS masih `*` sebelum domain website final tersedia; ini cukup untuk akses publik tetapi lebih longgar dari kebutuhan akhir.
+- Rotasi password role harus diikuti pembaruan `API_DB_URL` pada Render secara manual, dengan perhatian pada whitespace saat copy-paste.
+
+## Bagian 6 — Follow-up
+
+- Setelah website punya domain publik, set `CORS_ALLOW_ORIGINS` ke domain tersebut.
+- Rotasi role lewat script bila diperlukan dan segera perbarui environment deployment.
+- Website M1.7 mengonsumsi endpoint JSON ini; keterlambatan cold-start perlu dipertimbangkan dalam pengalaman pengguna.

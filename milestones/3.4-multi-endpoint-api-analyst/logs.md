@@ -2,7 +2,7 @@
 
 ## 2026-08-09 — Mulai kerja
 
-- Plan disetujui via Plan Mode. `decisions.md` ditulis, mengunci 10 keputusan teknis (topologi in-repo bukan portfolio-facing, pola kode FastAPI dari `api/`, desain route domain+whitelist, keamanan query, paginasi, dst).
+- Plan disetujui via Plan Mode. `decisions.md` ditulis, mengunci 10 keputusan teknis (topologi in-repo untuk tool internal, pola kode FastAPI dari `api/`, desain route domain+whitelist, keamanan query, paginasi, dst).
 - Folder dibuat: `milestones/3.4-multi-endpoint-api-analyst/`, `scripts/data_analyst_api/`.
 - Mulai Task 1 (Fase 0 — FastAPI app skeleton).
 

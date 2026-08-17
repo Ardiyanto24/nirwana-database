@@ -1,38 +1,72 @@
-# Milestone 1.4: Monitoring Perubahan Struktur (Schema Drift) — Report
+# Report — Milestone 1.4: Monitoring Perubahan Struktur (Schema Drift)
 
-**Status:** Completed
-**Date completed:** 2026-08-07
+Milestone ini berjenis **berbasis kode/sistem**. Hasilnya adalah baseline kolom yang disetujui, diff engine, serta antrian review perubahan struktur.
 
-## Kriteria Keberhasilan — Hasil
+## Bagian 1 — Ringkasan Hasil
 
-- [x] **Perubahan skema buatan (uji coba terkontrol: tambah kolom baru pada tabel non-produktif atau environment staging) berhasil terdeteksi dan memicu notifikasi.** — Evidence: `scripts/schema_drift/simulate_test.py`, 4 `ALTER TABLE` beneran (ADD kolom biasa, ADD kolom `password_hash`, DROP kolom, ALTER TYPE) di `_simulation.staging_table` — keempatnya terdeteksi dengan `drift_type` & `severity` benar (`password_hash` → `high`, 3 lainnya → `normal`). "Notifikasi" di sini berbentuk baris `pending` di `monitoring.schema_drift_events` yang bisa di-query sebagai antrian review (lihat query di `logs.md`) — bukan push notification (di luar scope repo ini, lihat `decisions.md` M1.2 soal precedent).
-- [x] **Tidak ada perubahan skema yang otomatis diteruskan tanpa jejak/notifikasi.** — Evidence: run diff kedua (tanpa acknowledge apa pun) menghasilkan 4 event pending yang **identik** dengan run pertama — bukan 8 (tidak duplikat) dan bukan 0 (tidak "lupa" seperti risiko day-over-day yang dihindari lewat keputusan model baseline tetap). Drift tetap `pending` sampai eksplisit di-`acknowledge`.
+**Status akhir:** Selesai sesuai rencana.
 
-## Deliverables
+Milestone 1.4 membangun deteksi perubahan kolom untuk 23 tabel production: kolom baru, kolom dihapus, dan tipe berubah. Baseline awal berisi 165 kolom dan tidak bergeser otomatis. Setiap perbedaan baru masuk ke `monitoring.schema_drift_events` sebagai `pending` sampai seorang reviewer mengakuinya secara eksplisit.
 
-- `scripts/schema_drift/schema.sql` — `monitoring.schema_column_baseline` (baseline tetap/approved), `monitoring.schema_drift_events` (antrian drift, status pending/acknowledged).
-- `scripts/schema_drift/tables_list.py` — reuse daftar 23 tabel dari `scripts/monitoring/tables_config.py`.
-- `scripts/schema_drift/baseline_columns.py` — ambil baseline awal (dijalankan sekali).
-- `scripts/schema_drift/sensitive_keywords.py` — heuristik keyword untuk severity kolom baru.
-- `scripts/schema_drift/snapshot_and_diff.py` — engine deteksi (idempotent, tidak menduplikasi event pending).
-- `scripts/schema_drift/acknowledge.py` — satu-satunya jalur baseline diperbarui.
-- `scripts/schema_drift/simulate_test.py` — uji coba terkontrol, 5/5 skenario PASS.
-- `milestones/1.4-monitoring-schema-drift/{decisions,logs}.md`.
-- `docs/keputusan-tertunda.md` — entri `pg_cron` diperbarui lagi, cakupan bertambah ke Milestone 1.4.
+Deteksi memakai snapshot `information_schema.columns` dan diff, bukan event trigger PostgreSQL, karena role koneksi bukan superuser. Uji coba menggunakan tabel staging `_simulation` membuktikan lima skenario: empat jenis perubahan memiliki severity yang benar dan tetap tampak pada run ulang; setelah satu event di-acknowledge, hanya event tersebut yang menjadi baseline baru.
 
-## Deviations from decisions.md
+## Bagian 2 — Kriteria Keberhasilan vs Bukti Nyata
 
-Tidak ada. Semua 8 task berjalan sesuai rencana di `decisions.md` tanpa perlu koreksi arah di tengah jalan — berbeda dari Milestone 1.2/1.3 yang masing-masing menemukan bug/koreksi signifikan saat implementasi (lihat `logs.md` untuk catatan soal ini).
+| Kriteria (dari dokumen sumber) | Bukti Aktual | Terpenuhi? |
+|---|---|---|
+| Perubahan skema buatan berhasil terdeteksi dan memicu notifikasi. | `simulate_test.py` menjalankan `ALTER TABLE` nyata untuk tambah kolom biasa, tambah `password_hash`, hapus kolom, dan ubah tipe. Keempatnya tercatat sebagai event pending; keyword sensitif memberi `password_hash` severity high. | Ya |
+| Tidak ada perubahan skema yang otomatis diteruskan tanpa jejak/notifikasi. | Run diff kedua tetap menghasilkan empat event pending yang sama—tidak hilang dan tidak terduplikasi. Hanya `acknowledge.py` yang mengubah baseline; sesudah acknowledge satu event, tiga lainnya tetap pending. | Ya |
 
-## Known Gaps / Follow-ups
+## Bagian 3 — Cara Kerja dan Arsitektur
 
-- **Penjadwalan otomatis masih tertunda** (lihat `docs/keputusan-tertunda.md`) — `snapshot_and_diff.py` perlu dijalankan manual/on-demand sampai `pg_cron` diaktifkan.
-- **Metode deteksi seketika (event trigger) tidak dieksplorasi lebih lanjut** — sudah diverifikasi read-only bahwa role koneksi bukan superuser, jadi kemungkinan besar tidak feasible; tidak ada percobaan aktif `CREATE EVENT TRIGGER` yang dilakukan (di luar scope plan mode saat itu, dan snapshot-diff sudah dipilih sebagai keputusan final, bukan sekadar fallback sementara).
-- **Cakupan hanya kolom di 23 tabel yang sudah dikenal** — tabel baru/hilang di 6 schema production tidak dipantau (keputusan eksplisit, lihat `decisions.md`). Kalau suatu saat tabel baru muncul di schema production tanpa masuk `tables_list.py`, itu tidak akan terdeteksi oleh mekanisme ini.
-- **Data simulasi (`_simulation.staging_table`) sengaja dibiarkan ada** di database (bukan tabel production, tidak mengganggu) sebagai bukti kerja uji coba terkontrol — bisa dibersihkan kapan saja tanpa dampak ke tabel manapun yang dipantau.
+### Cara Kerja
 
-## Handoff Notes
+`baseline_columns.py` mengambil daftar kolom dari `information_schema` untuk daftar 23 tabel yang sama dengan pemantauan M1.2. `snapshot_and_diff.py` membandingkan keadaan saat ini terhadap baseline approved, memeriksa apakah event pending serupa sudah ada, lalu menulis event idempotent. Kolom baru yang namanya cocok dengan keyword seperti `password`, `email`, `salary`, atau `token` diprioritaskan `high`; heuristik ini hanya mengurutkan review, bukan memberi persetujuan otomatis.
 
-- **Untuk Milestone 1.5 (dashboard)**: `monitoring.schema_drift_events` (filter `status='pending'`, urutkan `severity DESC`) langsung jadi sumber data pilar "schema drift" dashboard — pola query sudah didemonstrasikan di `logs.md`.
-- **Untuk siapa pun yang menjalankan mekanisme ini**: urutan kerja — `snapshot_and_diff.py` (jalankan kapan saja, aman diulang) → review `SELECT * FROM monitoring.schema_drift_events WHERE status='pending'` → `acknowledge.py <event_id> --note "..."` untuk tiap drift yang sudah direview (baik disetujui maupun ditolak — catat di `--note` kenapa).
-- **Peringatan penting**: `acknowledge.py` akan memperbarui baseline `approved` begitu dijalankan — pastikan review sudah benar-benar dilakukan (terutama untuk severity `high`) sebelum acknowledge, karena setelah itu drift yang sama tidak akan terdeteksi lagi sebagai "baru".
+`acknowledge.py` adalah satu-satunya jalur pembaruan baseline. Ia menambah, menghapus, atau mengubah metadata baseline sesuai jenis event lalu menandai event `acknowledged`. Dengan demikian, perubahan tidak pernah normal hanya karena satu snapshot berikutnya telah melewatinya.
+
+### Diagram Arsitektur
+
+```mermaid
+flowchart LR
+    subgraph BEFORE["Sebelum — inventaris dan schema sumber"]
+        I[Inventaris 23 tabel production] --> B[(Baseline kolom approved)]
+        P[(Schema production)]
+    end
+    subgraph CORE["Inti — deteksi dan review schema drift"]
+        P --> S[Snapshot information_schema.columns]
+        B --> D{Diff terhadap baseline tetap}
+        S --> D
+        D -->|tidak berubah| N[Status sehat]
+        D -->|kolom/tipenya berubah| K[Classifier sensitivitas nama kolom]
+        K --> E[(schema_drift_events: pending)]
+        E --> R[Review manusia]
+        R -->|acknowledge| A[Perbarui baseline]
+        A --> B
+    end
+    subgraph AFTER["Sesudah — konsumsi event yang menunggu review"]
+        E --> G[Dashboard, API, dan website monitoring]
+    end
+```
+
+### Integrasi dengan Komponen Lain
+
+M1.1 menyediakan cakupan 23 tabel; M1.2 menyediakan schema `monitoring` dan pola pencatatan event. M1.5 menampilkan event pending sebagai pilar schema drift, sementara API dan website berikutnya membacanya sebagai data publik yang sudah disaring dari simulasi.
+
+## Bagian 4 — Perubahan dari Plan
+
+Tidak ada penyimpangan dari plan. Delapan task diselesaikan sesuai keputusan: snapshot-diff waktu nyata, cakupan kolom 23 tabel, baseline tetap dengan acknowledgement, dan keyword classifier.
+
+## Bagian 5 — Keterbatasan dan Item Provisional
+
+- Deteksi tidak mencakup tabel baru atau tabel hilang; hanya kolom pada 23 tabel yang telah dikenal.
+- Event trigger seketika tidak tersedia bagi role standar Supabase, sehingga perubahan ditemukan ketika snapshot berikutnya dijalankan.
+- Scheduler otomatis masih tertunda; `snapshot_and_diff.py` perlu dioperasikan manual/on-demand sampai scheduler tersedia.
+- Data `_simulation.staging_table` sengaja disisakan sebagai bukti uji coba dan harus selalu difilter oleh konsumen production.
+
+## Bagian 6 — Follow-up
+
+- Jalankan diff secara berkala dan review `pending` sebelum menjalankan `acknowledge.py`, terutama untuk severity high.
+- Putuskan scheduler otomatis bersama runner monitoring lainnya.
+- Tambahkan deteksi tabel baru/hilang bila cakupan pemantauan struktur diperluas.
+- Dashboard, API, dan website menggunakan event pending sebagai indikator yang perlu ditindaklanjuti.

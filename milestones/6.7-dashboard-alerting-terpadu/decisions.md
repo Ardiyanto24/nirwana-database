@@ -16,7 +16,7 @@
 
 ## Perluasan Cakupan (di luar dokumen sumber, dikunci user sesi ini)
 
-Project ini punya dua permukaan dashboard terpisah: Grafana (internal, M1.5, akses tim — memenuhi KK1 literal "dapat diakses tim") dan situs publik `api/`+`web/` (M1.6/1.7, portofolio, no-auth). Dikonfirmasi eksplisit ke user (`AskUserQuestion`, lihat Open Questions) bahwa M6.7 **diperluas mencakup keduanya** — bukan cuma Grafana — karena `api/` (live di Render) dan `web/` (belum full-deploy) sama sekali belum menyentuh data Fase 2 sejak dibangun (M1.6/1.7 hanya Fase 1).
+Project ini punya dua permukaan dashboard terpisah: Grafana (internal, M1.5, akses tim — memenuhi KK1 literal "dapat diakses tim") dan situs publik `api/`+`web/` (M1.6/1.7, tanpa autentikasi). Dikonfirmasi eksplisit ke user (`AskUserQuestion`, lihat Open Questions) bahwa M6.7 **diperluas mencakup keduanya** — bukan cuma Grafana — karena `api/` (live di Render) dan `web/` (belum full-deploy) sama sekali belum menyentuh data Fase 2 sejak dibangun (M1.6/1.7 hanya Fase 1).
 
 ## Temuan Riset
 
@@ -28,7 +28,7 @@ Project ini punya dua permukaan dashboard terpisah: Grafana (internal, M1.5, aks
 6. Dashboard Fase 1 (`nirwana-data-monitoring`, 7 panel) dan 2 alert rule Fase 1 (M1.2+M1.3 gabungan, M1.4 schema drift) hanya mencakup production — nol panel/rule Fase 2. Dokumen sumber eksplisit minta "dua tampilan terpisah... saling dirujuk", bukan menambah panel ke dashboard existing.
 7. `api/app/queries.py`+`main.py` (M1.6, live) hanya punya 8 endpoint Fase 1 (`status/tables`, `dq/summary`, `dq/failures`, `dq/dirty-proportion`, `dq/anomalies`, `schema-drift`, `alerts`, `sample/{table}`). `scripts/api_reader/grants.sql` (M1.6) sudah `GRANT SELECT ON ALL TABLES IN SCHEMA monitoring` **+** `ALTER DEFAULT PRIVILEGES IN SCHEMA monitoring GRANT SELECT ON TABLES TO monitoring_api_reader` — klausa DEFAULT PRIVILEGES ini otomatis mencakup tabel APA PUN yang dibuat sesudahnya lewat koneksi yang sama (`SUPABASE_DB_URL`, admin) yang menjalankan `ALTER DEFAULT PRIVILEGES` itu sendiri — pola yang konsisten dipakai tiap `apply_schema.py` milestone manapun (M6.2-6.6 semua connect via `SUPABASE_DB_URL`). **Kemungkinan besar `monitoring_api_reader` SUDAH bisa baca seluruh tabel/view Fase 2 tanpa grant tambahan** — akan diverifikasi empiris di Checkpoint 6, bukan diasumsikan.
 8. `web/` (M1.7) — 6 halaman selesai+terverifikasi lokal (`decisions.md`+`logs.md` ada), **tidak ada `report.md`** → per konvensi project, milestone ini belum selesai. Log terakhir M1.7: percobaan deploy Vercel CLI dibatalkan (sesi tersimpan akun salah, `kertaslipatweb-1272` bukan akun user), user memilih deploy manual lewat dashboard Vercel sendiri, belum dikonfirmasi selesai. `web/` juga punya 1 perubahan belum dicommit: `.gitignore` (+`.vercel`, +`.env*`) — sisa cleanup insiden itu.
-9. Kanal notifikasi eksternal alert (Discord/Slack/Email) tercatat Open sejak M1.5 di `docs/keputusan-tertunda.md`, dengan catatan "prioritaskan sebelum project dianggap selesai untuk portofolio". Dikonfirmasi eksplisit ke user (M6.7 kemungkinan besar milestone alerting terakhir) — user memilih **tetap menunda**.
+9. Kanal notifikasi eksternal alert (Discord/Slack/Email) tercatat Open sejak M1.5 di `docs/keputusan-tertunda.md`, dengan catatan "prioritaskan sebelum kanal alert dianggap lengkap secara operasional". Dikonfirmasi eksplisit ke user (M6.7 kemungkinan besar milestone alerting terakhir) — user memilih **tetap menunda**.
 
 ## Technical Decisions
 

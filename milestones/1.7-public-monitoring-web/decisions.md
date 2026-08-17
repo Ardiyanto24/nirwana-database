@@ -6,7 +6,7 @@
 
 ## Contract (from source doc)
 
-- **Lingkup:** Website publik yang menampilkan status monitoring data production (volume/freshness, kualitas data, anomali nilai, schema drift, alert) dengan mengonsumsi API Milestone 1.6. Ditujukan untuk portofolio — bisa dibuka siapa pun tanpa login.
+- **Lingkup:** Website publik yang menampilkan status monitoring data production (volume/freshness, kualitas data, anomali nilai, schema drift, alert) dengan mengonsumsi API Milestone 1.6. Dapat dibuka siapa pun tanpa login.
 - **Output:** Website publik ter-deploy (di luar komputer lokal), menampilkan ringkasan status 23 tabel, hasil kualitas data, schema drift, dan alert terkini — versi publik dari dashboard Grafana Milestone 1.5. Deploy di repo terpisah dari `nirwana-database` dan dari `nirwana-monitoring-api`.
 - **Kriteria keberhasilan:** Website dapat diakses publik tanpa login dan menampilkan data yang konsisten dengan API Milestone 1.6 (bukan data statis/basi). Tampilan mencakup keempat pilar monitoring (volume/freshness, kualitas data, anomali nilai, schema drift) plus alert aktif, setara cakupan dashboard Grafana Milestone 1.5.
 
@@ -47,7 +47,7 @@
 - **Context:** Perlu memutuskan apakah semua data ditampilkan dalam satu halaman atau dipisah.
 - **Decision:** 6 halaman — Overview (`/`), Volume & Freshness, Kualitas Data, Anomali Nilai, Schema Drift, Sample Data Production — dengan navigasi antar halaman.
 - **Alternatives considered:** Single-page dashboard (semua section dalam satu halaman, setara satu dashboard Grafana).
-- **Rejected because:** User secara eksplisit memilih multi-halaman meski single-page direkomendasikan untuk kesederhanaan — pertimbangan user: terasa lebih seperti "aplikasi" utuh untuk portofolio, bukan cuma satu halaman panjang.
+- **Rejected because:** User secara eksplisit memilih multi-halaman meski single-page direkomendasikan untuk kesederhanaan — pertimbangannya: navigasi dan pemisahan area monitoring lebih jelas daripada satu halaman panjang.
 
 ### Decision: Repo terpisah (`nirwana-monitoring-web`), publik, deploy ke Vercel
 

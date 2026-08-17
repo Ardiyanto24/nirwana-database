@@ -1,7 +1,7 @@
 """
 Milestone 3.4 -- Multi-Endpoint API for Data Analyst.
 
-Internal tool (NOT portfolio-facing like api/, M1.6) -- no auth, no rate
+Internal tool (distinct from the public monitoring API in api/, M1.6) -- no auth, no rate
 limiting, no CORS. Sits over analyst_views (M3.2, aggregate) and mart_cleaned
 (row-level/ad-hoc) in the serving PostgreSQL project, both already indexed
 (M3.3). Per-role credential isolation is Milestone 3.5's job, not this one's.

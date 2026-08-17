@@ -132,7 +132,7 @@ Ini murni pekerjaan konsolidasi dan presentasi — sengaja diletakkan terakhir k
 
 ---
 
-> **Catatan penambahan (2026-08-07):** Milestone 1.6 dan 1.7 di bawah **bukan bagian dari rancangan Fase 1 semula** (baris 1–133 di atas ditulis sebelum keduanya ada). Keduanya ditambahkan belakangan, setelah Milestone 1.5 selesai, dari diskusi terpisah: Grafana Cloud free tier (platform dashboard yang dipilih di Milestone 1.5) ternyata tidak mendukung *publicly shared dashboard* — fitur itu baru tersedia di tier berbayar (diverifikasi lewat dokumentasi Grafana). Karena proyek ini adalah portofolio yang perlu bisa dilihat publik tanpa login, dua milestone tambahan ini dibuat untuk membangun jalur publik sendiri (API + website) di atas hasil Milestone 1.2–1.5 yang sudah ada, tanpa mengekspos instance Grafana atau kredensial Supabase secara langsung. Ditulis di sini (bukan cuma di `milestones/1.6-.../decisions.md`) supaya tercatat sebagai bagian resmi rancangan implementasi, sesuai konvensi `milestone-execution` — setiap milestone yang dieksekusi harus punya rancangan tertulis di dokumen ini, bukan cuma di folder milestone-nya.
+> **Catatan penambahan (2026-08-07):** Milestone 1.6 dan 1.7 di bawah **bukan bagian dari rancangan Fase 1 semula** (baris 1–133 di atas ditulis sebelum keduanya ada). Keduanya ditambahkan belakangan, setelah Milestone 1.5 selesai, dari diskusi terpisah: Grafana Cloud free tier (platform dashboard yang dipilih di Milestone 1.5) ternyata tidak mendukung *publicly shared dashboard* — fitur itu baru tersedia di tier berbayar (diverifikasi lewat dokumentasi Grafana). Dua milestone tambahan ini membangun jalur publik sendiri (API + website) di atas hasil Milestone 1.2–1.5 yang sudah ada, tanpa mengekspos instance Grafana atau kredensial Supabase secara langsung. Ditulis di sini (bukan cuma di `milestones/1.6-.../decisions.md`) supaya tercatat sebagai bagian resmi rancangan implementasi, sesuai konvensi `milestone-execution` — setiap milestone yang dieksekusi harus punya rancangan tertulis di dokumen ini, bukan cuma di folder milestone-nya.
 
 ## Milestone 1.6 — API Publik Data Monitoring
 
@@ -157,7 +157,7 @@ API dan website adalah dua concern yang berbeda (data access vs presentation) da
 ## Milestone 1.7 — Website Monitoring Publik
 
 ### Lingkup
-Membangun website publik (frontend) yang menampilkan status monitoring data production — volume/freshness, kualitas data, anomali, schema drift, alert — dengan mengonsumsi API dari Milestone 1.6. Ditujukan untuk portofolio: bisa dibuka siapa pun tanpa login.
+Membangun website publik (frontend) yang menampilkan status monitoring data production — volume/freshness, kualitas data, anomali, schema drift, alert — dengan mengonsumsi API dari Milestone 1.6. Website dapat dibuka tanpa login dan hanya menyajikan data agregat yang aman dipublikasikan.
 
 ### Kenapa Ini Jadi Milestone Terpisah
 Murni presentasi di atas API yang sudah ada — sengaja diletakkan setelah Milestone 1.6 karena baru bisa dibangun dengan baik setelah kontrak API-nya stabil, sama seperti relasi Milestone 1.5 terhadap 1.2–1.4.

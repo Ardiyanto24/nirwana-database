@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | **Dihasilkan oleh** | Milestone 3.4 (`milestones/3.4-multi-endpoint-api-analyst/`) |
-| **Kode** | `scripts/data_analyst_api/` (FastAPI, internal-only — bukan `api/` M1.6 yang portfolio-facing) |
+| **Kode** | `scripts/data_analyst_api/` (FastAPI, internal-only — berbeda dari `api/` M1.6 yang menyajikan monitoring publik) |
 | **Input utama** | `docs/08-serving-data-analyst/view-query-pattern-analyst.md` (M3.2, 48 view) + `index-baseline-analyst.md` (M3.3, 50 index) |
 | **Status** | Selesai — 12 route (6 domain × 2), seluruhnya diverifikasi via HTTP nyata |
 

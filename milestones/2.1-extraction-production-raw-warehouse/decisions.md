@@ -45,7 +45,7 @@ Breakdown (`planning-and-task-breakdown`) menemukan 3 fakta yang tidak sesuai as
 - **Decision:** Koneksi langsung ke primary lewat `psycopg2`, pola sama seperti `SUPABASE_DB_URL` yang sudah dipakai `scripts/monitoring`/`scripts/dq`. Bukan Supabase REST/PostgREST API (dipertimbangkan, ditolak karena jauh lebih lambat untuk 2.53M baris dibanding SQL langsung).
 - **Konsekuensi eksplisit:** Kriteria Keberhasilan #2 ("tervalidasi lewat read replica") **tidak terpenuhi literal** — dicatat sebagai gap di `report.md`, mirip pola M1.5 (kanal notifikasi ditunda, dilaporkan Partially Completed untuk poin itu, bukan disembunyikan).
 - **Alternatives considered:** Upgrade Supabase ke plan Pro+ untuk replica sungguhan; Supabase REST/PostgREST API.
-- **Rejected because:** replica sungguhan menambah biaya bulanan yang tidak sepadan untuk portofolio; REST API terlalu lambat untuk volume data ini.
+- **Rejected because:** replica sungguhan menambah biaya bulanan yang belum sepadan pada skala sistem saat ini; REST API terlalu lambat untuk volume data ini.
 
 ### Decision: Strategi incremental — cursor tracking custom, bukan CDC
 

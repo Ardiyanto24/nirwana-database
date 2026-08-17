@@ -1,5 +1,5 @@
 # Metadata & Data Dictionary
-## Nirwana Hospitality Group — AI Agent Data Analysis Portfolio
+## Nirwana Hospitality Group — Metadata Data Operasional
  
 > **Tujuan dokumen ini**: menjadi sumber kebenaran tunggal tentang arti setiap database, tabel, kolom, dan nilai. Ini bukan sekadar dokumentasi — ini **fondasi teknis AI Agent**: LLM perlu tahu arti tiap kolom untuk menerjemahkan pertanyaan user ("outlet mana yang paling rugi?") menjadi query yang benar. Tanpa metadata yang presisi, AI Agent akan menebak-nebak dan menghasilkan jawaban salah.
 >
@@ -61,7 +61,7 @@ Tiga hal yang **wajib** diketahui sebelum menganalisis data ini:
  
 ### 1. Ada "data kotor" yang disengaja
  
-Sebagian kolom sengaja dikotori untuk mensimulasikan kondisi nyata (portofolio ini ingin menunjukkan tahap *data cleaning*). **Jangan asumsikan data sudah bersih.** Detail per kolom ditandai dengan 🧹 di bawah.
+Sebagian kolom sengaja dikotori untuk mensimulasikan kondisi nyata agar tahap *data cleaning* dapat diuji. **Jangan asumsikan data sudah bersih.** Detail per kolom ditandai dengan 🧹 di bawah.
  
 Contoh paling berdampak: kolom `employees.department` punya **19 variasi penulisan** untuk 8 departemen sebenarnya (`Housekeeping`, `HOUSEKEEPING`, `housekeeping`, `Housekeeping ` dengan trailing space). **Selalu normalisasi** (`.str.strip().str.lower()`) sebelum `GROUP BY`.
  
@@ -378,7 +378,7 @@ Plus: tren pertumbuhan +4%/tahun, dan weekend effect (Jumat-Sabtu lebih tinggi, 
 | `promo` | 6.456 | Diskon terencana saat low season untuk dorong demand |
 | `dynamic-pricing-AI` | 82 | Penyesuaian oleh sistem dynamic pricing otomatis |
  
-> **Konteks cerita**: `dynamic-pricing-AI` hanya 82 baris karena sistem AI pricing baru dipakai di periode tertentu (window anomali). Ini bagian dari narasi: perusahaan baru mulai mengadopsi AI, dan portofolio ini adalah lanjutannya.
+> **Konteks cerita**: `dynamic-pricing-AI` hanya 82 baris karena sistem AI pricing baru dipakai di periode tertentu (window anomali). Ini menunjukkan tahap awal adopsi AI pada skenario data sintetis.
  
 ---
  

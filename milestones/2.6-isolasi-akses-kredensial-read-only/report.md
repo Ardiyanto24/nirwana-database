@@ -1,29 +1,67 @@
-# Milestone 2.6: Isolasi Akses dan Kredensial Read-Only — Report
+# Report — Milestone 2.6: Isolasi Akses dan Kredensial Read-Only
 
-**Status:** Completed
-**Date completed:** 2026-08-08
+Milestone ini berjenis **berbasis kode/sistem**. Hasilnya adalah audit serta kebijakan akses project-wide untuk enam kredensial scoped.
 
-## Kriteria Keberhasilan — Hasil
+## Bagian 1 — Ringkasan Hasil
 
-- [x] **Kredensial yang diberikan ke Data Scientist terbukti tidak bisa mengakses dataset raw maupun `mart_aggregated` saat diuji coba.** — Terpenuhi. Dibangun & diuji penuh di Milestone 2.5 (`scripts/bigquery_common/verify_dataset_isolation.py --allow mart_cleaned.* --deny raw_production.* --deny staging.*`, 3/3 OK), **di-re-verifikasi ulang di M2.6** (tidak ada drift). Isolasi dari `mart_aggregated` tetap dibuktikan by-construction (dataset itu belum ada di project) — dicatat konsisten di M2.5 dan diwariskan di sini, bukan diklaim "sudah diuji langsung" secara menyesatkan.
-- [x] **Kredensial terbukti hanya bisa membaca (tidak bisa menulis/mengubah) `mart_cleaned`.** — Terpenuhi. Dibuktikan empiris di M2.5 (percobaan `CREATE TABLE` ditolak `Forbidden`) — tidak diulang otomatis di M2.6 (percobaan tulis di dataset scoped adalah operasi yang secara desain "sekali cukup", tidak ada mekanisme yang bisa membuatnya berubah drift di antara M2.5 dan M2.6 tanpa perubahan grant eksplisit, yang tidak terjadi).
+**Status akhir:** Selesai sesuai rencana.
 
-## Deliverables
+M2.6 tidak membuat ulang service account Data Scientist karena implementasi dan bukti teknisnya telah selesai di M2.5. Milestone ini mengaudit enam kredensial Fase 2, mengulang verifikasi yang aman tanpa rotasi password, dan menghasilkan kebijakan tunggal `docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md`.
 
-- `docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md` — dokumen kebijakan **project-wide**: inventaris 6 kredensial scoped (nama, sistem, scope, milestone asal, bukti isolasi, status least-privilege), pengecualian `dbt-transform` didokumentasikan eksplisit (project-level, bukan dataset-scoped, alasan sadar), siapa boleh pegang tiap kredensial, proses meminta kredensial baru, proses rotasi/pencabutan (termasuk gap rotasi otomatis yang diwariskan dari M2.5).
-- Audit + re-verifikasi non-destruktif 6 kredensial (Task 1-2) — 4/6 diverifikasi ulang lewat mekanisme yang ada (2 BigQuery reader via `verify_dataset_isolation.py`, 2 role Postgres via query ad-hoc pakai `.env` existing tanpa rotasi password), 2/6 (`extract-writer`, `dbt-transform`) dikutip dari bukti manual milestone asal apa adanya — **zero drift** ditemukan di seluruh 6.
-- `milestones/2.6-isolasi-akses-kredensial-read-only/{decisions,logs}.md`.
+Audit menemukan tidak ada drift pada empat kredensial yang dapat diperiksa ulang non-destruktif. Kebijakan mendokumentasikan scope, pemegang yang berwenang, permintaan kredensial baru, rotasi/pencabutan, dan pengecualian penting: `dbt-transform` sengaja mempunyai scope BigQuery project-level karena harus mengelola beberapa dataset.
 
-## Deviations from decisions.md
+## Bagian 2 — Kriteria Keberhasilan vs Bukti Nyata
 
-Tidak ada. Kedua keputusan (cakupan project-wide, lokasi `docs/06-akses-kredensial/`) dan keputusan teknis (re-verifikasi non-destruktif tanpa rotasi password) diimplementasikan persis seperti direncanakan.
+| Kriteria (dari dokumen sumber) | Bukti Aktual | Terpenuhi? |
+|---|---|---|
+| Kredensial Data Scientist tidak dapat mengakses raw maupun `mart_aggregated`. | Isolasi raw/staging dibuktikan di M2.5 dan diverifikasi ulang tanpa drift. `mart_aggregated` belum ada; isolasi tetap berlaku by construction melalui dataset ACL whitelist. | Ya |
+| Kredensial hanya dapat membaca `mart_cleaned`. | Percobaan `CREATE TABLE` M2.5 ditolak `Forbidden`; tidak ada perubahan grant sebelum audit M2.6. | Ya |
 
-## Known Gaps / Follow-ups
+## Bagian 3 — Cara Kerja dan Arsitektur
 
-- **Rotasi kredensial otomatis masih belum ada** — diwariskan dari `milestones/2.5-.../report.md`, sekarang didokumentasikan project-wide di `docs/06-akses-kredensial/...md` (bagian "Rotasi dan Pencabutan") alih-alih tersebar. Bukan gap baru, hanya sekarang tercatat konsisten di 1 tempat.
-- **`extract-writer` dan `dbt-transform` tidak punya script verifikasi isolasi re-runnable** (beda dari 4 kredensial lain yang sudah punya) — untuk `dbt-transform` ini memang tidak relevan (scope-nya sengaja project-level, bukan soal isolasi dataset tunggal). Untuk `extract-writer`, ini gap kecil yang bisa ditutup nanti kalau dibutuhkan (tinggal pakai `verify_dataset_isolation.py --allow raw_production.* --deny staging.* --deny mart_cleaned.*`) — tidak dikerjakan sekarang karena di luar scope eksplisit M2.6 (audit + kebijakan, bukan membangun tooling baru untuk kredensial M2.1).
+### Cara Kerja
 
-## Handoff Notes
+Audit mengumpulkan scope serta bukti dari milestone asal, lalu memilih re-verifikasi yang tidak mengubah state: helper BigQuery untuk dua reader dan query read-only untuk dua role Postgres. Script setup yang merotasi password sengaja tidak dijalankan. Temuan, bukti, dan prosedur operasional dikonsolidasikan dalam satu kebijakan untuk enam kredensial.
 
-- **`docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md` adalah rujukan tunggal untuk seluruh kredensial scoped project ini** — setiap milestone berikutnya yang membuat kredensial BigQuery/Postgres baru (mis. pemilik `mart_aggregated`, `03-mart-aggregated-owner.md`) sebaiknya menambah 1 baris ke tabel inventaris di situ, bukan cuma mencatat di `decisions.md` milestone masing-masing saja.
-- **Untuk Milestone 2.7+ atau `mart_aggregated`**: pola `scripts/bigquery_common/verify_dataset_isolation.py` siap dipakai langsung untuk kredensial BigQuery baru, tidak perlu script baru.
+### Diagram Arsitektur
+
+```mermaid
+flowchart LR
+    subgraph BEFORE["Sebelum — kredensial scoped dari pipeline"]
+        E[extract_reader dan extract-writer]
+        D[dbt-transform]
+        R[reverse ETL reader dan writer]
+        S[data-scientist-reader]
+    end
+    subgraph CORE["Inti — audit dan kebijakan akses"]
+        E --> A[Audit scope dan bukti]
+        D --> A
+        R --> A
+        S --> A
+        A --> V[Re-verifikasi non-destruktif]
+        V --> K[Kebijakan kredensial scoped]
+    end
+    subgraph AFTER["Sesudah — operasi akses yang terkontrol"]
+        K --> O[Permintaan, rotasi, pencabutan, dan kredensial baru]
+    end
+```
+
+### Integrasi dengan Komponen Lain
+
+M2.1–M2.5 adalah sumber kredensial dan bukti teknis; M2.6 menjadi rujukan tunggal untuk pekerjaan berikutnya yang menambah kredensial BigQuery/Postgres.
+
+## Bagian 4 — Perubahan dari Plan
+
+Tidak ada penyimpangan. Scope kebijakan diperluas secara sadar menjadi project-wide sesuai frasa “seluruh sistem”, dan verifikasi dibatasi non-destruktif agar GitHub Secret yang aktif tidak putus oleh rotasi password.
+
+## Bagian 5 — Keterbatasan dan Item Provisional
+
+- Rotasi kredensial otomatis belum tersedia.
+- `extract-writer` tidak memiliki verifier isolasi re-runnable; `dbt-transform` memang project-level sehingga tidak setara kredensial dataset-scoped.
+- Isolasi mart_aggregated perlu diuji langsung setelah dataset benar-benar ada.
+
+## Bagian 6 — Follow-up
+
+- Tambahkan setiap kredensial baru ke inventaris kebijakan.
+- Terapkan rotasi otomatis serta deny-test mart_aggregated saat dataset dibuat.
+- Gunakan pendekatan least-privilege dan re-verifikasi non-destruktif sebagai standar operasional.

@@ -1,6 +1,6 @@
 # Milestone 1.6: API Publik Data Monitoring
 
-**Source:** `docs/03-implementation-plans/01-monitoring-data-production-fase1.md` (baris ditambahkan 2026-08-07, lihat catatan penambahan sebelum Milestone 1.6 di dokumen tsb) — milestone baru di luar rancangan Fase 1 semula, hasil diskusi portofolio: Grafana Cloud free tier tidak mendukung publicly shared dashboard (diverifikasi via dokumentasi Grafana), sehingga diputuskan membangun API + website sendiri agar hasil monitoring bisa diakses publik tanpa expose instance Grafana/kredensial Supabase.
+**Source:** `docs/03-implementation-plans/01-monitoring-data-production-fase1.md` (baris ditambahkan 2026-08-07, lihat catatan penambahan sebelum Milestone 1.6 di dokumen tsb) — milestone baru di luar rancangan Fase 1 semula: Grafana Cloud free tier tidak mendukung publicly shared dashboard (diverifikasi via dokumentasi Grafana), sehingga diputuskan membangun API + website sendiri agar hasil monitoring bisa diakses publik tanpa expose instance Grafana/kredensial Supabase.
 
 > **Catatan proses:** Implementasi Task 1–6 milestone ini sempat berjalan sebelum baris di atas ditambahkan ke source doc — `decisions.md` ini sendiri sudah ditulis lebih dulu (sesuai urutan yang benar), tapi penambahan ke `docs/03-implementation-plans/01-monitoring-data-production-fase1.md` baru menyusul setelah ditegur user. Dicatat di sini sebagai penyimpangan proses yang jujur, bukan disembunyikan — lihat `report.md` untuk detail.
 
@@ -55,15 +55,15 @@
   - `fnb_operations.fnb_outlets` (17 baris) — master outlet F&B (nama, tipe, properti). Tidak ada transaksi/harga.
   - `facility_maintenance.rooms` (549 baris) — master kamar fisik (nomor, tipe, lantai, status operasional). Tidak terhubung ke identitas tamu.
   Tabel yang eksplisit **tidak** masuk whitelist: seluruh `hr_finance.*` (payroll, staff_shifts, employee_performance, financial_summary), `corporate_master.guests`/`employees`/`role_permissions`, dan semua tabel transaksi (`bookings`, `fnb_transactions`, `spa_bookings`, `event_bookings`) — semuanya memuat PII, data finansial, atau bisa dipakai menyimpulkan pola tamu individual.
-- **Alternatives considered:** Hanya `monitoring.*` (lebih aman, lebih cepat, tapi user secara eksplisit ingin ada sample data production untuk memperkaya cerita portofolio).
+- **Alternatives considered:** Hanya `monitoring.*` (lebih aman, lebih cepat, tetapi sample data production non-sensitif diperlukan untuk memberi konteks pada dashboard).
 - **Rejected because:** N/A — ini pilihan eksplisit user, bukan hasil eliminasi. Mitigasi risiko: role Postgres terpisah (Task 2) yang secara teknis (bukan cuma di level query API) tidak bisa SELECT tabel di luar whitelist, sehingga bug di kode API tidak bisa membocorkan data di luar whitelist.
 
 ### Decision: Tanpa autentikasi, rate limiting per IP
 
-- **Context:** API ini untuk portofolio publik — reviewer harus bisa akses tanpa daftar/API key, tapi tetap perlu proteksi dari abuse.
+- **Context:** API ini menyajikan monitoring publik — pengguna harus dapat mengaksesnya tanpa daftar/API key, tetapi tetap perlu proteksi dari abuse.
 - **Decision:** Semua endpoint read-only tanpa auth; rate limiting per IP (mis. 60 request/menit) via `slowapi`.
 - **Alternatives considered:** Wajib API key.
-- **Rejected because:** API key menambah friksi untuk reviewer portofolio yang ingin lihat cepat, dan butuh proses distribusi key yang tidak sepadan untuk API read-only tanpa data sensitif.
+- **Rejected because:** API key menambah friksi bagi pengguna dashboard dan membutuhkan proses distribusi key yang tidak sepadan untuk API read-only tanpa data sensitif.
 
 ## Open Questions Resolved with User
 

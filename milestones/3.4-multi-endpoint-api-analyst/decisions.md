@@ -17,7 +17,7 @@
 
 ## Temuan Eksplorasi (sebelum breakdown)
 
-- **API ini bukan portfolio-facing seperti `api/` (M1.6)** — `api/` gitignored dan dideploy dari repo terpisah (`nirwana-monitoring-api` di Render) khusus karena butuh URL publik untuk reviewer portofolio (`CLAUDE.md` menyebutnya eksplisit "portfolio-facing exception"). M3.4 adalah tool internal untuk 6 peran analyst Nirwana sendiri, bukan untuk publik.
+- **API ini bukan layanan monitoring publik seperti `api/` (M1.6)** — `api/` gitignored dan dideploy dari repo terpisah (`nirwana-monitoring-api` di Render) karena membutuhkan URL publik tanpa mengekspos instance monitoring internal. M3.4 adalah tool internal untuk 6 peran analyst Nirwana sendiri, bukan untuk publik.
 - **Preseden lebih dekat: Milestone 2.5 menolak pola REST API M1.6** untuk konsumen internal (Data Scientist) — `decisions.md` M2.5: "Ditolak: REST API perantara (mirip pola M1.6 `api/`)... berlawanan dengan alasan arsitektur." Tapi M3.4 beda dari M2.5 karena dokumen sumbernya sendiri eksplisit minta "Multi-Endpoint API" sebagai Output — jadi kesimpulannya bukan "tolak API sama sekali", tapi "bangun API, dengan topologi internal (M2.5) bukan topologi publik (M1.6)".
 - **Pola kode `api/` (M1.6) layak dipakai ulang**: FastAPI + `main.py`/`db.py`/`queries.py`, koneksi `psycopg2` `readonly=True` per-request (bukan pool), auto-docs Swagger/ReDoc bawaan FastAPI, whitelist dict untuk endpoint param-driven (`SAMPLE_TABLE_WHITELIST` + `GET /api/sample/{table}`, 404 kalau tidak ada di whitelist) — pola ini persis yang dibutuhkan M3.4 untuk endpoint aggregate/rowlevel per domain.
 - **M3.4 tidak perlu auth/isolasi per-peran** — dikonfirmasi eksplisit garis batas M3.5 (KK M3.5: "kredensial terbukti TIDAK BISA mengakses..."), beda kata kerja dari KK M3.4 ("tanpa perlu mengakses" — soal ergonomi struktur, bukan keamanan credential-level).
@@ -27,7 +27,7 @@
 
 ### 1. Topologi: in-repo, bukan gitignored/deploy terpisah
 
-Folder `scripts/data_analyst_api/`, konsisten penamaan `scripts/data_analyst_views/`. Alasan: lihat Temuan Eksplorasi — API ini internal, bukan portfolio-facing, jadi tidak butuh alasan M1.6 (URL publik) untuk dipisah repo.
+Folder `scripts/data_analyst_api/`, konsisten penamaan `scripts/data_analyst_views/`. Alasan: lihat Temuan Eksplorasi — API ini internal, bukan layanan monitoring publik, jadi tidak membutuhkan alasan M1.6 (URL publik) untuk dipisah repo.
 
 ### 2. Pola kode: FastAPI, direplikasi dari `api/`
 

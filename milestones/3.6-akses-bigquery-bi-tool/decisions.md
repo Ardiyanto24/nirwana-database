@@ -29,7 +29,7 @@
 
 **Keputusan:** KK1 dibuktikan sejauh yang bisa dicapai tanpa BI tool sungguhan — kredensial dibangun+diverifikasi isolasinya, dibuktikan bisa query lewat script Python (`example_query.py`, pola M2.5), dan panduan koneksi BI tool didokumentasikan generik. **Tidak ada koneksi BI tool sungguhan yang benar-benar dijalankan** — dicatat eksplisit sebagai Known Gap/status Partially Met di `report.md`, bukan diklaim selesai penuh.
 
-**Kenapa:** Docker Desktop tidak berjalan di environment ini, alternatif (Looker Studio via OAuth) tidak benar-benar menguji kredensial `analyst-readonly` yang sama (OAuth pakai identitas berbeda dari service account key). Opsi paling jujur untuk portfolio solo project: bukti sejauh yang bisa dibuktikan, catat gap-nya eksplisit — pola sama M1.5 (Partially Completed untuk kanal notifikasi eksternal).
+**Kenapa:** Docker Desktop tidak berjalan di environment ini, alternatif (Looker Studio via OAuth) tidak benar-benar menguji kredensial `analyst-readonly` yang sama (OAuth pakai identitas berbeda dari service account key). Opsi paling jujur pada implementasi dengan constraint ini: bukti sejauh yang bisa dibuktikan, catat gap-nya eksplisit — pola sama M1.5 (Partially Completed untuk kanal notifikasi eksternal).
 
 **Ditolak:** Metabase via Docker (paling literal memenuhi KK1, tapi butuh Docker Desktop menyala — di luar kendali sesi ini saat ini).
 
