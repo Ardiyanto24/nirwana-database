@@ -1,35 +1,61 @@
-# Milestone 2.5: API Akses Data Scientist — Report
+# Report — Milestone 2.5: API Akses Data Scientist
 
-**Status:** Completed
-**Date completed:** 2026-08-08
+Milestone ini berjenis **berbasis kode/sistem**. Hasilnya adalah kredensial BigQuery read-only dan contoh akses terprogram untuk Data Scientist.
 
-## Kriteria Keberhasilan — Hasil
+## Bagian 1 — Ringkasan Hasil
 
-- [x] **Tim Data Scientist berhasil mengambil data dari `mart_cleaned` secara terprogram, tanpa memerlukan akses langsung ke kredensial admin/service account inti.** — Terpenuhi. `scripts/data_scientist_access/example_query.py` menjalankan query nyata (single-table, sample, DAN agregasi `GROUP BY` yang butuh scan penuh — bukan cuma `SELECT *` sederhana) memakai **hanya** kredensial `data-scientist-reader` (`DATA_SCIENTIST_READER_CREDENTIALS`), tidak pernah menyentuh `dbt-transform`/`extract-writer`/kredensial admin/pemilik project.
-- [x] **Akses yang diberikan bersifat read-only dan terisolasi dari layer raw maupun `mart_aggregated`.** — Terpenuhi, dua bagian:
-  - **Read-only**: dibuktikan empiris — percobaan `CREATE TABLE` di `mart_cleaned` memakai kredensial ini ditolak (`google.api_core.exceptions.Forbidden`), bukan cuma diasumsikan dari "kita cuma grant READER".
-  - **Terisolasi dari raw/staging**: dibuktikan lewat `scripts/bigquery_common/verify_dataset_isolation.py --allow mart_cleaned.* --deny raw_production.* --deny staging.*` — 3/3 OK.
-  - **Terisolasi dari `mart_aggregated`**: dataset ini **belum ada** di project (scope kerja terpisah, lihat catatan "Tidak termasuk" di `docs/03-implementation-plans/02-serving-data-scientist.md`) — tidak bisa diuji langsung. Dibuktikan **by construction**: model akses BigQuery adalah dataset-scoped ACL whitelist, `data-scientist-reader` cuma pernah di-grant eksplisit ke `mart_cleaned` — begitu `mart_aggregated` dibuat nanti, kredensial ini otomatis tidak punya akses ke situ kecuali digrant eksplisit lagi (yang tidak akan dilakukan tanpa keputusan sadar terpisah). Dicatat eksplisit di sini supaya tidak diklaim "sudah diuji" secara menyesatkan.
+**Status akhir:** Selesai sesuai rencana.
 
-## Deliverables
+M2.5 menyediakan service account `data-scientist-reader` yang hanya dapat membaca `mart_cleaned`, bersama script contoh query dan dokumentasi penggunaan. Verifikasi end-to-end membuktikan kredensial ini dapat melakukan query tunggal, sample, serta agregasi penuh tanpa memakai kredensial admin atau service account pipeline.
 
-- Service account `data-scientist-reader@nirwana-database-elt.iam.gserviceaccount.com` — dataset ACL READER `mart_cleaned` SAJA + `roles/bigquery.jobUser`.
-- `scripts/bigquery_common/verify_dataset_isolation.py` — helper isolasi generik (extracted dari `scripts/reverse_etl/verify_reader_isolation.py`), dipakai untuk 2 service account sekaligus (`reverse-etl-reader` dan `data-scientist-reader`), siap dipakai untuk kredensial BigQuery scoped berikutnya tanpa file baru.
-- `scripts/data_scientist_access/example_query.py` — demo end-to-end (query tunggal, sample, agregasi) memakai kredensial `data-scientist-reader` saja.
-- `scripts/data_scientist_access/README.md` — dokumentasi cara pakai (autentikasi, contoh query, daftar tabel, batas kebijakan yang dirujuk ke M2.6).
-- `milestones/2.5-api-akses-data-scientist/{decisions,logs}.md`.
+Scope akses dibuktikan pada dua sisi: `CREATE TABLE` ditolak, dan helper isolasi mengonfirmasi raw/staging tidak dapat dibaca. `mart_aggregated` belum ada sehingga isolasinya belum dapat diuji langsung, tetapi aman by construction karena ACL BigQuery hanya memberi grant eksplisit kepada `mart_cleaned`.
 
-## Deviations from decisions.md
+## Bagian 2 — Kriteria Keberhasilan vs Bukti Nyata
 
-Tidak ada. Seluruh keputusan di `decisions.md` (bentuk akses BigQuery langsung, pembagian M2.5/M2.6, nama service account, argumen isolasi `mart_aggregated` by-construction, refactor helper isolasi, README co-located) diimplementasikan persis seperti direncanakan.
+| Kriteria (dari dokumen sumber) | Bukti Aktual | Terpenuhi? |
+|---|---|---|
+| Tim Data Scientist dapat mengambil data `mart_cleaned` terprogram tanpa kredensial admin/intinya. | `example_query.py` sukses menjalankan query properties, sample bookings, dan agregasi rata-rata per properti hanya dengan `DATA_SCIENTIST_READER_CREDENTIALS`. | Ya |
+| Akses read-only dan terisolasi dari raw maupun `mart_aggregated`. | `CREATE TABLE` ditolak; isolasi raw/staging lulus 3/3. Isolasi mart_aggregated dijamin ACL whitelist, walaupun dataset belum ada. | Ya |
 
-## Known Gaps / Follow-ups
+## Bagian 3 — Cara Kerja dan Arsitektur
 
-- **Kebijakan akses (siapa boleh pakai kredensial ini, batasannya) belum didokumentasikan formal** — sesuai pembagian kerja M2.5/M2.6 yang dikunci di `decisions.md`, ini scope M2.6, bukan gap M2.5. `scripts/data_scientist_access/README.md` sudah merujuk ke M2.6 untuk ini secara eksplisit.
-- **Isolasi dari `mart_aggregated` belum diuji langsung** (dataset belum ada) — argumen by-construction di atas cukup kuat untuk sekarang, tapi begitu `mart_aggregated` benar-benar dibuat (pekerjaan pemilik `03-mart-aggregated-owner.md`), sebaiknya isolasi diuji ulang secara langsung (tambahkan 1 `--deny mart_aggregated.*` ke `verify_dataset_isolation.py` saat itu) untuk verifikasi eksplisit, bukan cuma andalkan argumen struktural.
-- **Belum ada rotasi/expiry policy untuk key file** `data-scientist-reader` — sama seperti seluruh service account lain di project ini (`extract-writer`, `dbt-transform`, `reverse-etl-reader`), key file statis tanpa rotasi terjadwal. Bukan gap baru khusus M2.5, konsisten dengan pola project secara keseluruhan.
+### Cara Kerja
 
-## Handoff Notes
+Service account memiliki dataset ACL `READER` pada `mart_cleaned` dan `jobUser` untuk menjalankan query. `example_query.py` memakai file key kredensial tersebut secara langsung. `verify_dataset_isolation.py` menguji query yang seharusnya diizinkan dan yang harus ditolak; helper ini juga dipakai reader reverse ETL agar pola verifikasi tidak diduplikasi.
 
-- **Untuk Milestone 2.6 (Isolasi Akses dan Kredensial Read-Only)**: kredensial `data-scientist-reader` sudah dibangun dan teruji penuh (read-only + isolasi raw/staging + argumen isolasi mart_aggregated) di sini — M2.6 tidak perlu membangun ulang service account atau uji teknis dari nol, fokus ke dokumentasi kebijakan (siapa berwenang pakai, proses permintaan/pencabutan akses) yang MERUJUK bukti di milestone ini.
-- **`scripts/bigquery_common/verify_dataset_isolation.py`** sekarang jadi helper standar project ini untuk verifikasi kredensial BigQuery scoped baru — pakai ini dulu sebelum menulis script `verify_*.py` baru di milestone mendatang.
+### Diagram Arsitektur
+
+```mermaid
+flowchart LR
+    subgraph BEFORE["Sebelum — mart yang telah melalui quality gate"]
+        M[(BigQuery mart_cleaned)]
+    end
+    subgraph CORE["Inti — akses Data Scientist scoped"]
+        K[Service account data-scientist-reader] --> Q[Query BigQuery read-only]
+        Q --> M
+        V[Verifier isolasi dataset] --> K
+    end
+    subgraph AFTER["Sesudah — analisis terprogram"]
+        Q --> A[Notebook atau aplikasi Data Scientist]
+    end
+```
+
+### Integrasi dengan Komponen Lain
+
+M2.3 menghasilkan dataset yang dibaca. M2.6 menggunakan bukti teknis ini untuk kebijakan kredensial project-wide; tidak ada akses otomatis ke raw, staging, atau future dataset lain.
+
+## Bagian 4 — Perubahan dari Plan
+
+Tidak ada deviasi. Helper isolasi diekstrak dari reader reverse ETL menjadi `scripts/bigquery_common/verify_dataset_isolation.py` dan tetap lulus tanpa regresi.
+
+## Bagian 5 — Keterbatasan dan Item Provisional
+
+- Isolasi `mart_aggregated` belum diuji langsung karena dataset belum dibuat.
+- Key file belum memiliki rotasi atau expiry otomatis.
+- Kebijakan siapa yang boleh memegang kredensial sengaja menjadi scope M2.6.
+
+## Bagian 6 — Follow-up
+
+- Saat `mart_aggregated` ada, tambahkan deny-test eksplisit untuk dataset itu.
+- Terapkan rotasi key dan proses pencabutan sesuai kebijakan M2.6.
+- Gunakan helper isolasi untuk setiap kredensial BigQuery scoped baru.

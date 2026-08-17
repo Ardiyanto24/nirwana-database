@@ -1,43 +1,74 @@
-# Milestone 1.2: Monitoring Volume dan Freshness Data Masuk — Report
+# Report — Milestone 1.2: Monitoring Volume dan Freshness Data Masuk
 
-**Status:** Completed
-**Date completed:** 2026-08-07
+Milestone ini berjenis **berbasis kode/sistem**. Hasilnya adalah mekanisme snapshot, baseline rolling, dan alert di schema `monitoring`.
 
-## Kriteria Keberhasilan — Hasil
+## Bagian 1 — Ringkasan Hasil
 
-- [x] **Untuk setiap tabel prioritas tinggi, tim bisa menjawab "berapa baris masuk hari ini dibanding biasanya" dan "kapan data terakhir update" tanpa query manual.** — Evidence: `scripts/monitoring/views.sql` (`monitoring.current_status`) — satu view SQL, satu query, menjawab keduanya sekaligus untuk 7 tabel prioritas Tinggi (`employees`, `guests`, `role_permissions`, `bookings`, `fnb_transactions`, `staff_shifts`, `payroll`). Lihat hasil di `logs.md` entri "Verifikasi Kriteria Keberhasilan #1".
-- [x] **Simulasi penurunan/lonjakan volume buatan (uji coba terkontrol) berhasil memicu alert sesuai ekspektasi.** — Evidence: `scripts/monitoring/simulate_test.py`, 5/5 skenario sesuai ekspektasi (2 normal → tidak alert, 3 anomali/delay → alert critical). Lihat `logs.md` entri "Uji coba terkontrol".
+**Status akhir:** Selesai sesuai rencana.
 
-## Deliverables
+Milestone 1.2 membangun pemantauan volume dan freshness untuk 23 tabel production. `snapshot_volume.py` menyimpan hitungan baris harian; `snapshot_freshness.py` menentukan kejadian bisnis terbaru untuk tabel yang memiliki sinyal waktu; `detect_alerts.py` mengevaluasi keduanya dan menyimpan penyimpangan ke `monitoring.alerts`. View `monitoring.current_status` menyatukan status terkini sehingga tujuh tabel prioritas Tinggi dapat dibaca tanpa menyusun query manual.
 
-- `scripts/monitoring/schema.sql` + `apply_schema.py` — schema `monitoring` (3 tabel: `volume_daily_snapshot`, `freshness_snapshot`, `alerts`), diterapkan ke Supabase.
-- `scripts/monitoring/tables_config.py` — konfigurasi 23 tabel: prioritas (dari Milestone 1.1), kolom freshness, tipe kolom, kelas kadensi.
-- `scripts/monitoring/snapshot_volume.py` — snapshot row count harian per tabel (upsert per hari).
-- `scripts/monitoring/snapshot_freshness.py` — snapshot `MAX(kolom sinyal)` & lag per tabel, termasuk parsing kolom text kotor (`hire_date` mixed-format) dan kolom period (`YYYY-MM`/`YYYY-SN`).
-- `scripts/monitoring/detect_alerts.py` — logic alert: volume (rolling per-hari-dalam-minggu, mean ± sigma) & freshness (threshold per kelas kadensi).
-- `scripts/monitoring/simulate_test.py` — uji coba terkontrol, 5 skenario, terisolasi di `schema_name='_simulation'`.
-- `scripts/monitoring/views.sql` — `monitoring.current_status`, satu view untuk menjawab Kriteria Keberhasilan #1.
-- `milestones/1.2-monitoring-volume-freshness/decisions.md` — 4 keputusan teknis + pemetaan freshness 23 tabel + koreksi selama implementasi.
-- `milestones/1.2-monitoring-volume-freshness/logs.md` — jurnal kerja lengkap.
-- `docs/keputusan-tertunda.md` — entri baru: aktivasi `pg_cron` untuk penjadwalan otomatis (ditunda).
+Baseline volume menggunakan riwayat hari-dalam-minggu yang sama, bukan angka tetap, agar pola akhir pekan dan musiman tidak menjadi false alert. Uji coba terisolasi membuktikan lima skenario: dua kondisi normal tidak memicu alert, sedangkan lonjakan, penurunan, dan keterlambatan data memicu alert. Penjadwalan otomatis sengaja belum diaktifkan; mekanisme berjalan on-demand sampai keputusan `pg_cron` dituntaskan.
 
-## Deviations from decisions.md
+## Bagian 2 — Kriteria Keberhasilan vs Bukti Nyata
 
-- **Koreksi kolom freshness `housekeeping_log`**: `decisions.md` awalnya menyebut `cleaning_start_time`, dikoreksi ke `date` setelah verifikasi tipe kolom menunjukkan `cleaning_start_time` bertipe `time without time zone` (tanpa komponen tanggal) — bukan `timestamp` seperti tersirat di `Metadata.md`. Dicatat & dikoreksi langsung di `decisions.md` (bukan disembunyikan), lihat `logs.md` Task 2.
-- Tidak ada deviasi lain dari `decisions.md`.
+| Kriteria (dari dokumen sumber) | Bukti Aktual | Terpenuhi? |
+|---|---|---|
+| Untuk tabel prioritas tinggi, tim bisa menjawab “berapa baris masuk hari ini vs biasanya” dan “kapan data terakhir update” tanpa query manual. | `monitoring.current_status` menampilkan volume terkini, baseline/persentase ketika histori cukup, sinyal event terbaru, dan lag. Satu query ke view ini telah dijalankan untuk tujuh tabel prioritas Tinggi; `role_permissions` tampil volume-only sesuai karakter master statisnya. | Ya |
+| Simulasi penurunan/lonjakan volume buatan berhasil memicu alert sesuai ekspektasi. | `scripts/monitoring/simulate_test.py` menulis snapshot `_simulation` terisolasi. Hasilnya 5/5 skenario benar: volume normal dan freshness normal tidak alert; volume spike, volume drop, dan freshness delayed menghasilkan alert critical. | Ya |
 
-## Known Gaps / Follow-ups
+## Bagian 3 — Cara Kerja dan Arsitektur
 
-- **`event_bookings` tidak punya sinyal freshness yang valid** — hanya ada `event_date` (tanggal acara, bisa jauh di masa depan karena event MICE lazim dibooking berbulan-bulan sebelumnya), bukan tanggal booking dibuat. Dipantau volume-only. Kalau di masa depan `event_bookings` mendapat kolom `created_at`/`booking_created_date`, freshness bisa ditambahkan.
-- **`employees.hire_date` sebagai proxy freshness kurang tepat** — kolom ini mencatat kapan karyawan itu direkrut, bukan kapan baris terakhir di-update (mis. perubahan `status`/`access_level` karyawan lama tidak mengubah `hire_date`). Ini keterbatasan yang melekat pada tidak adanya kolom audit di production (lihat `decisions.md`), bukan bug implementasi.
-- **Data production adalah snapshot sintetis statis (berhenti 2026-07-01), bukan aliran live** — akibatnya, freshness check *saat ini* melaporkan status **CRITICAL** untuk 12 dari 15 tabel berkelas kadensi "daily" (lag 866-1706 jam). **Ini bukan bug** — mekanisme bekerja benar dan jujur melaporkan kondisi data yang sesungguhnya stale relatif terhadap `now()` wall-clock. Kalau/ketika data production menjadi aliran live sungguhan, angka ini akan otomatis turun ke rentang wajar tanpa perubahan kode apa pun.
-- **Baseline volume rolling belum punya histori** — baru 1 titik snapshot (hari ini). `pct_diff_from_baseline` di `monitoring.current_status` akan tetap `NULL`/`histori belum cukup` sampai `snapshot_volume.py` dijalankan minimal 3x di hari-yang-sama-dalam-minggu. Ini konsekuensi wajar dari mekanisme baru dibangun hari ini, bukan cacat desain.
-- **Penjadwalan otomatis harian (`pg_cron` atau alternatif lain) ditunda** — lihat `docs/keputusan-tertunda.md`. Saat ini `snapshot_volume.py`/`snapshot_freshness.py`/`detect_alerts.py` perlu dijalankan manual/on-demand.
+### Cara Kerja
 
-## Handoff Notes
+Daftar 23 tabel, prioritas, kolom freshness, dan kelas kadensi berasal dari baseline M1.1 dan disimpan di `tables_config.py`. Pada setiap run, snapshot volume menghitung `COUNT(*)` lalu menyimpannya per tanggal. Evaluator membandingkan hitungan itu dengan histori maksimal delapan minggu pada hari-dalam-minggu yang sama, memakai band `mean ± 2×stddev`; kurang dari tiga titik histori tidak menghasilkan alert karena baseline belum bermakna.
 
-- **Untuk Milestone 1.3 (kualitas data/anomali)**: `monitoring` schema & pola snapshot-harian yang dibangun di sini bisa dipakai sebagai referensi pola (append-only snapshot + alert table), tapi Milestone 1.3 kemungkinan butuh tabel/skema terpisah untuk hasil pengujian kualitas data (beda bentuk data dari volume/freshness).
-- **Untuk Milestone 1.4 (schema drift)**: sebaiknya independen dari `monitoring` schema di sini (murni soal struktur tabel, bukan snapshot metrik).
-- **Untuk Milestone 1.5 (dashboard)**: `monitoring.current_status` sudah bisa langsung jadi sumber data dashboard untuk 3 dari 4 pilar (volume, freshness dari sini; kualitas data & schema drift menyusul dari 1.3/1.4).
-- **Untuk siapa pun yang menjalankan mekanisme ini mulai sekarang**: jalankan `snapshot_volume.py` lalu `snapshot_freshness.py` lalu `detect_alerts.py` setiap hari (manual, sampai `docs/keputusan-tertunda.md` soal `pg_cron` diputuskan) supaya histori baseline terbentuk dan alert volume mulai bisa dievaluasi (butuh minimal 3 titik histori per hari-dalam-minggu).
-- **Peringatan penting**: freshness CRITICAL yang muncul sekarang untuk 12 tabel adalah **temuan nyata tentang kondisi dataset** (berhenti 2026-07-01), bukan false alarm — jangan diabaikan sebagai "known issue" tanpa konteks ini saat melapor ke pihak lain.
+Freshness memakai `MAX()` dari kolom peristiwa bisnis terdekat, bukan kolom audit baru agar tidak mengubah schema production. Nilai `hire_date` yang formatnya campuran, period bulanan, dan period semesteran diparse di Python. Tabel tanpa sinyal yang jujur—misalnya master statis atau `event_bookings`—dipantau volume-only. Evaluator menerapkan ambang sesuai kadensi lalu menyimpan hasil yang menyimpang sebagai alert.
+
+### Diagram Arsitektur
+
+```mermaid
+flowchart LR
+    subgraph BEFORE["Sebelum — baseline dan data sumber"]
+        B[Baseline inventaris: 23 tabel, prioritas, kolom kritis] --> C[Konfigurasi tabel dan sinyal freshness]
+        P[(Tabel production)]
+    end
+    subgraph CORE["Inti — pemantauan volume dan freshness"]
+        P --> V[Snapshot volume harian]
+        P --> F[Snapshot freshness per event bisnis]
+        V --> S[(monitoring.volume_daily_snapshot)]
+        F --> R[(monitoring.freshness_snapshot)]
+        S --> E{Evaluasi baseline rolling dan lag}
+        R --> E
+        E -->|normal atau histori kurang| CS[Current status]
+        E -->|penyimpangan| A[(monitoring.alerts)]
+        S --> CS[monitoring.current_status]
+        R --> CS
+    end
+    subgraph AFTER["Sesudah — konsumsi status dan alert"]
+        CS --> D[Dashboard dan alerting terpadu]
+        A --> D
+    end
+```
+
+### Integrasi dengan Komponen Lain
+
+M1.1 memasok prioritas dan pemetaan karakteristik tabel. Schema `monitoring`, snapshot, alert, dan `current_status` menjadi fondasi data untuk kualitas data M1.3, schema drift M1.4, serta dashboard M1.5. Konsumen berikutnya membaca status/alert yang telah dihitung ini, bukan menghitung ulang baseline mereka sendiri.
+
+## Bagian 4 — Perubahan dari Plan
+
+Ada satu koreksi implementasi: `housekeeping_log.cleaning_start_time` semula dipertimbangkan sebagai sinyal freshness, tetapi verifikasi `information_schema` menunjukkan tipenya `time without time zone`; sinyal diganti menjadi kolom `date`. Ini menjaga definisi freshness tetap valid. Tidak ada penyimpangan lain dari keputusan teknis.
+
+## Bagian 5 — Keterbatasan dan Item Provisional
+
+- Dataset produksi adalah snapshot sintetis yang berhenti pada 1 Juli 2026. Terhadap waktu server, 12 tabel harian terlapor critical karena memang stale; ini temuan kondisi dataset, bukan cacat detektor.
+- Baseline rolling baru memiliki satu snapshot awal, sehingga persentase dari baseline belum dapat dihitung sampai sedikitnya tiga titik pada hari yang sama terkumpul.
+- `event_bookings` tidak memiliki waktu pembuatan booking yang valid; tabel itu volume-only. `employees.hire_date` hanya proxy dan tidak menangkap update ke karyawan lama.
+- Scheduler otomatis belum aktif; run harian masih manual/on-demand sampai keputusan `pg_cron` dibuka kembali.
+
+## Bagian 6 — Follow-up
+
+- Jalankan `snapshot_volume.py`, `snapshot_freshness.py`, lalu `detect_alerts.py` secara berkala agar histori baseline terbentuk.
+- Putuskan dan aktifkan mekanisme penjadwalan yang tercatat di `docs/keputusan-tertunda.md`.
+- M1.3 memakai pola schema `monitoring` dan alert ini untuk hasil kualitas data; M1.4 menambahkan antrian schema drift secara terpisah.
+- M1.5 mengonsumsi `monitoring.current_status` dan `monitoring.alerts` untuk tampilan terpadu.

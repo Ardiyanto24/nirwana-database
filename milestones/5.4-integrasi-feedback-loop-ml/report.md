@@ -1,54 +1,68 @@
-# Milestone 5.4: Integrasi Feedback Loop ML (Join ke ml_output) — Report
+# Report — Milestone 5.4: Integrasi Feedback Loop ML
 
-**Status:** Completed
-**Date completed:** 2026-08-08
+Milestone ini berbasis **kode/sistem**, tetapi seluruh kontrak ML-nya **provisional**. Implementasinya membuktikan mekanisme trigger, sensor, isolasi kegagalan, dan transformasi agregat; bukan spesifikasi final untuk pipeline yang nantinya dimiliki ML Engineer.
 
-## ⚠️ Status: Seluruhnya Provisional — Menunggu Tim ML Engineer
+## 1. Ringkasan Hasil
 
-Sama seperti dicatat di header `decisions.md`: skema `ml_output.predictions`, use-case occupancy forecast, dan seluruh mekanisme mock scorer di milestone ini **bukan kontrak final**. Ini murni bukti-konsep mekanisme orkestrasi (trigger→sensor→join→test) — begitu tim ML Engineer mendefinisikan skema/use-case nyata, keputusan desain di sini kemungkinan besar berubah.
+**Status akhir: Completed (proof of concept provisional).** Satu loop end-to-end berjalan di GitHub Actions: refresh `mart_cleaned` memicu mock scoring dan transformasi mart secara paralel; transformasi menunggu `ml_output`, lalu mempromosikan fact forecast bila data siap. Fact baru `fact_ml_occupancy_forecast_property_room_type` memakai grain property × room type × target date × model version sehingga tetap konsisten dengan mart agregat.
 
-## Kriteria Keberhasilan — Hasil
+Run terkontrol membuktikan tiga hasil inti: siklus otomatis berhasil, 756 baris forecast live tidak memiliki `NULL` pada `model_version` maupun `feature_snapshot_at`, dan ketika sensor sengaja dibuat timeout, 76 tabel non-ML tetap dipromosikan dengan job berstatus sukses.
 
-- [x] **Simulasi siklus penuh (`mart_cleaned` refresh → trigger → sensor → join → `mart_aggregated` final) berhasil berjalan end-to-end tanpa intervensi manual.** — Terpenuhi. Dibuktikan terhadap GitHub Actions sungguhan (bukan simulasi lokal): 1 trigger manual `gh workflow run transform-mart-cleaned.yml` ([run 31259156230](https://github.com/Ardiyanto24/nirwana-database/actions/runs/31259156230), mensimulasikan jadwal cron 05:00 UTC) menyebabkan **3 workflow downstream otomatis jalan lewat `workflow_run`** tanpa intervensi lanjutan: `reverse-etl-mart-cleaned.yml` (existing), `scoring-occupancy-forecast.yml`, dan `transform-mart-aggregated.yml` ([run 31259292176](https://github.com/Ardiyanto24/nirwana-database/actions/runs/31259292176)) — seluruhnya `conclusion: success`. Sensor menemukan `ml_output` di attempt 1/30 (756 baris fresh), tabel ML ikut ter-promote di run yang sama. Detail lengkap di `logs.md` Checkpoint 6.
-- [x] **Baris hasil prediksi yang muncul di `mart_aggregated` selalu punya `model_version` dan `feature_snapshot_at` terisi.** — Terpenuhi, dibuktikan 2 lapis: (1) 12 dbt test `not_null` pada kedua kolom, PASS (Checkpoint 3); (2) query langsung ke `mart_aggregated.fact_ml_occupancy_forecast_property_room_type` live setelah run CI sungguhan — `COUNTIF(model_version IS NULL)=0`, `COUNTIF(feature_snapshot_at IS NULL)=0` dari 756 baris. Terjamin **struktural**, bukan cuma diverifikasi test: model dbt mengambil `FROM ml_output.predictions` sebagai base query (bukan `LEFT JOIN` dari sisi `mart_aggregated`), jadi kedua kolom itu tidak pernah bisa NULL lewat mekanisme join manapun.
-- [x] **Jika `ml_output` gagal/telat ditulis, `mart_aggregated` tidak ikut gagal total — bagian non-ML tetap bisa ter-refresh.** — Terpenuhi, dibuktikan lewat **uji coba terkontrol** (pola fault-injection sama seperti DQ gate M5.3): `gh workflow run transform-mart-aggregated.yml -f sensor_model_name=nonexistent_model_kk3_test -f sensor_max_attempts=2 -f sensor_interval_seconds=5` ([run 31259615980](https://github.com/Ardiyanto24/nirwana-database/actions/runs/31259615980)) — sensor dipaksa mencari model yang tidak pernah ada, log membuktikan `Sensor TIMED OUT after 2 attempts (10s total)`, step promosi ML **SKIPPED** (kondisi `if` tidak terpenuhi), tapi log step wajib membuktikan `76 table(s) promoted to mart_aggregated (scope: 76 model(s) selected)` dan **job keseluruhan tetap `conclusion: success`**.
+## 2. Kriteria Keberhasilan vs Bukti Nyata
 
-## Deliverables
+| Kriteria | Bukti nyata |
+| --- | --- |
+| Siklus refresh → scoring → sensor → mart berjalan tanpa intervensi lanjutan | Satu trigger `transform-mart-cleaned` memicu workflow scoring dan transform mart; run downstream selesai sukses. |
+| Hasil prediksi selalu memiliki metadata model dan snapshot fitur | 12 dbt test lulus dan query live pada 756 baris menemukan nol `NULL` pada kedua kolom wajib. |
+| Kegagalan/kelambatan ML tidak menggagalkan refresh utama | Fault injection dengan model yang tidak ada membuat sensor timeout; promosi ML dilewati, 76 tabel inti tetap dipromosikan, dan workflow sukses. |
+| Akses scoring dibatasi | Kredensial `ml-scoring-writer` memiliki write pada `ml_output` dan read pada data fitur `mart_aggregated`; uji allow/deny lulus. |
 
-- `scripts/ml_scoring/mock_score.py` — mock scoring pipeline (STAND-IN scoring eksternal), forecast naif occupancy per property×room_type, tulis `ml_output.predictions` via self-union CTAS.
-- `scripts/ml_scoring/wait_for_ml_output.py` — sensor polling manual (GitHub Actions tidak punya sensor native).
-- `scripts/mart_aggregated/promote.py` — diperluas dengan `--exclude` + promosi ter-scope (bukan lagi "copy semua tabel staging"), fix bug yang ditemukan saat verifikasi isolasi M5.4.
-- `warehouse/models/mart_aggregated/ml_feedback/` — 1 model fact baru (`fact_ml_occupancy_forecast_property_room_type`, tag `ml_feedback_loop`) + source `ml_output` + 12 dbt test.
-- `.github/workflows/scoring-occupancy-forecast.yml` — workflow baru, trigger off `transform-mart-cleaned.yml`.
-- `.github/workflows/transform-mart-aggregated.yml` — **workflow terjadwal pertama untuk `mart_aggregated`** (M5.3 hanya manual), termasuk sensor + isolasi kegagalan + `workflow_dispatch` input untuk uji coba terkontrol KK3.
-- Kredensial baru `ml-scoring-writer` (BigQuery, WRITER `ml_output` + READER `mart_aggregated`), GitHub Secret `GCP_ML_SCORING_WRITER_KEY_JSON` — didokumentasikan di `docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md`.
-- Dataset BigQuery `ml_output` (baru) — live, 756 baris prediksi.
-- `docs/07-mart-aggregated/DataSchema-mart-aggregated.md`, `Metadata-mart-aggregated.md` — masing-masing ditambah 1 addendum bertanda **PROVISIONAL** untuk tabel ML baru (46 fact + 27 dimension = 73 tabel total).
-- `docs/keputusan-tertunda.md` — entri "Orchestrator sungguhan" diberi catatan bahwa prediksinya terbukti benar di M5.4 (workaround polling terpakai), status tetap **Open** (bukan di-resolve).
-- `milestones/5.4-integrasi-feedback-loop-ml/{decisions,logs}.md`.
+## 3. Cara Kerja dan Arsitektur
 
-## Deviations from decisions.md
+Mock scorer mengambil fitur agregat, menghitung forecast occupancy sederhana, lalu menulis riwayat prediksi ke `ml_output.predictions`. Workflow mart mempromosikan bagian non-ML terlebih dahulu, memakai polling manual sebagai sensor, dan hanya menjalankan promosi fact ML sebagai best effort setelah data baru ditemukan.
 
-Tidak ada deviasi pada 11 keputusan inti. **Beberapa koreksi teknis ditemukan & diperbaiki saat implementasi/verifikasi** (didokumentasikan eksplisit di `decisions.md`/`logs.md` per checkpoint, bukan diperbaiki diam-diam):
-- **Sintaks selector dbt salah** (Keputusan #10a): draf `--select mart_aggregated,exclude:tag:ml_feedback_loop` bukan sintaks dbt valid — `--exclude` ternyata flag terpisah.
-- **Bug laten `promote.py` (sejak M5.3)**: tahap promosi menyalin SEMUA tabel staging, tidak benar-benar di-scope `--select` — aman kebetulan waktu M5.3 (1 selector untuk semua), tapi akan salah kalau dipanggil 2x scope berbeda. Diperbaiki dengan `dbt --quiet ls --output name` untuk resolve scope sebenarnya.
-- **Gap kredensial `ml-scoring-writer`**: draf awal cuma WRITER `ml_output`, ternyata `mock_score.py` juga perlu baca `mart_aggregated` (data fitur). Ditambah 1 ACL READER (user dikonfirmasi dulu, perubahan IAM).
-- **`scripts/extract/bq.py` env var**: `scoring-occupancy-forecast.yml` lupa menulis `BIGQUERY_PROJECT_ID`/`BIGQUERY_DATASET` ke `.env` — ketahuan dari run CI sungguhan pertama (`renew_expiration.py` gagal `KeyError`), bukan dari review kode.
-- **Asumsi salah soal least-privilege**: draf Keputusan #8 mengasumsikan `ml-scoring-writer` bisa `create_dataset(exists_ok=True)` — ternyata WRITER dataset ACL tidak termasuk hak buat dataset baru. Diperbaiki: script cuma verifikasi dataset ada, provisioning tetap tanggung jawab pemilik infrastruktur.
+```mermaid
+flowchart LR
+  subgraph before["Sebelum — data fitur dan pemicu refresh"]
+    CLEAN["mart_cleaned selesai refresh"]
+    FEAT["fact_revenue_room_type_daily"]
+    CLEAN --> FEAT
+  end
+  subgraph core["Inti — feedback loop forecast"]
+    SCORE["Mock scorer occupancy"]
+    OUT["ml_output.predictions"]
+    BASE["Promosi 76 tabel non-ML"]
+    SENSOR["Sensor polling ml_output"]
+    MODEL["Fact forecast dbt"]
+    PROMO["Promosi best-effort ML"]
+    FEAT --> SCORE --> OUT
+    CLEAN --> BASE --> SENSOR
+    OUT --> SENSOR --> MODEL --> PROMO
+  end
+  subgraph after["Sesudah — mart tahan gangguan ML"]
+    MART["mart_aggregated"]
+    SERVE["Reverse ETL dan konsumsi"]
+    BASE --> MART
+    PROMO --> MART
+    MART --> SERVE
+  end
+```
 
-## Known Gaps / Follow-ups
+**Integrasi.** `promote.py` diperbaiki agar `--select` dan `--exclude` benar-benar membatasi tabel yang dipromosikan. Pemisahan scope ini mencegah kegagalan satu model ML menahan 76 tabel yang independen.
 
-- **Seluruh feedback loop ML di milestone ini PROVISIONAL** — lihat catatan status di atas dan header `decisions.md`. Jangan dibaca sebagai kontrak final `ml_output`.
-- **Sensor tetap workaround polling, bukan sensor native** — `docs/keputusan-tertunda.md` "Orchestrator sungguhan" tetap Open, cuma dikonfirmasi prediksinya benar (lihat catatan yang ditambahkan di dokumen itu).
-- **Tabel ML baru belum di-set partition/cluster key** — skala kecil (~750 baris) di scope simulasi ini, perlu direvisit kalau data bertambah signifikan atau setelah skema final dari tim ML Engineer.
-- **ERD diagram (`ERD-mart-aggregated.md`/`.mmd`) TIDAK diupdate** — di luar scope Fase 6 yang disepakati di plan (cuma `DataSchema`/`Metadata`), jadi jumlah tabel di diagram (72) sudah tidak sinkron dengan realita (73). Perlu update terpisah kalau diagram dipakai lagi untuk referensi jumlah tabel.
-- **Reverse ETL `mart_aggregated` (M5.5) belum dibangun** — tabel ML baru ini (dan 76 lainnya) masih cuma ada di BigQuery, belum tersedia di serving PostgreSQL.
-- **Rotasi kredensial `ml-scoring-writer`** belum otomatis — gap yang sama seperti kredensial lain (lihat `kebijakan-akses-kredensial-scoped.md` "Rotasi dan Pencabutan").
-- **Sensor timeout realistis (~60 menit) belum pernah benar-benar diuji habis** — uji coba terkontrol KK3 pakai timeout dipersingkat (`workflow_dispatch` input) untuk kepraktisan, bukan menunggu 60 menit penuh. Mekanisme timeout-nya sendiri (kode `wait_for_ml_output.py`) sudah diverifikasi benar secara logic, cuma durasi penuh belum pernah dijalani nyata.
+## 4. Perubahan dari Plan
 
-## Handoff Notes
+Desain awal dikoreksi saat diuji: selector dbt menggunakan `--exclude` sebagai flag terpisah, bukan sintaks inline; promosi yang sebelumnya menyalin seluruh staging diperbaiki menjadi scope-aware; dan kredensial scoring ditambah read pada `mart_aggregated` setelah kegagalan akses fitur terungkap. Job juga tidak membuat dataset sendiri karena ACL writer tidak memberi izin membuat dataset.
 
-- **Milestone 5.5 (Reverse ETL Mart Aggregated)**: perlu memutuskan apakah tabel `fact_ml_occupancy_forecast_property_room_type` (provisional) ikut disinkronkan ke PostgreSQL bersama 76 tabel lain, atau ditunda sampai skema final dari tim ML Engineer — cek `docs/07-mart-aggregated/DataSchema-mart-aggregated.md` addendum M5.4 sebelum memutuskan.
-- **Tim ML Engineer (kalau/ketika terlibat)**: `scripts/ml_scoring/mock_score.py` perlu diganti scoring pipeline sungguhan; skema `ml_output.predictions` (termasuk deviasi `target_date` dan format `entity_id`) perlu direview ulang terhadap kebutuhan model produksi sesungguhnya — jangan asumsikan skema di milestone ini final.
-- **Milestone 5.6 (Mekanisme Pengajuan Perubahan Cakupan)**: kalau tim ML Engineer mengajukan skema `ml_output` yang berbeda, perubahan tabel `fact_ml_occupancy_forecast_property_room_type` sebaiknya lewat jalur pengajuan resmi M5.6 begitu milestone itu ada, bukan diedit ad-hoc.
-- **`scripts/mart_aggregated/promote.py`** sekarang mendukung `--exclude` dan promosi ter-scope — pola ini bisa dipakai kalau ke depan ada kebutuhan isolasi kegagalan serupa untuk domain lain (mis. kalau salah satu dari 6 domain M5.3 butuh dipisah cadence refresh-nya).
+## 5. Keterbatasan dan Item Provisional
+
+- Skema `ml_output`, `target_date`, format `entity_id`, mock scorer, dan use case occupancy forecast belum merupakan kontrak ML final.
+- Sensor adalah polling workaround; belum ada sensor native atau orchestrator penuh.
+- Fact ML belum diberi partition/cluster untuk skala besar, ERD lama belum mencerminkan tabel tambahan, dan rotasi kredensial belum otomatis.
+- Timeout realistis sekitar 60 menit belum dijalankan sampai habis; uji timeout dipersingkat untuk fault injection.
+
+## 6. Follow-up
+
+- ML Engineer perlu mengganti mock scorer dan meninjau kontrak `ml_output` melalui proses perubahan cakupan.
+- Orchestrator native tetap menjadi keputusan terbuka.
+- Reverse ETL M5.5 perlu menentukan apakah fact ML provisional ikut disajikan; akhirnya tabel tersebut memang ditunda dari sinkronisasi serving.

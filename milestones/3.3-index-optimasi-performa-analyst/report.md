@@ -1,42 +1,62 @@
-# Milestone 3.3: Index dan Optimasi Performa untuk Pola Akses Analyst — Report
+# Report — Milestone 3.3: Index dan Optimasi Performa untuk Pola Akses Analyst
 
-**Status:** Completed
-**Date completed:** 2026-08-09
+Milestone ini berjenis **berbasis kode/sistem**. Hasilnya adalah 50 index serving PostgreSQL dan reindex/analyze pasca-swap.
 
-## Kriteria Keberhasilan — Hasil
+## Bagian 1 — Ringkasan Hasil
 
-- [x] **KK1 — Query representatif tiap domain berjalan dalam waktu wajar untuk analisis interaktif, diverifikasi `EXPLAIN ANALYZE`.** Terpenuhi untuk seluruh 6 domain × 2 schema (`mart_aggregated`, `mart_cleaned`), diverifikasi langsung terhadap serving PostgreSQL sungguhan (bukan asumsi) — lihat `docs/08-serving-data-analyst/index-baseline-analyst.md` untuk baseline-vs-setelah lengkap per tabel. Perbaikan paling signifikan: `mart_cleaned.staff_shifts` 1702.8ms→2.5ms (~681x, penurunan terbesar milestone ini), `mart_cleaned.fnb_transactions` 1004.4ms→~5ms (~200x, tabel terbesar project di 902.574 baris), `fact_revenue_los_daily` 276.6ms→0.48ms (~576x).
-- [x] **KK2 — Index yang dipasang benar-benar terpakai oleh query plan.** Terpenuhi, dibuktikan 2 arah untuk seluruh 50 index: (a) `EXPLAIN ANALYZE` menunjukkan node Index Scan/Bitmap Index Scan (bukan Seq Scan) pada query representatif setelah index dipasang; (b) `pg_stat_user_indexes.idx_scan ≥ 1` dikonfirmasi lewat query langsung ke `pg_stat_user_indexes` — tidak satu pun dari 50 index yang terpasang tapi tidak pernah terpakai (dicek eksplisit, list kosong).
+**Status akhir:** Selesai dengan penyesuaian dari plan.
 
-## Deliverables
+M3.3 mengoptimalkan query analyst pada `mart_aggregated` dan `mart_cleaned` berdasarkan filter dari pemetaan akses. Sebanyak 41 index dibuat pada mart agregat dan sembilan pada mart cleaned; `REINDEX/ANALYZE` kini berjalan otomatis setelah reverse ETL. Semua index dibuktikan dipilih planner dan tercatat memiliki `idx_scan ≥ 1`.
 
-- `docs/08-serving-data-analyst/index-baseline-analyst.md` — baseline lengkap per tabel (sebelum/sesudah index), 50 entri.
-- `scripts/reverse_etl_mart_aggregated/mart_aggregated_indexes.py` — 41 index, menggantikan `example_indexes.py` (M5.5 provisional).
-- `scripts/reverse_etl/mart_cleaned_indexes.py` + `reindex_analyze.py` — mekanisme baru dari nol (sebelumnya tidak ada sama sekali untuk `mart_cleaned`).
-- `.github/workflows/reverse-etl-mart-cleaned.yml` — step baru "REINDEX/ANALYZE pasca-swap".
-- `milestones/3.3-index-optimasi-performa-analyst/{decisions,logs}.md`.
+Perbaikan terbesar terjadi pada `staff_shifts` (1702,8ms→2,5ms), `fnb_transactions` (~1004ms→~5ms setelah cache warm), dan revenue LOS (276,6ms→0,48ms). Temuan implementasi mengoreksi asumsi awal: selektivitas filter, bukan ukuran tabel saja, menentukan apakah index bernilai.
 
-## Cakupan Final
+## Bagian 2 — Kriteria Keberhasilan vs Bukti Nyata
 
-50 index (41 `mart_aggregated` + 9 `mart_cleaned`) lintas 6 domain: Revenue (9), F&B (8), Facility/Ops (8), Spa & Event (7), HR (7), Corporate/Financial (11).
+| Kriteria (dari dokumen sumber) | Bukti Aktual | Terpenuhi? |
+|---|---|---|
+| Query representatif tiap domain cukup cepat untuk analisis interaktif. | `EXPLAIN ANALYZE` dibandingkan sebelum/sesudah pada enam domain dan dua schema; baseline lengkap tercatat di `index-baseline-analyst.md`. | Ya |
+| Index yang dipasang benar-benar digunakan query plan. | Seluruh 50 query verifikasi memakai Index/Bitmap Index Scan dan seluruh index memiliki `pg_stat_user_indexes.idx_scan ≥ 1`. | Ya |
 
-## Deviations from decisions.md
+## Bagian 3 — Cara Kerja dan Arsitektur
 
-**1 koreksi signifikan ditemukan saat implementasi (Checkpoint 7), didokumentasikan eksplisit:** Keputusan #2 (`decisions.md`) berasumsi tabel kecil (ribuan baris atau kurang) hampir pasti tetap seq-scan meski diberi index. Spot-check di `fact_financial_business_line_group_monthly` (180 baris) membuktikan sebaliknya — dengan filter cukup selektif, Postgres tetap memilih Index Scan bahkan di tabel sekecil itu. **Kesimpulan yang benar: selektivitas filter, bukan jumlah baris mentah, yang menentukan pilihan planner.** Koreksi diterapkan retroaktif di Corporate/Financial (seluruh 9 tabel domain itu diuji individual tanpa pengecualian berdasar ukuran), tapi domain-domain sebelumnya (Revenue, F&B, Facility/Ops, Spa & Event, HR) yang sudah mengecualikan beberapa tabel <500 baris tanpa uji individual eksplisit **tidak diuji ulang** dalam milestone ini — dicatat sebagai Known Gap di bawah, bukan didiamkan. Tidak mengurangi bukti KK1/KK2 untuk index yang memang dipasang — cuma berarti beberapa tabel kecil di domain awal *mungkin* juga akan lolos uji index kalau dicoba, belum dibuktikan.
+### Cara Kerja
 
-**Temuan sekunder (bukan deviasi, tapi nuansa penting):** untuk tabel yang sudah sub-milidetik sebelum index (Corporate/Financial, ~216 baris), index terpakai planner (KK2 terpenuhi) tapi **tidak mempercepat** — bahkan sedikit menambah overhead traversal B-tree dibanding seq scan trivial pada tabel sekecil itu. Bukan pelanggaran KK2 (index terbukti terpakai secara faktual), tapi menunjukkan manfaat nyata index terkonsentrasi di tabel besar, bukan seragam di semua tabel.
+Definisi index mengikuti filter `property_id`, tanggal, outlet, employee, atau business line yang dipakai view/API. Setelah reverse ETL menukar tabel, script index menyiapkan ulang struktur dan statistik. Pengukuran mencakup query plan serta runtime; cache-dingin dicatat terpisah agar tidak disalahartikan sebagai kegagalan index.
 
-**Anomali operasional dicatat jujur:** `fnb_transactions` (902.574 baris) sempat terukur 1473.5ms pada run pertama tepat setelah `REINDEX` (cache-dingin, buffer belum warm) — 3 run berikutnya stabil 4.9-65ms. Bukan kegagalan index (plan tetap Bitmap Index Scan), tapi karakteristik operasional relevan: baseline pertama pasca-swap/reindex terjadwal bisa terasa lebih lambat sampai cache warm.
+### Diagram Arsitektur
 
-## Known Gaps / Follow-ups
+```mermaid
+flowchart LR
+ subgraph BEFORE["Sebelum — query view dan tabel serving"]
+  V[Filter query analyst] --> M[(mart_aggregated dan mart_cleaned)]
+ end
+ subgraph CORE["Inti — desain dan verifikasi index"]
+  M --> I[Composite index]
+  V --> E[EXPLAIN ANALYZE]
+  I --> E
+  I --> R[REINDEX dan ANALYZE pasca-swap]
+ end
+ subgraph AFTER["Sesudah — query interaktif lebih cepat"]
+  E --> A[API dan tool analyst]
+ end
+```
 
-- **Tabel kecil yang dikecualikan di Revenue/F&B/Facility/Spa&Event/HR tanpa uji individual** (mis. `fact_revenue_gop_impact_monthly` 180 baris, `fact_hr_turnover_snapshot` 43 baris, dkk) belum diuji ulang dengan pemahaman "selektivitas filter lebih penting dari ukuran tabel" yang baru ditemukan di Checkpoint 7. Kemungkinan sebagian akan lolos kalau diuji dengan filter yang cukup selektif — belum dibuktikan, follow-up untuk revisit milestone ini kalau performa tabel-tabel tersebut jadi masalah nyata di kemudian hari.
-- **Baseline waktu eksekusi perlu diperiksa ulang berkala** (bukan sekali di awal) — sesuai catatan ketergantungan dokumen sumber M3.3 sendiri: tabel hasil swap tidak mewarisi statistik lama, dan meski `reindex_analyze.py` sudah wired otomatis pasca-swap, degradasi performa jangka panjang (mis. data bertambah signifikan, distribusi berubah) belum tentu tertangkap tanpa pengecekan ulang.
-- **Composite index HR** (`fact_hr_attendance_daily`, 3 kolom) adalah satu-satunya index 3-kolom di seluruh milestone ini — domain lain yang berpotensi butuh composite serupa (mis. kombinasi filter tambahan di Facility/Ops untuk `priority_id`) belum dieksplorasi karena `EXPLAIN ANALYZE` domain itu sudah cukup cepat dengan index 2-kolom `(property_id, period_date)`.
+### Integrasi dengan Komponen Lain
 
-## Handoff Notes
+M3.1 menyediakan pola filter, M3.2 menyediakan query/view, dan M3.4 memakai baseline ini untuk endpoint. Reindex dipicu setelah workflow reverse ETL.
 
-- **Operasional harian:** mekanisme `reindex_analyze.py --all` sudah otomatis jalan pasca-swap di kedua workflow terjadwal — tidak perlu intervensi manual untuk mempertahankan index yang sudah didesain di milestone ini.
-- **Milestone 3.4 (API):** query representatif per domain di `index-baseline-analyst.md` adalah basis langsung untuk menentukan pola query endpoint (filter kolom mana yang harus jadi parameter wajib supaya index terpakai).
-- **Pemilik `mart_aggregated`/`mart_cleaned` berikutnya:** kalau ada perubahan skema (kolom baru, tabel baru) lewat mekanisme M5.6, ingat index di 2 file `*_indexes.py` ini perlu direvisit — index tidak otomatis mengikuti perubahan skema.
-- **Kalau Known Gap "tabel kecil belum diuji ulang" ingin diselesaikan:** pola yang sudah terbukti di Checkpoint 7 (buat index sementara dengan `CREATE INDEX IF NOT EXISTS` manual, uji `EXPLAIN ANALYZE`, baru putuskan pertahankan atau drop) bisa dipakai lagi langsung tanpa proses baru.
+## Bagian 4 — Perubahan dari Plan
+
+Asumsi bahwa tabel kecil pasti tidak membutuhkan index dikoreksi setelah tabel 180 baris memakai Index Scan dengan filter selektif. Corporate/Financial diuji penuh; tabel kecil domain sebelumnya belum diuji ulang.
+
+## Bagian 5 — Keterbatasan dan Item Provisional
+
+- Tabel kecil yang dikecualikan pada domain awal belum direvisit dengan pemahaman selektivitas baru.
+- Baseline runtime perlu diukur ulang saat data atau distribusi berubah.
+- Cache dingin dapat membuat run pertama pasca-swap lebih lambat.
+
+## Bagian 6 — Follow-up
+
+- Revisit index saat skema berubah melalui pengajuan perubahan.
+- Uji tabel kecil yang sebelumnya dikecualikan bila menjadi bottleneck.
+- Gunakan kolom index sebagai parameter endpoint agar planner tetap dapat menggunakannya.

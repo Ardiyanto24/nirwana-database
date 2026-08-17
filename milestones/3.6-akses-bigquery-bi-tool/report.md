@@ -1,35 +1,64 @@
-# Milestone 3.6: Akses BigQuery Langsung via BI Tool — Report
+# Report — Milestone 3.6: Akses BigQuery Langsung via BI Tool
 
-**Status:** Partially Completed — KK2 dan KK3 terpenuhi penuh, KK1 Partially Met (lihat detail di bawah).
-**Date completed:** 2026-08-10
+Milestone ini berjenis **berbasis kode/sistem**. Hasilnya adalah service account BigQuery `analyst-readonly` dan panduan integrasi BI tool.
 
-## Kriteria Keberhasilan — Hasil
+## Bagian 1 — Ringkasan Hasil
 
-- [~] **KK1 — Tim Data Analyst berhasil menjalankan query eksploratif langsung dari BI tool ke `mart_cleaned`/`mart_aggregated` di BigQuery menggunakan kredensial yang disediakan.** **Partially Met.** Yang terbukti: kredensial `analyst-readonly` bekerja penuh secara terprogram — `scripts/analyst_bi_access/example_query.py` dijalankan sungguhan, berhasil query row-level `mart_cleaned` (`mart_cleaned__properties` 6 baris, `mart_cleaned__bookings` sample) DAN agregat `mart_aggregated` (`fact_revenue_room_type_daily`, 18 baris hasil `GROUP BY`) sekaligus, hanya memakai kredensial ini. Panduan koneksi 2 kelas BI tool (upload-key: Metabase/Redash/DBeaver; OAuth+impersonation: Looker Studio) didokumentasikan teknis benar di `scripts/analyst_bi_access/README.md`. **Yang belum terbukti**: koneksi BI tool GUI sungguhan tidak benar-benar dijalankan — Docker Desktop tidak aktif di lingkungan pengerjaan (dicek langsung sebelum breakdown), dan jalur OAuth (Looker Studio) butuh setup service account impersonation tambahan yang belum dikonfigurasi. Keputusan diambil sadar bersama user sebelum breakdown (`decisions.md` Keputusan #1), bukan terlewat tanpa disadari.
-- [x] **KK2 — Kredensial `analyst-readonly` terbukti tidak bisa mengakses `raw_production` atau `ml_output` saat diuji coba.** Terpenuhi. `scripts/bigquery_common/verify_dataset_isolation.py --allow mart_cleaned.mart_cleaned__properties --allow mart_aggregated.dim_property --deny raw_production.properties --deny ml_output.predictions` → 4/4 OK, dijalankan sungguhan terhadap BigQuery `nirwana-database-elt`.
-- [x] **KK3 — Kredensial terbukti hanya bisa membaca (tidak bisa menulis/mengubah) data.** Terpenuhi. Percobaan `CREATE TABLE mart_cleaned.__test_write_denied_analyst_readonly` memakai kredensial `analyst-readonly` → `403 Forbidden` (`google.api_core.exceptions.Forbidden`), dijalankan sungguhan (pola sama M2.5).
+**Status akhir:** Selesai sebagian, dengan follow-up.
 
-## Deliverables
+M3.6 menyediakan kredensial read-only yang dapat membaca `mart_cleaned` dan `mart_aggregated`, beserta contoh query dan panduan koneksi untuk tool yang menerima service-account key maupun jalur OAuth/impersonation. Query terprogram membuktikan akses row-level dan agregat bekerja; isolasi raw/ml_output serta penolakan write juga terbukti nyata.
 
-- `docs/08-serving-data-analyst/bi-tool-analyst.md` — Output resmi #2 (kebijakan + status jujur KK1).
-- `docs/06-akses-kredensial/kebijakan-akses-kredensial-scoped.md` — diupdate, 1 baris inventaris baru + bagian "Siapa Boleh Memegang".
-- `scripts/analyst_bi_access/{example_query.py,README.md}`.
-- `scripts/extract/gcp-analyst-readonly-key.json` (gitignored) — key file service account.
-- `.env`/`.env.example` — `ANALYST_READONLY_CREDENTIALS`.
-- `milestones/3.6-akses-bigquery-bi-tool/{decisions,logs}.md`.
+Namun koneksi dari UI BI tool sungguhan belum diuji. Docker Desktop tidak aktif untuk Metabase dan jalur Looker Studio memerlukan setup impersonation tambahan. Karena kriteria meminta pembuktian dari BI tool, status akhir tetap sebagian.
 
-## Deviations from decisions.md
+## Bagian 2 — Kriteria Keberhasilan vs Bukti Nyata
 
-Tidak ada deviasi dari keputusan inti. **1 bug operasional signifikan ditemukan dan diperbaiki di luar scope asli** (didokumentasikan eksplisit, bukan disembunyikan): `.env` ternyata sudah rusak sejak Milestone 3.5 Checkpoint 2 — `write_env_var()` menambahkan entri baru ke baris terakhir file yang kebetulan tidak diakhiri newline, membuat 2 variabel (`REVERSE_ETL_MART_AGGREGATED_READER_CREDENTIALS` dan `REVENUE_ANALYST_READER_DB_URL`) tergabung jadi 1 baris korup. Ditemukan saat menambahkan `ANALYST_READONLY_CREDENTIALS`, diperbaiki langsung (baris `.env` dibetulkan + akar masalah di `write_env_var()` diperbaiki supaya tidak terulang untuk kredensial berikutnya). Dikonfirmasi tidak ada baris lain yang kena masalah sama.
+| Kriteria (dari dokumen sumber) | Bukti Aktual | Terpenuhi? |
+|---|---|---|
+| Analyst menjalankan query eksploratif langsung dari BI tool. | Kredensial dan query Python sukses untuk row-level serta agregat, tetapi koneksi UI Metabase/Looker Studio belum dijalankan. | Sebagian, lihat Bagian 5 |
+| Kredensial tidak dapat mengakses raw atau ml_output. | Verifier menjalankan dua allow dan dua deny query terhadap BigQuery, seluruhnya 4/4 sesuai harapan. | Ya |
+| Kredensial hanya dapat membaca. | `CREATE TABLE` menggunakan kredensial analyst-readonly ditolak 403 Forbidden. | Ya |
 
-## Known Gaps / Follow-ups
+## Bagian 3 — Cara Kerja dan Arsitektur
 
-- **Koneksi BI tool GUI sungguhan belum dijalankan** (KK1 Partially Met, lihat detail di atas). Follow-up eksplisit: begitu Docker Desktop bisa dinyalakan, jalankan Metabase (`docker run -d -p 3000:3000 metabase/metabase`), hubungkan ke BigQuery pakai `gcp-analyst-readonly-key.json` langsung di UI setup, jalankan 1 query eksploratif nyata — akan menyelesaikan KK1 sepenuhnya tanpa perlu perubahan desain kredensial apa pun (kredensial sudah siap pakai).
-- **Service account impersonation untuk jalur OAuth (Looker Studio dkk) belum dikonfigurasi** — kalau tim memang memilih jalur ini, perlu `roles/iam.serviceAccountTokenCreator` diberikan ke akun Google analyst pada `analyst-readonly`, dicatat sebagai langkah IAM tambahan terpisah.
-- **Bug `.env` yang diperbaiki** (lihat Deviations) — perlu diperiksa ulang kalau ada milestone lain yang sempat menulis ke `.env` di antara M3.5 dan M3.6 tanpa terdeteksi (dicek: tidak ada, cuma 1 baris kena, sudah dikonfirmasi lewat `_load_env()` parse ulang 25 key benar).
+### Cara Kerja
 
-## Handoff Notes
+Service account memiliki ACL reader pada dataset yang disetujui dan `jobUser` untuk menjalankan query. Script contoh menjalankan query properties, bookings, dan fact revenue menggunakan hanya key tersebut. Panduan membedakan alat yang dapat mengunggah key dari tool OAuth yang memerlukan impersonation; verifier memastikan scope deny dan write denial sebelum key dipakai consumer.
 
-- **Kalau KK1 mau diselesaikan penuh nanti**: tidak perlu ulang dari nol — kredensial, isolasi, dan bukti akses terprogram semuanya sudah siap. Tinggal jalankan Metabase (atau BI tool lain) dan hubungkan pakai `gcp-analyst-readonly-key.json`.
-- **Pemilik `mart_cleaned`/`mart_aggregated` berikutnya**: kalau ada dataset BigQuery baru untuk Data Analyst, tambahkan ACL READER ke `analyst-readonly` lewat pola `bq show`/`bq update --source` yang sama (dicatat di `logs.md` Checkpoint 1) — `bq add-iam-policy-binding` level-dataset gagal butuh allowlisting, jangan dicoba lagi.
-- **Siapa pun yang menulis ke `.env` via script Python ke depan**: pastikan pola append aman terhadap baris terakhir tanpa newline — `write_env_var()` di `scripts/data_analyst_credentials/connections.py` sudah diperbaiki dan bisa dipakai sebagai referensi kalau ada helper serupa di folder lain.
+### Diagram Arsitektur
+
+```mermaid
+flowchart LR
+ subgraph BEFORE["Sebelum — dataset dan scope analyst"]
+  M[(mart_cleaned dan mart_aggregated)]
+  X[(raw_production dan ml_output)]
+ end
+ subgraph CORE["Inti — kredensial BI read-only"]
+  K[Service account analyst-readonly] --> Q[Query BigQuery]
+  Q --> M
+  K -. akses ditolak .-> X
+  V[Verifier isolasi dan write denial] --> K
+ end
+ subgraph AFTER["Sesudah — koneksi BI tool"]
+  Q --> B[Metabase, DBeaver, Redash, atau Looker Studio]
+ end
+```
+
+### Integrasi dengan Komponen Lain
+
+Kredensial melengkapi akses PostgreSQL M3.5 untuk kebutuhan BigQuery/BI. Kebijakan scoped credentials diperbarui dengan inventaris dan pemegang yang berwenang.
+
+## Bagian 4 — Perubahan dari Plan
+
+Tidak ada perubahan keputusan inti. Bug lama `write_env_var()` yang menggabungkan dua entry tanpa newline ditemukan saat menambah kredensial ini dan diperbaiki; seluruh key kemudian dapat diparse kembali dengan benar.
+
+## Bagian 5 — Keterbatasan dan Item Provisional
+
+- UI BI tool belum terhubung, sehingga KK1 belum penuh.
+- OAuth/Looker Studio membutuhkan service-account impersonation yang belum dikonfigurasi.
+- Kredensial key file tetap memerlukan rotasi manual.
+
+## Bagian 6 — Follow-up
+
+- Jalankan Metabase atau BI tool GUI dan bukti satu query eksploratif nyata untuk menutup KK1.
+- Konfigurasikan `serviceAccountTokenCreator` bila memakai jalur OAuth.
+- Gunakan helper env yang sudah diperbaiki untuk kredensial baru.
